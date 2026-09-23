@@ -1,0 +1,72 @@
+{
+  "data_kind": "synthetic",
+  "lead_months": 3,
+  "sequence_length": 12,
+  "table": {
+    "cells": 64,
+    "rows": 5499,
+    "cell_month_span": 7635,
+    "observed_fraction_of_span": 0.7202,
+    "interior_missing_months": 2136,
+    "first_month": "2015-01",
+    "last_month": "2024-12",
+    "dropped_low_quality_rows": 0,
+    "group_column": "region_id"
+  },
+  "windows": {
+    "total": 2890,
+    "rejected": {
+      "target_month_unavailable": 1263,
+      "anchor_month_missing": 1247,
+      "too_few_observed_months": 1531
+    },
+    "mean_observed_months": 9.342
+  },
+  "splits": {
+    "mode": "temporal",
+    "counts": {
+      "train": 1957,
+      "val": 314,
+      "test": 619
+    },
+    "target_month_range": {
+      "train": [
+        "2016-03",
+        "2021-12"
+      ],
+      "val": [
+        "2022-01",
+        "2022-12"
+      ],
+      "test": [
+        "2023-01",
+        "2024-12"
+      ]
+    },
+    "mean_observed_months": {
+      "train": 9.402,
+      "val": 9.226,
+      "test": 9.21
+    }
+  },
+  "scaler": {
+    "kind": "zscore",
+    "fit_monthly_rows": 3405,
+    "fit_last_month": "2021-09"
+  },
+  "parameter_count": 9857,
+  "device": "cpu",
+  "training_seconds": 1.81,
+  "warnings": [],
+  "environment": {
+    "command": ".venv/bin/dewsat distill --data data/synthetic_monthly.csv --config configs/student.json --teacher runs/teacher/best.pt --out runs/student_distilled",
+    "dewsat_version": "2.0.0",
+    "python": "3.14.4",
+    "torch": "2.14.0",
+    "numpy": "2.5.3",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "csv": "data/synthetic_monthly.csv",
+    "csv_sha256": "831376ffcea2551e7f7d2cad370d84c04b0e6905fc6a923900b70a6ea034dc87"
+  }
+}

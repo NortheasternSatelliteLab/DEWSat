@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "data_kind": "synthetic",
+  "target_name": "synthetic_soil_store_percentile",
+  "target_range": [
+    0,
+    1
+  ],
+  "target_timing": "value_for_its_own_month",
+  "spatial_unit": "synthetic_cell",
+  "feature_names": [
+    "NDVI_mean",
+    "NDVI_std",
+    "VCI_mean",
+    "VCI_p10",
+    "valid_frac",
+    "month_sin",
+    "month_cos"
+  ],
+  "preprocessing": {
+    "generator": "DEWSat v2 synthetic soil-store generator",
+    "seed": 42,
+    "n_cells": 64,
+    "n_regions": 4,
+    "months": "2015-01..2024-12",
+    "cloud_level": 0.35,
+    "target_reference_period": "2015-01..2021-12",
+    "target_method": "empirical mid-rank percentile of a simulated soil store against a frozen reference period",
+    "missing_month_policy": "months with no simulated clear observation are omitted, not filled",
+    "note": "Toy dynamics with no land-surface physics. Features are invented summaries; VCI is not computed from imagery and the target is not FLDAS soil moisture."
+  },
+  "known_limitations": [
+    "Scores on this data measure software behaviour and nothing about drought accuracy.",
+    "Regions share one synthetic climate signal, so held-out-region results are optimistic relative to real geographic transfer."
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "int8_file": "model_int8_dynamic.pt",
+  "int8_bytes": 3971932,
+  "saved_as": "torchscript_trace",
+  "engine": "qnnpack",
+  "parameters": 3832065,
+  "float32_weight_bytes": 15328260,
+  "int8_weight_bytes_estimate": 3832065,
+  "float_checkpoint_bytes": 15339293,
+  "file_size_ratio": 0.2589,
+  "file_size_note": "On-disk ratio includes serialization overhead. Below roughly 100k parameters that overhead dominates and the file can even grow; the weight-level figures are the ones to quote.",
+  "quantized_modules": [
+    "LSTM",
+    "Linear"
+  ],
+  "test_float32": {
+    "n": 619,
+    "rmse": 0.1745609353945686,
+    "mae": 0.13561652136458044,
+    "bias": 0.02022231835119655,
+    "r2": 0.5377238109784019,
+    "pearson_r": 0.7739053178120873,
+    "spearman_r": 0.7544389510878245,
+    "dry_n": 192,
+    "dry_rmse": 0.12686606658356409,
+    "dry_bias": 0.08824080060973453,
+    "event": {
+      "threshold": 0.2,
+      "base_rate": 0.31017770597738287,
+      "hits": 147,
+      "misses": 45,
+      "false_alarms": 77,
+      "correct_negatives": 350,
+      "pod": 0.765625,
+      "far": 0.34375,
+      "csi": 0.5464684014869888,
+      "frequency_bias": 1.1666666666666667,
+      "hss": 0.5596309945885427,
+      "auroc_dry": 0.8805620608899297
+    }
+  },
+  "test_int8": {
+    "n": 619,
+    "rmse": 0.17431381616329822,
+    "mae": 0.13551233449773276,
+    "bias": 0.020008191126300947,
+    "r2": 0.5390317379266207,
+    "pearson_r": 0.7739030980145293,
+    "spearman_r": 0.7544509201622615,
+    "dry_n": 192,
+    "dry_rmse": 0.12703134127452245,
+    "dry_bias": 0.08853627501715285,
+    "event": {
+      "threshold": 0.2,
+      "base_rate": 0.31017770597738287,
+      "hits": 147,
+      "misses": 45,
+      "false_alarms": 77,
+      "correct_negatives": 350,
+      "pod": 0.765625,
+      "far": 0.34375,
+      "csi": 0.5464684014869888,
+      "frequency_bias": 1.1666666666666667,
+      "hss": 0.5596309945885427,
+      "auroc_dry": 0.8807816159250585
+    }
+  },
+  "max_abs_prediction_shift": 0.008322656154632568,
+  "note": "CPU dynamic quantization. GPU INT8 on Orin requires a TensorRT engine built with the exported calibration tensor and must be measured separately.",
+  "reload_note": "Set torch.backends.quantized.engine = 'qnnpack' before loading this file, and expect small numeric differences on a different engine.",
+  "rmse_delta": -0.0002471192312703818
+}

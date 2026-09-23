@@ -1,0 +1,33 @@
+{
+  "kind": "zscore",
+  "feature_names": [
+    "NDVI_mean",
+    "NDVI_std",
+    "VCI_mean",
+    "VCI_p10",
+    "valid_frac",
+    "month_sin",
+    "month_cos",
+    "observed"
+  ],
+  "scaled_indices": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "center": [
+    0.5683377015608173,
+    0.04453143806999519,
+    72.35062321174162,
+    60.75062461158428
+  ],
+  "spread": [
+    0.10382148241151125,
+    0.010971147521690712,
+    12.745924822357363,
+    14.129050412624897
+  ],
+  "fit_monthly_rows": 3405,
+  "fit_last_month": "2021-09"
+}

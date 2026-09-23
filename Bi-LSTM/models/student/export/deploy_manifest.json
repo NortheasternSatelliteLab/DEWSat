@@ -1,0 +1,135 @@
+{
+  "format": "dewsat-v2-deploy",
+  "dewsat_version": "2.0.0",
+  "created_from": {
+    "torch_version": "2.14.0",
+    "validation_rmse": 0.15597146371836373,
+    "contract_fingerprint": "a34c83a4bf1673ce7a5e466ee40f0cb3c8c486d048f339929772cf84ef82dd8e"
+  },
+  "task": {
+    "target_name": "synthetic_soil_store_percentile",
+    "target_range": [
+      0,
+      1
+    ],
+    "lead_months": 3,
+    "data_kind": "synthetic"
+  },
+  "io": {
+    "input_name": "window",
+    "output_name": "prediction",
+    "input_shape": [
+      "batch",
+      12,
+      8
+    ],
+    "input_dtype": "float32",
+    "output_shape": [
+      "batch"
+    ],
+    "onnx_opset": 17,
+    "dynamic_axes": [
+      "batch"
+    ]
+  },
+  "input_recipe": {
+    "channel_order": [
+      "NDVI_mean",
+      "NDVI_std",
+      "VCI_mean",
+      "VCI_p10",
+      "valid_frac",
+      "month_sin",
+      "month_cos",
+      "observed"
+    ],
+    "step_order": "oldest month first; the last step is the most recent input month",
+    "standardization": {
+      "applies_to_channels": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "kind": "zscore",
+      "center": [
+        0.5683377015608173,
+        0.04453143806999519,
+        72.35062321174162,
+        60.75062461158428
+      ],
+      "spread": [
+        0.10382148241151125,
+        0.010971147521690712,
+        12.745924822357363,
+        14.129050412624897
+      ],
+      "formula": "(value - center) / spread"
+    },
+    "unstandardized_channels": {
+      "valid_frac": "fraction 0..1 as supplied",
+      "month_sin": "sin(2*pi*(month-1)/12)",
+      "month_cos": "cos(2*pi*(month-1)/12)",
+      "observed": "1.0 if the month was observed, else 0.0"
+    },
+    "missing_month_rule": "set the four standardized channels and valid_frac to 0.0, keep the true season values, and set observed to 0.0",
+    "minimum_observed_months": 8
+  },
+  "artifacts": {
+    "torchscript": {
+      "file": "model_torchscript.pt",
+      "bytes": 46435,
+      "sha256": "060d1f7288af52888300ef9d23d911742e3553f0ad81ec70971d2e90d453d304"
+    },
+    "onnx": {
+      "file": "model.onnx",
+      "bytes": 44396,
+      "sha256": "0e012ee55f9ff90c09d501c2561414ee2d67d59c9fe2c3f81b38aafb6b3cbe18",
+      "opset": 17,
+      "exporter": "torchscript"
+    }
+  },
+  "calibration": {
+    "available": true,
+    "source_csv": "data/synthetic_monthly.csv",
+    "split": "train",
+    "windows": 512,
+    "available_train_windows": 1957,
+    "target_month_range": [
+      "2016-03",
+      "2021-12"
+    ],
+    "npz": "calibration.npz",
+    "raw_float32": "calibration.f32",
+    "shape": [
+      512,
+      12,
+      8
+    ],
+    "dtype": "float32",
+    "raw_layout": "C-contiguous [windows, months, channels]"
+  },
+  "parity": {
+    "torchscript_max_abs_diff": 0.0,
+    "onnx": {
+      "checked": true,
+      "runtime": "1.30.0",
+      "providers": [
+        "CPUExecutionProvider"
+      ],
+      "traced_at_batch": 1,
+      "max_abs_diff_by_batch": {
+        "1": 0.0,
+        "8": 1.7881393432617188e-07,
+        "64": 1.7881393432617188e-07
+      },
+      "max_abs_diff": 1.7881393432617188e-07,
+      "worst_batch": 8
+    }
+  },
+  "notes": [
+    "The output is a bounded score in [0,1]; lower means drier.",
+    "Quantized engines must be calibrated with the supplied training-split tensor, never with validation or test windows.",
+    "TensorRT INT8 support for LSTM layers is limited; expect FP16 to be the practical GPU precision on Orin and verify accuracy before claiming INT8."
+  ]
+}

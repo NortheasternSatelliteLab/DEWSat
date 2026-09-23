@@ -1,0 +1,231 @@
+{
+  "test": {
+    "n": 619,
+    "rmse": 0.17456094211705345,
+    "mae": 0.1356165238681681,
+    "bias": 0.020222325224026148,
+    "r2": 0.5377237753731305,
+    "pearson_r": 0.7739053164581012,
+    "spearman_r": 0.7544389510878245,
+    "dry_n": 192,
+    "dry_rmse": 0.1268660647131975,
+    "dry_bias": 0.08824079189798795,
+    "event": {
+      "threshold": 0.2,
+      "base_rate": 0.31017770597738287,
+      "hits": 147,
+      "misses": 45,
+      "false_alarms": 77,
+      "correct_negatives": 350,
+      "pod": 0.765625,
+      "far": 0.34375,
+      "csi": 0.5464684014869888,
+      "frequency_bias": 1.1666666666666667,
+      "hss": 0.5596309945885427,
+      "auroc_dry": 0.8805620608899297
+    },
+    "by_calendar_month": {
+      "01": {
+        "n": 65,
+        "rmse": 0.11119507253170013
+      },
+      "02": {
+        "n": 57,
+        "rmse": 0.15525035560131073
+      },
+      "03": {
+        "n": 45,
+        "rmse": 0.2295720875263214
+      },
+      "04": {
+        "n": 45,
+        "rmse": 0.18775878846645355
+      },
+      "05": {
+        "n": 41,
+        "rmse": 0.1963164359331131
+      },
+      "06": {
+        "n": 37,
+        "rmse": 0.14724227786064148
+      },
+      "07": {
+        "n": 48,
+        "rmse": 0.18922986090183258
+      },
+      "08": {
+        "n": 44,
+        "rmse": 0.18932291865348816
+      },
+      "09": {
+        "n": 44,
+        "rmse": 0.1482304483652115
+      },
+      "10": {
+        "n": 61,
+        "rmse": 0.174846351146698
+      },
+      "11": {
+        "n": 68,
+        "rmse": 0.1663007289171219
+      },
+      "12": {
+        "n": 64,
+        "rmse": 0.19104400277137756
+      }
+    }
+  },
+  "baselines": {
+    "train_mean": {
+      "n": 619,
+      "rmse": 0.2744094417466163,
+      "mae": 0.23432048470660538,
+      "bias": 0.09687247226294582,
+      "r2": -0.1423666186657251,
+      "pearson_r": null,
+      "spearman_r": null,
+      "dry_n": 192,
+      "dry_rmse": 0.3920233642209046,
+      "dry_bias": 0.386849605992514,
+      "event": {
+        "threshold": 0.2,
+        "base_rate": 0.31017770597738287,
+        "hits": 0,
+        "misses": 192,
+        "false_alarms": 0,
+        "correct_negatives": 427,
+        "pod": 0.0,
+        "far": null,
+        "csi": 0.0,
+        "frequency_bias": 0.0,
+        "hss": 0.0,
+        "auroc_dry": 0.5
+      }
+    },
+    "persistence": {
+      "n": 619,
+      "rmse": 0.29297300600261117,
+      "mae": 0.238018308647326,
+      "bias": 0.0311947070627875,
+      "r2": -0.3021548043694673,
+      "pearson_r": 0.36062308830597045,
+      "spearman_r": 0.3593518921912753,
+      "dry_n": 192,
+      "dry_rmse": 0.2999954731613547,
+      "dry_bias": 0.20548115117223156,
+      "event": {
+        "threshold": 0.2,
+        "base_rate": 0.31017770597738287,
+        "hits": 90,
+        "misses": 102,
+        "false_alarms": 94,
+        "correct_negatives": 333,
+        "pod": 0.46875,
+        "far": 0.5108695652173914,
+        "csi": 0.3146853146853147,
+        "frequency_bias": 0.9583333333333334,
+        "hss": 0.251493016139381,
+        "auroc_dry": 0.6886221701795472
+      }
+    },
+    "seasonal_climatology": {
+      "n": 619,
+      "rmse": 0.24263393496836172,
+      "mae": 0.20081448784588515,
+      "bias": 0.08605089782163958,
+      "r2": 0.10687861864788517,
+      "pearson_r": 0.5804707033159244,
+      "spearman_r": 0.5673753529759751,
+      "dry_n": 192,
+      "dry_rmse": 0.26599332157826694,
+      "dry_bias": 0.22548565618732633,
+      "event": {
+        "threshold": 0.2,
+        "base_rate": 0.31017770597738287,
+        "hits": 50,
+        "misses": 142,
+        "false_alarms": 44,
+        "correct_negatives": 383,
+        "pod": 0.2604166666666667,
+        "far": 0.46808510638297873,
+        "csi": 0.211864406779661,
+        "frequency_bias": 0.4895833333333333,
+        "hss": 0.18308759880231032,
+        "auroc_dry": 0.763947843481655
+      }
+    },
+    "ridge": {
+      "n": 619,
+      "rmse": 0.17107786261268457,
+      "mae": 0.13252812508277007,
+      "bias": 0.03231709904409042,
+      "r2": 0.5559876654975993,
+      "pearson_r": 0.7770946677410981,
+      "spearman_r": 0.7604332664332268,
+      "dry_n": 192,
+      "dry_rmse": 0.15269216531200167,
+      "dry_bias": 0.10511009978654329,
+      "event": {
+        "threshold": 0.2,
+        "base_rate": 0.31017770597738287,
+        "hits": 112,
+        "misses": 80,
+        "false_alarms": 47,
+        "correct_negatives": 380,
+        "pod": 0.5833333333333334,
+        "far": 0.29559748427672955,
+        "csi": 0.4686192468619247,
+        "frequency_bias": 0.828125,
+        "hss": 0.49675763220730673,
+        "auroc_dry": 0.8781103629976581
+      }
+    }
+  },
+  "baseline_details": {
+    "train_mean": {
+      "value": 0.4628044664859772
+    },
+    "persistence": {
+      "test_coverage": 1.0,
+      "fallback": 0.4628044664859772,
+      "mean_age_months": 3.0,
+      "max_age_months": 3
+    },
+    "seasonal_climatology": {
+      "fallback_use": {
+        "cell_month": 598,
+        "cell": 21
+      },
+      "global_mean": 0.4628044623861591
+    },
+    "ridge": {
+      "penalty": 1.0,
+      "n_features": 96
+    }
+  },
+  "skill_vs": {
+    "train_mean": 0.36386685164339494,
+    "persistence": 0.4041739732311801,
+    "seasonal_climatology": 0.28055841760215716,
+    "ridge": -0.020359615505920026
+  },
+  "data_kind": "synthetic",
+  "target_name": "synthetic_soil_store_percentile",
+  "lead_months": 3,
+  "selection": [
+    {
+      "member": 0,
+      "seed": 42,
+      "best_epoch": 12,
+      "val_rmse": 0.15960860981266564,
+      "epochs_run": 24
+    }
+  ],
+  "best_member": 0,
+  "validation_rmse": 0.15960860981266564,
+  "reload_max_absolute_difference": 1.1920928955078125e-07,
+  "checkpoint_bytes": 15339293,
+  "parameter_count": 3832065,
+  "training_seconds": 18.54,
+  "interpretation": "Synthetic data: these numbers test the software, not drought accuracy. Forecast at 3-month lead using only prior months. Temporal holdout only; every test location was seen in training."
+}
