@@ -54,20 +54,52 @@ def _retry(call, label: str):
 
 
 class SasTokens:
-    """Planetary Computer's anonymous read token per collection, refreshed ten minutes before it expires."""
+    """Planetary Computer's anonymous read token per collection, refreshed ten minutes before it expires.
+
+    DEWSat_BiLSTM_v2 change: the token is shared by every pull process through a small file cache
+    (cache/pc_sas/<collection>.json) under a file lock, so one process fetches it and the rest reuse it. The token
+    endpoint rate-limits (HTTP 429) when a dozen processes each fetch their own. These are anonymous public tokens.
+    """
+
+    DIR = Path(__file__).resolve().parents[2] / "cache" / "pc_sas"
 
     def __init__(self):
         self._lock = threading.Lock()
         self._tokens: dict[str, tuple[str, datetime]] = {}
 
+    @staticmethod
+    def _fresh(tok) -> bool:
+        return tok is not None and (tok[1] - datetime.now(timezone.utc)).total_seconds() >= 600
+
+    def _read(self, collection: str):
+        import json as _json
+        try:
+            j = _json.loads((self.DIR / f"{collection}.json").read_text())
+            return j["token"], datetime.fromisoformat(j["expiry"])
+        except Exception:  # noqa: BLE001
+            return None
+
     def get(self, collection: str) -> str:
+        import fcntl
+        import json as _json
+        import os as _os
         with self._lock:
             tok = self._tokens.get(collection)
-            if tok is None or (tok[1] - datetime.now(timezone.utc)).total_seconds() < 600:
-                j = _retry(lambda: httpx.get(SAS.format(collection=collection), timeout=60), f"sas {collection}")
-                expiry = datetime.fromisoformat(j["msft:expiry"].replace("Z", "+00:00"))
-                tok = (j["token"], expiry)
-                self._tokens[collection] = tok
+            if not self._fresh(tok):
+                tok = self._read(collection)
+            if not self._fresh(tok):
+                self.DIR.mkdir(parents=True, exist_ok=True)
+                with open(self.DIR / f"{collection}.lock", "w") as lk:
+                    fcntl.flock(lk, fcntl.LOCK_EX)
+                    tok = self._read(collection)              # another process may have refreshed it
+                    if not self._fresh(tok):
+                        j = _retry(lambda: httpx.get(SAS.format(collection=collection), timeout=60), f"sas {collection}")
+                        tok = (j["token"], datetime.fromisoformat(j["msft:expiry"].replace("Z", "+00:00")))
+                        tmp = self.DIR / f"{collection}.json.{_os.getpid()}.tmp"
+                        tmp.write_text(_json.dumps({"token": tok[0], "expiry": tok[1].isoformat()}))
+                        _os.replace(tmp, self.DIR / f"{collection}.json")
+                    fcntl.flock(lk, fcntl.LOCK_UN)
+            self._tokens[collection] = tok
             return tok[0]
 
 
