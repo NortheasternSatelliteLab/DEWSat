@@ -96,11 +96,52 @@ def collect(fam: str) -> dict:
     return out
 
 
+def rebuild_originals_with_views() -> dict:
+    """Once the original 102 are re-extracted, rebuild their region caches so they carry per-scene values and NDMI,
+    check that their pixel features are unchanged, and re-assemble the dataset (DECISIONS.md #37)."""
+    import dataset
+    from common import CACHE, MONTHS, REEXTRACT
+    from regions import selected_regions
+    regs = selected_regions(frozen=True)
+    orig = [g for g in regs if g["origin"] == "existing"]
+    done = [g for g in orig if all((REEXTRACT / g["name"] / "hls" / f"{m}.npz").exists() for m in MONTHS)]
+    todo = []
+    for g in done:
+        with np.load(CACHE / "regions" / f"{g['name']}.npz") as z:
+            if "view_date" not in z.files:
+                todo.append(g)
+    info = {"originals": len(orig), "reextracted": len(done), "rebuilt": len(todo), "max_feature_change": 0.0}
+    if not todo:
+        return info
+    old = {}
+    for g in todo:
+        p = CACHE / "regions" / f"{g['name']}.npz"
+        with np.load(p) as z:
+            old[g["name"]] = (z["feats"].copy(), z["obs"].copy())
+        p.rename(p.with_suffix(".pre_reextract.npz"))
+    dataset.build(frozen=True, workers=6)
+    worst = 0.0
+    for g in todo:
+        with np.load(CACHE / "regions" / f"{g['name']}.npz") as z:
+            f0, o0 = old[g["name"]]
+            if not np.array_equal(o0, z["obs"]):
+                raise RuntimeError(f"{g['name']}: observed flags changed after the re-extraction rebuild")
+            worst = max(worst, float(np.nanmax(np.abs(np.nan_to_num(f0) - np.nan_to_num(z["feats"])))))
+        (CACHE / "regions" / f"{g['name']}.pre_reextract.npz").unlink()
+    info["max_feature_change"] = worst
+    if worst > 0:
+        raise RuntimeError(f"pixel features changed by up to {worst} after the re-extraction rebuild")
+    units._CTX.clear()
+    return info
+
+
 def run(status=None) -> dict:
     import run as runner
+    rb = rebuild_originals_with_views()
+    log(f"  originals with per-scene values: {rb}")
     fam = best_job1_family()
     sp = specs()
     runner.run_specs("whatif", sp, n_cpu=3, n_mps=2, threads=3, status=status)
-    res = {"git": git_state(), "family": fam, **collect(fam)}
+    res = {"git": git_state(), "family": fam, "originals_rebuild": rb, **collect(fam)}
     write_json(SCORES / "whatif.json", res)
     return res

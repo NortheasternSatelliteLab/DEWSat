@@ -205,12 +205,13 @@ def run_net(job: str, family: str, k: int, split: str, cfg: dict, seed: int, out
 
 
 def chosen_config(job: str, family: str, k: int) -> dict | None:
-    """The configuration with the highest inner-split metric among the 30 (None until all 30 are done)."""
+    """The configuration with the highest inner-split metric among the completed search runs (the final stage runs
+    after the search stage and its retry pass, so a missing run is a logged, permanent failure)."""
     best = None
     for i in range(N_CONFIGS):
         m = read_json(search_dir(job, family, k, i) / "meta.json")
         if m is None or not (search_dir(job, family, k, i) / "DONE").exists():
-            return None
+            continue
         v = m["metric"]["metric"]
         if v is not None and np.isfinite(v) and (best is None or v > best[0]):
             best = (v, m["cfg"])
