@@ -41,7 +41,8 @@ def read_json(p, default=None):
 
 def pids(pattern: str) -> list[int]:
     try:
-        r = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True, timeout=20)
+        # -a: macOS pgrep otherwise leaves out the caller's ancestors, so the chain launcher could not list itself
+        r = subprocess.run(["pgrep", "-a", "-f", pattern], capture_output=True, text=True, timeout=20)
         return [int(x) for x in r.stdout.split()]
     except Exception:  # noqa: BLE001
         return []
