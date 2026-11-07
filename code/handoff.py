@@ -42,7 +42,7 @@ def read_json(p, default=None):
 def pids(pattern: str) -> list[int]:
     try:
         r = subprocess.run(["pgrep", "-f", pattern], capture_output=True, text=True, timeout=20)
-        return [int(x) for x in r.stdout.split() if int(x) != os.getpid()]
+        return [int(x) for x in r.stdout.split()]
     except Exception:  # noqa: BLE001
         return []
 
@@ -252,7 +252,8 @@ mkdir -p logs/chain && caffeinate -dimsu nohup .venv/bin/python -u code/launch_a
 
 - Approve Phase 5 after the chain launcher stopped on a sanity check, only after reviewing why: `touch logs/chain/GO_PHASE5`.
 - Stop the chain launcher before it starts anything further: `touch STOP_CHAIN` (it never kills a running stage).
-- Phase 6 alone, after the fresh-test lock exists and nothing else runs:
+- Phase 6 alone, after the fresh-test lock exists and nothing else runs (Phase 6 keeps what it finished; if
+  `scores/phase6.json` says SPEI was "Not completed", remove its `spei` key first so SPEI is tried again):
 
 ```bash
 .venv/bin/python -u code/dewsat2/run.py --stages phase6 >> logs/run_phase56.log 2>&1
