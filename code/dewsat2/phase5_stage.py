@@ -31,6 +31,13 @@ STARTS = 3
 THIN_SEEDS = (42, 43, 44)
 THIN_JOBS = ("job1", "job2")
 _P5: dict = {}
+_KEEP = ("meta", "dev", "test", "base_dev", "base_test", "drought_test", "keep_test")
+
+
+def _evict(prefix: str, keep_key=None) -> None:
+    """Drop cached entries whose key starts with `prefix` (except keep_key), so a process holds one large set."""
+    for k in [k for k in _P5 if isinstance(k, tuple) and k[0] == prefix and k != keep_key]:
+        del _P5[k]
 
 
 def sha256(path) -> str:
@@ -146,6 +153,8 @@ def dev_all(job: str, feats=None, obs=None, tag="composite", with_X: bool = True
     key = ("dev", job, tag)
     if key in _P5:
         return _P5[key]
+    if tag == "composite":
+        _evict("dev")
     base, dev = c["base_dev"], c["dev"]
     feats = dev["feats"][REF_ALL] if feats is None else feats
     obs = dev["obs"][REF_ALL] if obs is None else obs
@@ -223,6 +232,9 @@ def thinned_inputs(part: str, N: int, rep: int):
     key = ("thin", part, N, rep)
     if key in _P5:
         return _P5[key]
+    if part == "dev":
+        for k in [k for k in _P5 if isinstance(k, tuple) and k[:2] == ("thin", "dev") and k[2] != N]:
+            del _P5[k]
     meta, arr = c["meta"], c[part]
     names = meta[part]["regions"]
     n = len(arr["cell_id"])
@@ -297,6 +309,8 @@ def train_set(job: str, train: str) -> dict:
     key = ("devthin", job, N)
     if key in _P5:
         return _P5[key]
+    _evict("devthin")
+    _evict("dev")
     base = c["base_dev"]
     ds = [dev_all(job, f, o, tag=f"thin{N}_s{r}", with_X=False) for r, (f, o) in enumerate(parts)]
     # one scaler for the pooled set: refit on the pooled training windows' observed cell-months
@@ -318,6 +332,7 @@ def train_set(job: str, train: str) -> dict:
          "Y_fit": np.concatenate(Ys), "M_fit": np.concatenate(Ms), "scaler": scaler,
          "fit": np.concatenate([dd["fit"] for dd in ds])}
     d["f_fit"] = baseline_features(d["V_fit"], d["O_fit"], base.w_T[d["fit"]])
+    _evict("dev")                       # the per-start pieces are no longer needed
     _P5[key] = d
     return d
 
@@ -407,8 +422,10 @@ def run(status=None) -> dict:
             for N in REVISITS:
                 for s in THIN_SEEDS:
                     specs.append({"type": "p5", "job": job, "train": f"thin{N}", "cfg": cfg, "seed": s})
-    # build the shared inputs once in this process (workers rebuild their own copies)
-    runner.run_specs("phase5", specs, n_cpu=2, n_mps=2, threads=4, status=status)
+    comp = [x for x in specs if x["train"] == "composite"]
+    thin = [x for x in specs if x["train"] != "composite"]
+    runner.run_specs("phase5_composite", comp, n_cpu=4, n_mps=2, threads=2, status=status)
+    runner.run_specs("phase5_thinned", thin, n_cpu=1, n_mps=1, threads=4, status=status)
     res = score_all(st, models, lock)
     res["seconds"] = round(time.time() - t0, 1)
     write_json(SCORES / "phase5.json", res)
