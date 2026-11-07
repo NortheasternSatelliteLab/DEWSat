@@ -38,32 +38,133 @@ def gate_lines(d) -> list[str]:
     return out
 
 
+def _key_models(sub, extra=()):
+    from common import FAMILIES
+    order = ["lr_vci_t", "lr_latest_age", "gbt_mono", "state_ewma", "lr_trend", "climatology"] + list(FAMILIES) + list(extra)
+    return [m for m in order if m in sub.get("models", {})]
+
+
+def _compact(sub, models, within=True) -> list[str]:
+    key = "auc_within"
+    rows = ["| Model | AUC all | West | East |", "|---|---|---|---|"]
+    for m in models:
+        r = sub["models"][m]
+        rows.append(f"| {lab(m)} | {ci(r['all'][key])} | {ci(r['west'][key])} | {ci(r['east'][key])} |")
+    return rows
+
+
 def audit(d: dict) -> str:
-    import report as R
+    import json as _json
+    sc, p5, dc = d["scores"], d["phase5"], read_json(SCORES / "data_counts.json", {}) or {}
     L = ["# DEWSat_BiLSTM_v2: self-contained summary", "",
-         f"_Generated {time.strftime('%Y-%m-%d %H:%M')} from the run's logged files; full detail in `report.md`._", ""]
-    for sec in (R.sec_phase0(d), R.sec_data(d), R.sec_design()):
-        L += sec
-    L += ["## Gate outcomes (development, within-fold AUC)", ""] + gate_lines(d) + [""]
-    sc = d["scores"]
+         f"_Generated {time.strftime('%Y-%m-%d %H:%M')} from the run's logged files (full detail: `report.md`)._", "",
+         "Context: DEWSat is a Red/NIR CubeSat concept that must estimate each 0.1° cell's drought state on board. The label is "
+         "FLDAS Noah 10-40 cm soil moisture below its 2001-2022 calendar-month 20th percentile. The question: does a Bi-LSTM "
+         "over 12 months of HLS-derived features beat logistic regression (LR) on the current month's VCI?", ""]
+    a = d["audit"]
+    L += ["## Phase 0: audit of the last run (capability tests, e13e7a4)", ""]
+    if a:
+        L += ["- The old networks learned but overfit the training years: training AUC 0.80-0.86 vs LR 0.65-0.72; inner (other "
+              "regions, same years) about 0.75; outer (other regions and years) 0.62-0.73, below LR in 4 of 5 folds.",
+              "- Its inner validation shared every month with training, so early stopping could not see this; best epochs 1-7.",
+              f"- Order test: shuffling the 11 earlier months changed the Bi-LSTM's within-fold AUC by "
+              f"{ci(a['d']['bilstm_h32']['paired_shuffle0_minus_original_within']['diff'], signed=True)}.",
+              f"- Positive control (label only history explains): LR {a['e']['auc_lr_vci_t']:.3f}, Bi-LSTM "
+              f"{a['e']['auc_bilstm_h32_mean_of_seeds']:.4f}: the code can learn history.",
+              "- 20 spot-checked windows correct. Other problems: pooled AUC as primary (base-rate shifts), no tuning, one shared "
+              "nowcast model, VCI reference included test-period years, no months-since-observation input.", "",
+              "**Fixes in this run:** year-held-out inner validation; within-fold AUC primary; 30-configuration searches per "
+              "family, fold and job; dedicated models per job; searched epochs with a matching cosine schedule; development-only "
+              "VCI references; explicit months-since-last-observation input; 5x more regions.", ""]
+    L += ["## Data", ""]
+    fz = d.get("frozen_regions") or {}
+    if fz:
+        L.append(f"- New regions (frozen {fz.get('frozen')}): {_json.dumps(fz.get('counts'))}; plus the paper's 102 (development).")
+    if dc.get("cells"):
+        c = dc["cells"]
+        L.append(f"- Cells: development {c['dev']:,} ({c['dev_dropped_no_label']} dropped), fresh test {c['test']:,}; "
+                 f"development cells with SWIR {c['dev_with_ndmi']:,}, with per-scene values {c['dev_with_views']:,}.")
+    if dc.get("granules"):
+        g = dc["granules"]
+        L.append(f"- HLS granules searched: {dc['summary']['granules_searched']:,} (all v2.0: {g.get('v20', 0):,}); "
+                 f"per-scene views {dc['summary']['views']:,}, view x cell rows {dc['summary']['view_cell_rows']:,}.")
+    if dc.get("windows"):
+        w = dc["windows"]
+        L.append("- Windows (outer train / outer validation), summed over folds: " + ", ".join(
+            f"{j} {sum(v['outer_train'] for k, v in w.items() if k.startswith(j)):,} / "
+            f"{sum(v['outer_val'] for k, v in w.items() if k.startswith(j)):,}" for j in ("job1", "job2", "job3")) + ".")
+    if dc.get("drought_rate_dev"):
+        L.append(f"- Development drought rate 2016-2023: {dc['drought_rate_dev']['all']:.3f}.")
+    L += ["", "## Design (committed before training)", "",
+          "- 4 outer folds: region group k (balanced East/West of 98° W) x year block k (2016-17, 2018-19, 2020-21, 2022-23); "
+          "12-month buffers (15 for forecasts); development data 2016-2023 only, 2024 is a buffer before the fresh test.",
+          "- VCI tables and scalers per fold from training years only; inner validation = next group x one year, same buffers.",
+          "- Jobs: 1 estimation now (T observed); 2 missing month (T unobserved, >= 8 of 11 observed); 3 forecast T+1..T+3 "
+          "(gated on onsets); 4 = job 1 where VCI changed most.",
+          "- Models: climatology, LR on VCI(T), LR latest VCI + age, LR + trend, monotone boosted trees, smoothed-VCI state; "
+          "Bi-LSTM, residual Bi-LSTM (starts at the LR), GRU, LSTM, temporal CNN; 30-config searches, 10 seeds.",
+          "- Primary metric: within-fold AUC, 95% intervals from 2,000 whole-region resamples. Gate: best network vs best simple, "
+          "paired interval above zero and not significantly worse on either side of 98° W.", ""]
     if sc:
-        for key in ("job1", "job2", "job4_either"):
-            s = sc["subsets"].get(key)
-            if s:
-                L += [f"### {key} ({s['n']:,} windows)", ""] + R.model_table(s, R.all_models(s)) + [""]
-        L += R.sec_results(d)[-0:0]
+        L += ["## Gate outcomes (development)", ""] + gate_lines(d) + [""]
+        L += ["## Development numbers (within-fold AUC)", ""]
+        for key, title in (("job1", "Job 1"), ("job2", "Job 2"), ("job4_either", "Job 4")):
+            sub = sc["subsets"].get(key)
+            if sub:
+                L += [f"**{title}** ({sub['n']:,} windows):", ""] + _compact(sub, _key_models(sub)) + [""]
         j3 = sc.get("job3_mean", {}).get("onset")
         if j3:
-            L += ["### job3 mean onset within-fold AUC", ""] + [f"- {lab(m)}: {ci(v['all'])}" for m, v in j3["within"].items()] + [""]
-    L += R.sec_checks(d) + R.sec_whatif(d) + R.sec_weekly(d) + R.sec_fresh(d) + R.sec_limits(d)
+            L += ["**Job 3**, mean onset within-fold AUC over leads 1-3:", "", "| Model | All | West | East |", "|---|---|---|---|"]
+            for m, v in j3["within"].items():
+                L.append(f"| {lab(m)} | {ci(v['all'])} | {ci(v['west'])} | {ci(v['east'])} |")
+            L += [""]
+    if p5:
+        L += ["## Fresh test (scored once; regions >= 0.5° from all development regions, 2025-01..2026-09)", ""]
+        for key, title in (("job1", "Job 1"), ("job2", "Job 2"), ("job4", "Job 4")):
+            sub = p5["fresh"].get(key)
+            if sub:
+                L += [f"**{title}** ({sub['n']:,} windows, {sub['sides']['all']['regions']} regions):", ""] + \
+                     _compact(sub, _key_models(sub)) + [""]
+                L += [f"- {lab(pp.split(' - ')[0])} − {lab(pp.split(' - ')[1])}: {ci(v['all']['dauc_within'], signed=True)}"
+                      for pp, v in sub["paired"].items() if pp.split(" - ")[0] in ("bilstm", "resbilstm", "gru", "lstm", "tcn")] + [""]
+        m3 = p5["fresh"].get("job3_mean_onset")
+        if m3:
+            L += ["**Job 3** mean onset AUC: " + "; ".join(f"{lab(m)} {ci(v['all'])}" for m, v in m3["models"].items()), ""]
+        c = conclusion()
+        L += ["## Realistic sampling", ""] + c.get("realistic_lines", []) + [""]
+    w = d["whatif"]
+    if w:
+        L += ["## What-ifs", ""]
+        for key, title in (("ndmi", "NDMI added (SWIR; not DEWSat's camera)"), ("vci_cell_vs_pixel", "VCI per cell vs per pixel")):
+            s2 = w.get(key)
+            if s2:
+                L.append(f"- {title}, {s2['n']:,} windows: " + "; ".join(
+                    f"{lab(pp.split(' - ')[0])} − {lab(pp.split(' - ')[1])} {ci(v['all']['dauc_within'], signed=True)}"
+                    for pp, v in s2["paired"].items()) + ".")
+        L += [""]
+    wk = d["weekly"]
+    if wk:
+        s3 = wk["scores"]
+        L += ["## Weekly inputs (secondary)", "", "- " + "; ".join(
+            f"{lab(m)} {ci(v['all']['auc_within'])}" for m, v in s3["models"].items()) + "; difference " +
+              "; ".join(ci(v['all']['dauc_within'], signed=True) for v in s3["paired"].values()) + ".", ""]
+    ch = d["checks"]
+    if ch:
+        L += ["## Checks on the new models", ""]
+        ot = ch.get("order_test", {}).get("families", {})
+        if ot:
+            L.append("- Order test (shuffled minus original, permutation 1): " + "; ".join(
+                f"{lab(f)} {ci(v['shuffled_minus_original'][0], signed=True)}" for f, v in ot.items()) + ".")
+        pc = ch.get("positive_control")
+        if pc:
+            L.append("- Positive control AUC: " + "; ".join(f"{lab(m)} {ci(v)}" for m, v in pc["scores"].items()) + ".")
+        L += [""]
+    lim = read_json(SCORES / "limitations.json", {}) or {}
+    if lim.get("items"):
+        L += ["## Problems and limitations", ""] + [f"- {x}" for x in lim["items"]] + [""]
     c = conclusion()
     L += ["## Did the Bi-LSTM beat logistic regression?", "", c.get("paragraph", "Not decided yet: the run is not finished."), ""]
-    text = "\n".join(L) + "\n"
-    lines = text.splitlines()
-    if len(lines) > 400:
-        text = "\n".join(lines[:395] + ["", "_(trimmed to stay under ~400 lines; see report.md)_"] +
-                         ["", "## Did the Bi-LSTM beat logistic regression?", "", c.get("paragraph", "")]) + "\n"
-    return text
+    return "\n".join(L) + "\n"
 
 
 def fatemeh(d: dict) -> str:
