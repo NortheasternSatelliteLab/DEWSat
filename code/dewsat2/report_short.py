@@ -9,8 +9,12 @@ from report import ci, lab
 
 
 def conclusion() -> dict:
-    """The closing paragraph is written once the results are in (scores/conclusion.json), citing logged numbers."""
-    return read_json(SCORES / "conclusion.json", {}) or {}
+    """Email-ready lines from the logged scores, plus the hand-written closing paragraph once it exists."""
+    try:
+        import conclusion as C
+        return C.build()
+    except Exception:  # noqa: BLE001
+        return read_json(SCORES / "conclusion.json", {}) or {}
 
 
 def write(d: dict) -> None:
@@ -67,7 +71,9 @@ def fatemeh(d: dict) -> str:
     L = ["# DEWSat: numbers for Prof. Ghoreishi", "", c.get("bottom_line", "Bottom line: pending (the run is still going)."), ""]
     p5 = d["phase5"]
     if p5:
-        L += c.get("fresh_lines", [])
-        L += c.get("realistic_lines", [])
-    L += c.get("dev_lines", [])
+        L += c.get("fresh_lines", []) + [""]
+        L += c.get("realistic_lines", []) + [""]
+    if c.get("dev_lines"):
+        L += ["**Development** (4 outer folds, regions and years held out together; within-fold AUC, 95% intervals from "
+              "2,000 whole-region resamples):"] + c["dev_lines"]
     return "\n".join(L) + "\n"
