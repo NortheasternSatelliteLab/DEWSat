@@ -25,8 +25,11 @@ def main() -> int:
     running = [b for b, v in batches.items() if v.get("state") == "running"]
     whole = sorted(int(b) for b, v in batches.items() if v.get("state") == "complete")
     all_planned_done = len(whole) == len(plan["batches"])
-    stopped = any(e.get("event", "").startswith("frozen") for e in st.get("events", [])) or bool(st.get("originals"))
-    if running or not (all_planned_done or stopped):
+    import subprocess
+    driver_alive = subprocess.run(["pgrep", "-f", "code/pull/pull_driver.py"], capture_output=True).returncode == 0
+    moved_on = bool(st.get("originals")) or not driver_alive      # the final retry of failed regions is over
+    stopped = any(e.get("event", "").startswith("frozen") for e in st.get("events", []))
+    if running or not ((all_planned_done and moved_on) or stopped or (not driver_alive and whole)):
         print(f"not frozen: batches running {running}, complete {len(whole)}/{len(plan['batches'])}")
         return 1
     new = sorted(n for b in whole for n in batches[str(b)]["ok"])
