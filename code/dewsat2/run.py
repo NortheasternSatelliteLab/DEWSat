@@ -51,6 +51,8 @@ def spec_name(spec: dict) -> str:
     if spec["type"] == "simple":
         return f"simple/{spec['job']}/fold{spec['k'] + 1}"
     c = spec["cfg"]
+    if spec["type"] in ("whatif", "weekly", "p5"):
+        return f"{spec['type']}/{spec.get('variant', spec.get('job', ''))}/{c['family']}/fold{spec.get('k', 0) + 1}/seed{spec['seed']}"
     tail = f"cfg{c['id']:02d}" if spec["type"] == "search" else f"seed{spec['seed']}"
     return f"{spec['type']}/{spec['job']}/{c['family']}/fold{spec['k'] + 1}/{tail}"
 
@@ -59,6 +61,14 @@ def spec_done(spec: dict) -> bool:
     import units
     if spec["type"] == "simple":
         return (units.simple_dir(spec["job"], spec["k"]) / "DONE").exists()
+    if spec["type"] == "whatif":
+        return (units.whatif_dir(spec["variant"], spec["cfg"]["family"], spec["k"], spec["seed"]) / "DONE").exists()
+    if spec["type"] == "weekly":
+        import weekly_stage
+        return (weekly_stage.unit_dir(spec) / "DONE").exists()
+    if spec["type"] == "p5":
+        import phase5_stage
+        return (phase5_stage.unit_dir(spec) / "DONE").exists()
     c = spec["cfg"]
     if spec["type"] == "search":
         return (units.search_dir(spec["job"], c["family"], spec["k"], c["id"]) / "DONE").exists()
@@ -99,8 +109,8 @@ def run_specs(stage: str, specs: list[dict], n_cpu: int, n_mps: int, threads: in
         i = loads[dev].index(min(loads[dev]))
         loads[dev][i] += cst
         plan.append((dev, s))
-    order = lambda s: (s["job"], s["k"], s.get("cfg", {}).get("family", ""), s.get("cfg", {}).get("id", 0),  # noqa: E731
-                       s.get("seed", 0))
+    order = lambda s: (s.get("job", ""), s.get("variant", ""), s.get("k", 0), s.get("cfg", {}).get("family", ""),  # noqa: E731
+                       s.get("cfg", {}).get("id", 0), s.get("seed", 0))
     by_dev = {d: sorted([s for dd, s in plan if dd == d], key=order) for d in ("cpu", "mps")}
     pools = {}
     if by_dev["cpu"]:

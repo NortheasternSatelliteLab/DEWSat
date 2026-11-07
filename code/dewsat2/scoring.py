@@ -132,7 +132,8 @@ def score_subset(name: str, y, region, west, preds: dict, fold_r, R: int, n_fold
             sm = np.ones(len(y), bool) if s == "all" else (west if s == "west" else ~west)
             rel, ece = reliability(p[sm], y[sm]) if sm.any() else ([], None)
             res[s] = {"auc_within": ci(auc_within_from(W, P, N, C, fold_r)), "auc_pooled": ci(auc_from(W, P, N, C)),
-                      "brier": ci(brier), "ece": ece, "reliability": rel, "mean_pred": float(p[sm].mean())}
+                      "brier": ci(brier), "ece": ece, "reliability": rel,
+                      "mean_pred": float(p[sm].mean()) if sm.any() else None}
         out["models"][model] = res
     for a, b in pairs:
         if a not in mats or b not in mats or a == b:

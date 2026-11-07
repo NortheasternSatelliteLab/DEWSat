@@ -176,13 +176,14 @@ def train(cfg: dict, data: dict, seed: int, device: str = "cpu", threads: int = 
     n_heads = data["Y_fit"].shape[1]
     n_in = data["X_fit"].shape[2]
     model = SeqNet(cfg["family"], n_in, n_heads, cfg["hidden"], cfg.get("layers", 1), cfg.get("dropout", 0.2),
-                   cfg.get("bidir"), OBS_CH).to(device)
+                   cfg.get("bidir"), data.get("obs_ch", OBS_CH)).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"], weight_decay=cfg["weight_decay"])
     lossf = nn.BCEWithLogitsLoss(reduction="none")
     X = torch.from_numpy(data["X_fit"]).to(device)
     Y = torch.from_numpy(data["Y_fit"].astype(np.float32)).to(device)
     M = torch.from_numpy(data["M_fit"].astype(np.float32)).to(device)
-    zero_mask = torch.from_numpy(ZERO_ON_HIDE).to(device)
+    zm = data.get("zero_on_hide")
+    zero_mask = torch.from_numpy(np.asarray(ZERO_ON_HIDE if zm is None else zm, np.float32)).to(device)
     hide_ok = torch.from_numpy(np.asarray(data["hide_ok"], bool)).to(device)
     B_fit = None if data.get("base_fit") is None else torch.from_numpy(data["base_fit"].astype(np.float32)).to(device)
     V = None if data.get("V_fit") is None else torch.from_numpy(data["V_fit"].astype(np.float32)).to(device)

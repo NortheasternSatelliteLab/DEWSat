@@ -41,6 +41,8 @@ class LR:
         return self
 
     def logit(self, X):
+        if len(X) == 0:
+            return np.zeros(0)
         return self.m.decision_function((X - self.mu) / self.sd)
 
     def predict(self, X):
@@ -64,6 +66,8 @@ class GBT:
         return self
 
     def predict(self, X):
+        if len(X) == 0:
+            return np.zeros(0)
         return self.m.predict_proba(X)[:, 1]
 
 
@@ -82,6 +86,8 @@ class State:
         return self
 
     def predict(self, V, O):
+        if len(V) == 0:
+            return np.zeros(0)
         return self.lr.predict(self._x(V, O, self.alpha))
 
 

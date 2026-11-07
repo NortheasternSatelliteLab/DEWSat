@@ -122,6 +122,8 @@ def scaler_for(base: Base, feats: np.ndarray, obs: np.ndarray, fit_idx: np.ndarr
     np.add.at(diff, (c, T + 1), -1)
     used = (np.cumsum(diff, axis=1)[:, :N_MONTHS] > 0) & obs
     vals = feats[used][:, :4].astype(np.float64)
+    if len(vals) == 0:                       # empty training set (only possible in tiny sandboxes or thinned sets)
+        return {"center": [0.0] * 4, "spread": [1.0] * 4, "rows": 0}
     center, spread = vals.mean(axis=0), np.maximum(vals.std(axis=0), 1e-6)
     return {"center": center.tolist(), "spread": spread.tolist(), "rows": int(used.sum())}
 

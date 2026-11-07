@@ -217,6 +217,105 @@ def chosen_config(job: str, family: str, k: int) -> dict | None:
     return None if best is None else best[1]
 
 
+# --------------------------------------------------------------------------------------------- what-ifs
+WHATIF_VARIANTS = ("ndmi_off", "ndmi_on", "pixel", "cell")
+
+
+def whatif_dir(variant, family, k, seed):
+    return RUNS / "whatif" / variant / family / f"fold{k + 1}" / f"seed{seed}"
+
+
+def prep_variant(variant: str, k: int) -> dict:
+    """Job-1 outer split for a what-if (DESIGN.md 10). ndmi_off/ndmi_on: cells with SWIR and NDMI at T, without or
+    with the two NDMI channels; pixel/cell: windows with T observed under both definitions, per-pixel or per-cell
+    VCI inputs."""
+    c = ctx()
+    key = ("whatif", variant, k)
+    if key in c["prep"]:
+        return c["prep"][key]
+    c["prep"].clear()
+    base, arrays = c["base"], c["arrays"]
+    feats, obs = arrays["feats"][k], arrays["obs"][k]
+    sets = Sets(base, "job1", k, obs)
+    fit, ev = sets.outer_train, sets.outer_val
+    if variant.startswith("ndmi"):
+        nd = arrays["ndmi"][k]                                     # (cells, months, 2)
+        okT = arrays["has_ndmi"][base.w_cell] & np.isfinite(nd[base.w_cell, base.w_T, 0]) & \
+            np.isfinite(nd[base.w_cell, base.w_T, 1])
+        fit, ev = fit[okT[fit]], ev[okT[ev]]
+        f_in, o_in = feats, obs
+    else:
+        cellf, fixed, obs_c = arrays["cellf"][k], arrays["fixed"], arrays["obs_c"]
+        both = obs[base.w_cell, base.w_T] & obs_c[base.w_cell, base.w_T] & np.isfinite(
+            cellf[base.w_cell, base.w_T, 0])
+        fit, ev = fit[both[fit]], ev[both[ev]]
+        if variant == "cell":
+            f_in = np.concatenate([fixed[:, :, 0:2], cellf[:, :, 0:2], fixed[:, :, 3:4]], axis=2)
+            o_in = obs_c & np.isfinite(cellf[:, :, 0])
+        else:
+            f_in, o_in = feats, obs
+    scaler = scaler_for(base, f_in, o_in, fit)
+    F = input_cube(f_in, o_in, scaler)
+    d = {"fit": fit, "ev": ev, "scaler": scaler, "variant": variant}
+    d["X_fit"], d["X_ev"] = gather(F, base, fit), gather(F, base, ev)
+    if variant == "ndmi_on":
+        nd = arrays["ndmi"][k]
+        o = obs & np.isfinite(nd[:, :, 0]) & np.isfinite(nd[:, :, 1])
+        diff = np.zeros((base.n_cells, o.shape[1] + 1), np.int64)        # training windows' cell-months only
+        np.add.at(diff, (base.w_cell[fit], np.maximum(base.w_T[fit] - 11, 0)), 1)
+        np.add.at(diff, (base.w_cell[fit], base.w_T[fit] + 1), -1)
+        used = (np.cumsum(diff, axis=1)[:, :o.shape[1]] > 0) & o
+        vals = nd[:, :, 0][used].astype(np.float64)
+        mu, sd = float(vals.mean()), float(max(vals.std(), 1e-6))
+        G = np.zeros((nd.shape[0], F.shape[1], 2), np.float32)
+        from windows import PAD
+        G[:, PAD:, 0] = np.where(o, (np.nan_to_num(nd[:, :, 0]) - mu) / sd, 0.0)
+        G[:, PAD:, 1] = np.where(o, np.nan_to_num(nd[:, :, 1]) / 100.0, 0.0)
+        from numpy.lib.stride_tricks import sliding_window_view
+        def g2(idx):
+            return np.ascontiguousarray(sliding_window_view(G, 12, axis=1)[base.w_cell[idx], base.w_T[idx]]
+                                        .transpose(0, 2, 1))
+        d["X_fit"] = np.concatenate([d["X_fit"], g2(fit)], axis=2)
+        d["X_ev"] = np.concatenate([d["X_ev"], g2(ev)], axis=2)
+        d["ndmi_scaler"] = {"mu": mu, "sd": sd}
+    V_fit, _ = raw_windows(f_in, o_in, base, fit)
+    V_ev, _ = raw_windows(f_in, o_in, base, ev)
+    d["vT_fit"], d["vT_ev"] = V_fit[:, -1], V_ev[:, -1]
+    d["Y_fit"], d["M_fit"] = labels(base, "job1", fit)
+    d["Y_ev"], d["M_ev"] = labels(base, "job1", ev)
+    d["hide_ok"] = np.r_[np.ones(11, bool), False]
+    d["onset_ev"] = base.label0[ev] == 0
+    c["prep"][key] = d
+    return d
+
+
+def run_whatif(variant: str, family: str, k: int, cfg: dict, seed: int, device: str, threads: int) -> dict:
+    out_dir = whatif_dir(variant, family, k, seed)
+    if (out_dir / "DONE").exists():
+        return read_json(out_dir / "meta.json")
+    d = prep_variant(variant, k)
+    data = {"X_fit": d["X_fit"], "Y_fit": d["Y_fit"], "M_fit": d["M_fit"], "hide_ok": d["hide_ok"],
+            "X_eval": [("ev", d["X_ev"], None)]}
+    if d["X_fit"].shape[2] > 9:
+        data["zero_on_hide"] = np.r_[nets.ZERO_ON_HIDE, np.ones(d["X_fit"].shape[2] - 9, np.float32)]
+    if family == "resbilstm":
+        t = np.isfinite(d["vT_fit"])
+        lr = simple.LR(["vci_t"]).fit(d["vT_fit"][t][:, None].astype(np.float64), d["Y_fit"][t, 0])
+        a, b = lr.raw_coefficients()
+        data["base_fit"] = (a + b[0] * np.nan_to_num(d["vT_fit"]))[:, None].astype(np.float32)
+        data["X_eval"] = [("ev", d["X_ev"], (a + b[0] * np.nan_to_num(d["vT_ev"]))[:, None].astype(np.float32))]
+    res = nets.train(cfg, data, seed, device=device, threads=threads)
+    z = res["logits"]["ev"]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    save_npz(out_dir / "pred.npz", wid=d["ev"].astype(np.int64), logit=z.astype(np.float32))
+    meta = {"variant": variant, "family": family, "fold": k + 1, "cfg": cfg, "seed": seed, "device": device,
+            "git": git_state(), "seconds": res["seconds"], "n_fit": int(len(d["fit"])), "n_ev": int(len(d["ev"])),
+            "metric": {"metric": simple.auc(z[:, 0], d["Y_ev"][:, 0])}, "history": res["history"]}
+    write_json(out_dir / "meta.json", meta)
+    (out_dir / "DONE").write_text(meta["git"]["commit"] + "\n")
+    return meta
+
+
 def unit(spec: dict, device: str, threads: int) -> dict:
     """Entry point used by the worker processes."""
     t = spec["type"]
@@ -229,6 +328,14 @@ def unit(spec: dict, device: str, threads: int) -> dict:
     if t == "final":
         return run_net(spec["job"], cfg["family"], spec["k"], "outer", cfg, spec["seed"],
                        final_dir(spec["job"], cfg["family"], spec["k"], spec["seed"]), device, threads, True)
+    if t == "whatif":
+        return run_whatif(spec["variant"], cfg["family"], spec["k"], cfg, spec["seed"], device, threads)
+    if t == "weekly":
+        import weekly_stage
+        return weekly_stage.run_unit(spec, device, threads)
+    if t == "p5":
+        import phase5_stage
+        return phase5_stage.run_unit(spec, device, threads)
     raise ValueError(t)
 
 

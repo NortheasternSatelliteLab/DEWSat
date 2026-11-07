@@ -38,8 +38,19 @@ def all_regions() -> list[dict]:
 
 
 def selected_regions(frozen: bool = True, only_complete_new: bool = False) -> list[dict]:
-    """The frozen dataset's regions (default), or for sandboxes the 102 plus every new region whose pull is complete."""
+    """The frozen dataset's regions (default), or for sandboxes the 102 plus every new region whose pull is complete.
+
+    Sandboxes may set DEWSAT_PSEUDO_TEST to development region names that then play the fresh-test role, so a
+    Phase 5 code check never reads a real fresh-test label."""
+    import os
     regs = all_regions()
+    pseudo = set(filter(None, os.environ.get("DEWSAT_PSEUDO_TEST", "").split(",")))
+    if pseudo:
+        for g in regs:
+            if g["name"] in pseudo:
+                g["role"] = "test"
+            elif g["role"] == "test":
+                g["role"] = "excluded"
     if frozen:
         fz = read_json(FROZEN_REGIONS)
         if fz is None:
@@ -50,7 +61,7 @@ def selected_regions(frozen: bool = True, only_complete_new: bool = False) -> li
         st = read_json(DATA / "pull_state.json", {}) or {}
         ok = {n for b in st.get("batches", {}).values() for n in b.get("ok", [])}
         return [g for g in regs if g["origin"] == "existing" or g["name"] in ok]
-    return [g for g in regs if g["origin"] == "existing" or g["batch"] > 0]
+    return [g for g in regs if (g["origin"] == "existing" or g["batch"] > 0) and g["role"] != "excluded"]
 
 
 def composite_dir(g: dict) -> Path:
