@@ -182,6 +182,11 @@ def main() -> int:
             else:
                 dataset.build(frozen=True, workers=a.feature_workers)
             status.refresh_counts()
+            try:
+                import datacount
+                datacount.run(frozen=not a.sandbox_regions)
+            except Exception as exc:  # noqa: BLE001
+                log(f"data counts not written: {type(exc).__name__}: {exc}")
             status.stage(stage, state="done")
         elif stage in ("simple", "search", "final"):
             specs = stage_specs(stage)

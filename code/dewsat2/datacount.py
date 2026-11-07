@@ -53,7 +53,7 @@ def run(frozen: bool = True) -> dict:
             tot[f"{g['role']}_{g['origin']}_{k}"] += v
             tot[k] += v
         sd = scene_dir(g)
-        if sd is None:
+        if sd is None or not (CACHE / "regions" / f"{g['name']}.npz").exists():
             continue
         z = None
         try:
