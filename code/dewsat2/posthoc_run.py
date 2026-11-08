@@ -148,12 +148,13 @@ def main() -> int:
         elif stage == "score":
             t0 = time.time()
             res = posthoc.score_dev()
-            sub = res["subset"]["models"]
-            for m in ["lr_vci_t", res["best_simple"], "bilstm", *res["models_new"]]:
-                if m in sub:
-                    say(f"  {m}: within-fold AUC {sub[m]['all']['auc_within']}")
-            for k, v in res["verdicts"].items():
-                say(f"  {k}: {res['subset']['paired'][k]['all']['dauc_within']} -> {v}")
+            for job, e in res["jobs"].items():
+                lr = "lr_latest_age" if job == "job2" else "lr_vci_t"
+                for m in dict.fromkeys([lr, e["best_simple"], "bilstm", *e["new_models"]]):
+                    if m in e["models"]:
+                        say(f"  {job} {m}: {e['metric']} {e['models'][m]['all']}")
+                for k, v in e["verdicts"].items():
+                    say(f"  {job} {k}: {e['paired'][k]['all']} -> {v}")
             status["stages"]["score"] = {"state": "done", "minutes": round((time.time() - t0) / 60, 1),
                                          "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
         else:

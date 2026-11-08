@@ -1,12 +1,16 @@
-"""Units, configurations and development scoring for the three job-1 models of DESIGN.md amendment 4.
+"""Units, configurations and development scoring for the models added after the development results
+(DESIGN.md amendments 4 and 4b).
 
-    bilstm_vci  the bilstm (same 30 job-1 configurations and seeds) with NDVI_mean, NDVI_std, valid_frac and the
-                season channels zeroed, so only VCI_mean, VCI_p10, observed and months-since carry information
-    cnn_lr      tile encoder on month T's VCI tile, dropout, one linear layer
-    cnn_bilstm  tile encoder on each of the 12 monthly tiles + observed + months-since -> bilstm encoder and head
+    bilstm_vci  each job's bilstm (same 30 configurations and seeds) with NDVI_mean, NDVI_std, valid_frac and the
+                season channels zeroed, so only VCI_mean, VCI_p10, observed and months-since carry information;
+                jobs 1, 2 and 3 (job 4 is scored with the job-1 models)
+    cnn_lr      tile encoder on month T's VCI tile, dropout, one linear layer; job 1
+    cnn_bilstm  tile encoder on each of the 12 monthly tiles + observed + months-since -> bilstm encoder and head;
+                job 1
 
-Runs live under runs/posthoc/ (search: inner split, one seed 1000 + id; final: outer split, FINAL_SEEDS, model.pt
-saved); development scores in scores/posthoc.json, scored like every job-1 model (score stage's pooling and draws).
+Runs live under runs/posthoc/{search,final}/<job>/<model>/ (search: inner split, one seed 1000 + id; final: outer
+split, FINAL_SEEDS, model.pt saved). Development scores in scores/posthoc.json, from the score stage's own pooling
+(score_stage.collect), subset names and region draws, so the new rows line up with the pre-registered ones.
 """
 
 from __future__ import annotations
@@ -17,28 +21,30 @@ import time
 
 import numpy as np
 
-from common import (CACHE, FINAL_SEEDS, N_FOLDS, REFS, RUNS, SCORES, SMOKE, git_state, read_json, save_npz,
+from common import (CACHE, FINAL_SEEDS, LEADS, N_FOLDS, REFS, RUNS, SCORES, SMOKE, git_state, read_json, save_npz,
                     write_json)
 
-JOB = "job1"
-MODELS = ("bilstm_vci", "cnn_lr", "cnn_bilstm")
+MODEL_JOBS = {"bilstm_vci": ("job1", "job2", "job3"), "cnn_lr": ("job1",), "cnn_bilstm": ("job1",)}
+MODELS = tuple(MODEL_JOBS)
 ZERO_CH = [0, 1, 4, 5, 6]                    # NDVI_mean, NDVI_std, valid_frac, season sin, season cos
-N_CFG = {"bilstm_vci": 30, "cnn_lr": 20, "cnn_bilstm": 12}
+N_CFG = {"cnn_lr": 20, "cnn_bilstm": 12}
 LABELS = {"bilstm_vci": "VCI-only Bi-LSTM", "cnn_lr": "CNN + LR", "cnn_bilstm": "CNN + Bi-LSTM"}
 _TILES: dict = {}
 
 
-def configs(model: str) -> list[dict]:
-    """Search configurations, drawn once with a fixed seed (amendment 4)."""
+def configs(model: str, job: str = "job1") -> list[dict]:
+    """Search configurations, drawn once with a fixed seed (amendments 4 and 4b)."""
     import search
     if model == "bilstm_vci":
         out = []
-        for c in search.net_configs(JOB, "bilstm"):          # the bilstm's own 30 job-1 configurations
+        for c in search.net_configs(job, "bilstm"):          # the job's own bilstm configurations
             c = dict(c)
             c["family"], c["net_family"] = "bilstm_vci", "bilstm"
             out.append(c)
         return out
-    rng = np.random.default_rng(search.seed_for("posthoc", JOB, model))
+    if job != "job1":
+        raise ValueError(f"{model} is a job-1 model")
+    rng = np.random.default_rng(search.seed_for("posthoc", "job1", model))
     n = 2 if SMOKE else N_CFG[model]
     out = []
     for i in range(n):
@@ -66,25 +72,25 @@ def device_for(cfg: dict) -> str:
     return "cpu" if cfg["family"] == "bilstm_vci" else "mps"
 
 
-def search_dir(model: str, k: int, i: int):
-    return RUNS / "posthoc" / "search" / JOB / model / f"fold{k + 1}" / f"cfg{i:02d}"
+def search_dir(model: str, job: str, k: int, i: int):
+    return RUNS / "posthoc" / "search" / job / model / f"fold{k + 1}" / f"cfg{i:02d}"
 
 
-def final_dir(model: str, k: int, seed: int):
-    return RUNS / "posthoc" / "final" / JOB / model / f"fold{k + 1}" / f"seed{seed}"
+def final_dir(model: str, job: str, k: int, seed: int):
+    return RUNS / "posthoc" / "final" / job / model / f"fold{k + 1}" / f"seed{seed}"
 
 
 def spec_dir(spec: dict):
     c = spec["cfg"]
     if spec["type"] == "ph_search":
-        return search_dir(c["family"], spec["k"], c["id"])
-    return final_dir(c["family"], spec["k"], spec["seed"])
+        return search_dir(c["family"], spec["job"], spec["k"], c["id"])
+    return final_dir(c["family"], spec["job"], spec["k"], spec["seed"])
 
 
 def spec_name(spec: dict) -> str:
     c = spec["cfg"]
     tail = f"cfg{c['id']:02d}" if spec["type"] == "ph_search" else f"seed{spec['seed']}"
-    return f"posthoc/{spec['type'][3:]}/{c['family']}/fold{spec['k'] + 1}/{tail}"
+    return f"posthoc/{spec['type'][3:]}/{spec['job']}/{c['family']}/fold{spec['k'] + 1}/{tail}"
 
 
 def tiles_for(ref: str, part: str = "dev") -> np.ndarray:
@@ -96,16 +102,25 @@ def tiles_for(ref: str, part: str = "dev") -> np.ndarray:
     return _TILES[key]
 
 
+def lstm_macs(hidden: int, layers: int, n_in: int, n_heads: int, steps: int = 12) -> int:
+    """Multiply-adds of one bilstm prediction (both directions, four gates, the SeqNet head)."""
+    macs, d_in = 0, n_in
+    for _ in range(layers):
+        macs += steps * 2 * 4 * hidden * (d_in + hidden)
+        d_in = 2 * hidden
+    return int(macs + 4 * hidden * 2 * hidden + 2 * hidden * n_heads)
+
+
 def run_unit(spec: dict, device: str, threads: int) -> dict:
     """One search or final run of a post-hoc model (resumable: a finished run is read back)."""
     import units
     out_dir = spec_dir(spec)
     if (out_dir / "DONE").exists():
         return read_json(out_dir / "meta.json")
-    cfg, k = spec["cfg"], spec["k"]
+    cfg, k, job = spec["cfg"], spec["k"], spec["job"]
     split = "inner" if spec["type"] == "ph_search" else "outer"
     seed = 1000 + cfg["id"] if spec["type"] == "ph_search" else spec["seed"]
-    d = units.prep(JOB, k, split)
+    d = units.prep(job, k, split)
     t0 = time.time()
     if cfg["family"] == "bilstm_vci":
         import nets
@@ -117,7 +132,7 @@ def run_unit(spec: dict, device: str, threads: int) -> dict:
         data = {"X_fit": Xf, "Y_fit": d["Y_fit"], "M_fit": d["M_fit"], "hide_ok": d["hide_ok"],
                 "X_eval": [("ev", Xe, None)]}
         res = nets.train(net_cfg, data, seed, device=device, threads=threads)
-        macs = None
+        macs = lstm_macs(cfg["hidden"], cfg.get("layers", 1), 9 - len(ZERO_CH), d["Y_fit"].shape[1])
     else:
         import cnn
         base = units.ctx()["base"]
@@ -128,13 +143,13 @@ def run_unit(spec: dict, device: str, threads: int) -> dict:
         res = cnn.train(cfg, fit, d["Y_fit"], d["M_fit"], seed, device=device, threads=threads, evals=[("ev", ev)])
         macs = cnn.multiply_adds(cfg)
     z = res["logits"]["ev"]
-    met = units.eval_metric(JOB, z, d)
+    met = units.eval_metric(job, z, d)
     out_dir.mkdir(parents=True, exist_ok=True)
     save_npz(out_dir / "pred.npz", wid=d["ev"].astype(np.int64), logit=z.astype(np.float32))
     if spec["type"] == "ph_final":
         import torch
         torch.save(res["state"], out_dir / "model.pt")
-    meta = {"job": JOB, "family": cfg["family"], "fold": k + 1, "split": split, "cfg": cfg, "seed": seed,
+    meta = {"job": job, "family": cfg["family"], "fold": k + 1, "split": split, "cfg": cfg, "seed": seed,
             "device": device, "threads": threads, "git": git_state(), "n_params": res["n_params"],
             "multiply_adds": macs, "seconds": res["seconds"], "unit_seconds": round(time.time() - t0, 1),
             "prep_seconds": d["seconds"], "history": res["history"], "metric": met, "scaler": d["scaler"],
@@ -145,11 +160,11 @@ def run_unit(spec: dict, device: str, threads: int) -> dict:
     return meta
 
 
-def chosen_config(model: str, k: int) -> dict | None:
-    """Highest inner-validation AUC among the finished search runs of this model and fold."""
+def chosen_config(model: str, job: str, k: int) -> dict | None:
+    """Highest inner-validation metric among the finished search runs of this model, job and fold."""
     best = None
-    for c in configs(model):
-        d = search_dir(model, k, c["id"])
+    for c in configs(model, job):
+        d = search_dir(model, job, k, c["id"])
         m = read_json(d / "meta.json")
         if m is None or not (d / "DONE").exists():
             continue
@@ -161,19 +176,15 @@ def chosen_config(model: str, k: int) -> dict | None:
 
 def stage_specs(stage: str) -> list[dict]:
     specs = []
-    if stage == "search":
-        for model in MODELS:
+    for model, jobs in MODEL_JOBS.items():
+        for job in jobs:
             for k in range(N_FOLDS):
-                for cfg in configs(model):
-                    specs.append({"type": "ph_search", "k": k, "cfg": cfg})
-    elif stage == "final":
-        for model in MODELS:
-            for k in range(N_FOLDS):
-                cfg = chosen_config(model, k)
-                if cfg is None:
-                    continue
-                for s in FINAL_SEEDS:
-                    specs.append({"type": "ph_final", "k": k, "cfg": cfg, "seed": s})
+                if stage == "search":
+                    specs += [{"type": "ph_search", "job": job, "k": k, "cfg": c} for c in configs(model, job)]
+                elif stage == "final":
+                    cfg = chosen_config(model, job, k)
+                    if cfg is not None:
+                        specs += [{"type": "ph_final", "job": job, "k": k, "cfg": cfg, "seed": s} for s in FINAL_SEEDS]
     return specs
 
 
@@ -181,25 +192,24 @@ def _sig(z):
     return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
 
 
-def final_preds(model: str, k: int, wid: np.ndarray) -> tuple[np.ndarray | None, int]:
-    """Mean probability over the finished final seeds (None unless all FINAL_SEEDS are done)."""
+def final_probs(model: str, job: str, k: int, wid: np.ndarray) -> tuple[np.ndarray | None, int]:
+    """Mean probability (n, heads) over the finished final seeds; None unless all FINAL_SEEDS are done."""
     ps = []
     for s in FINAL_SEEDS:
-        d = final_dir(model, k, s)
+        d = final_dir(model, job, k, s)
         if not (d / "DONE").exists():
             continue
         with np.load(d / "pred.npz") as z:
             if not np.array_equal(z["wid"], wid):
-                raise RuntimeError(f"{model}/fold{k + 1}/seed{s}: window ids differ from the simple models'")
-            ps.append(_sig(z["logit"][:, 0].astype(float)))
+                raise RuntimeError(f"{job}/{model}/fold{k + 1}/seed{s}: window ids differ from the simple models'")
+            ps.append(_sig(z["logit"].astype(float)))
     return (np.mean(ps, axis=0) if len(ps) == len(FINAL_SEEDS) else None), len(ps)
 
 
 def score_dev() -> dict:
-    """Job 1 on the four outer folds with every pre-registered and post-hoc model, pooled and resampled exactly as
-    the score stage (subset name "job1", so the same region draws). Writes scores/posthoc.json."""
-    import json
-
+    """Every job with every pre-registered and post-hoc model, pooled and resampled exactly as the score stage:
+    score_stage.collect builds the subsets (the post-hoc models' seed means added to each fold's predictions), and the
+    official subset names give the same region draws. Writes scores/posthoc.json."""
     import dataset
     import score_stage
     import scoring
@@ -208,63 +218,95 @@ def score_dev() -> dict:
     meta_ds, arrays = dataset.load("dev")
     base = Base(meta_ds, arrays, "dev")
     R, fold_r = base.n_regions, base.region_group
-    parts, used = [], {}
-    for k in range(N_FOLDS):
-        wid, preds, u = score_stage.load_preds(JOB, k, 1)
-        pr = {m: p[:, 0] for m, p in preds.items()}
-        for model in MODELS:
-            p, n = final_preds(model, k, wid)
-            u[model] = n
-            if p is not None:
-                pr[model] = p
-        used[f"fold{k + 1}"] = u
-        parts.append((wid, pr))
-    keep = sorted(set.intersection(*(set(p) for _, p in parts)))
-    wid = np.concatenate([w for w, _ in parts])
-    y = base.label0[wid].astype(np.int64)
-    pr = {m: np.concatenate([p[m] for _, p in parts]) for m in keep}
-    region = base.w_region[wid]
-    west = base.region_west[region]
-    gate = next(j for j in score_stage.GATE["jobs"] if j["job"] == JOB)
-    simple_c = [m for m in score_stage.GATE["simple_models"] if m not in gate["simple_exclude"]]
-    sc = read_json(SCORES / "scores.json") or {}
-    best_simple = ((sc.get("selection") or {}).get(JOB) or {}).get("best_simple")
-    if best_simple is None:                              # before the score stage: the gate's rule on the same data
-        def point(m):
-            W, P, N = scoring.win_matrix(pr[m], y, region, R)
-            C = np.zeros((1, R))
-            C[0, np.unique(region)] = 1
-            return float(scoring.auc_within_from(W, P, N, C, fold_r)[0])
-        vals = {m: point(m) for m in simple_c if m in pr}
-        best_simple = max(vals, key=vals.get) if vals else None
-    new = [m for m in MODELS if m in pr]
-    pairs = []
-    for m in new:
-        for c in dict.fromkeys(["lr_vci_t", best_simple]):
-            if c and c in pr:
-                pairs.append((m, c))
-    for a, b in (("bilstm_vci", "bilstm"), ("cnn_bilstm", "bilstm_vci"), ("cnn_bilstm", "cnn_lr")):
-        if a in pr and b in pr:
-            pairs.append((a, b))
-    res = scoring.score_subset(JOB, y, region, west, pr, fold_r, R, N_FOLDS, pairs)
-    wording = score_stage.GATE["wording"]
-    verdicts = {}
-    for key, v in res["paired"].items():
-        d = {s: v[s]["dauc_within"] for s in scoring.SIDES}
-        verdicts[key] = scoring.verdict(d["all"], d["west"], d["east"], wording)
+    used = {}
+    orig = score_stage.load_preds
+
+    def load_plus(job, k, nh):
+        wid, preds, u = orig(job, k, nh)
+        if wid is not None:
+            for model, jobs in MODEL_JOBS.items():
+                if job in jobs:
+                    p, n = final_probs(model, job, k, wid)
+                    u[model] = n
+                    if p is not None:
+                        preds[model] = p
+        used[f"{job}/fold{k + 1}"] = u
+        return wid, preds, u
+
+    score_stage.load_preds = load_plus
+    try:
+        col = score_stage.collect(base, arrays)
+    finally:
+        score_stage.load_preds = orig
+    subs = col["subsets"]
+    gate = score_stage.GATE
+    wording = gate["wording"]
+    sel = (read_json(SCORES / "scores.json") or {}).get("selection") or {}
+    out_jobs = {}
+    for g in gate["jobs"]:
+        job = g["job"]
+        model_job = "job1" if job == "job4" else job
+        new = [m for m, js in MODEL_JOBS.items() if model_job in js]
+        simple_c = [m for m in gate["simple_models"] if m not in g["simple_exclude"]]
+        lr = "lr_latest_age" if job == "job2" else "lr_vci_t"
+        entry = {"label": g["label"], "new_models": new}
+        if job == "job3":
+            names = [f"job3_lead{h}_onset" for h in LEADS]
+            if not all(n in subs for n in names):
+                continue
+            mv = scoring.mean_over_leads("job3_mean_onset", [subs[n] for n in names],
+                                         list(SIMPLE) + list(FAMILIES) + new + ["persistence"], fold_r, R)
+            best_simple = (sel.get(job) or {}).get("best_simple") or max(
+                (m for m in simple_c if m in mv), key=lambda m: mv[m]["all"][0], default=None)
+            comps = [c for c in dict.fromkeys([lr, best_simple]) if c and c in mv]
+            pairs = [(m, c) for m in new if m in mv for c in comps] + [(a, b) for a, b in (("bilstm_vci", "bilstm"),)
+                                                                      if a in mv and b in mv]
+            entry.update({"metric": "mean onset within-fold AUC over leads 1-3",
+                          "models": {m: {sd: scoring.ci(v[sd]) for sd in scoring.SIDES} for m, v in mv.items()},
+                          "paired": {f"{a} - {b}": {sd: scoring.ci(mv[a][sd] - mv[b][sd]) for sd in scoring.SIDES}
+                                     for a, b in pairs}})
+        else:
+            name = g["subset"]
+            if name not in subs:
+                continue
+            s = subs[name]
+
+            def point(m):
+                W, P, N = scoring.win_matrix(s["preds"][m], s["y"], s["region"], R)
+                C = np.zeros((1, R))
+                C[0, np.unique(s["region"])] = 1
+                return float(scoring.auc_within_from(W, P, N, C, fold_r)[0])
+            best_simple = (sel.get(job) or {}).get("best_simple") or max(
+                (m for m in simple_c if m in s["preds"]), key=point, default=None)
+            comps = [c for c in dict.fromkeys([lr, best_simple]) if c and c in s["preds"]]
+            pairs = [(m, c) for m in new if m in s["preds"] for c in comps]
+            pairs += [(a, b) for a, b in (("bilstm_vci", "bilstm"), ("cnn_bilstm", "bilstm_vci"), ("cnn_bilstm", "cnn_lr"))
+                      if a in s["preds"] and b in s["preds"]]
+            res = scoring.score_subset(name, s["y"], s["region"], s["west"], s["preds"], fold_r, R, N_FOLDS, pairs)
+            entry.update({"metric": "within-fold AUC", "subset": name, "n": res["n"], "n_pos": res["n_pos"],
+                          "models": {m: {sd: v[sd]["auc_within"] for sd in scoring.SIDES} | {
+                              "per_fold_auc": v["per_fold_auc"], "brier": v["all"]["brier"]}
+                              for m, v in res["models"].items()},
+                          "paired": {k: {sd: v[sd]["dauc_within"] for sd in scoring.SIDES}
+                                     for k, v in res["paired"].items()}})
+        entry["best_simple"] = best_simple
+        entry["verdicts"] = {k: scoring.verdict(v["all"], v["west"], v["east"], wording)
+                             for k, v in entry["paired"].items()}
+        out_jobs[job] = entry
     sizes = {}
-    for m in new:
-        per = []
-        for k in range(N_FOLDS):
-            mm = read_json(final_dir(m, k, FINAL_SEEDS[0]) / "meta.json") or {}
-            per.append({"fold": k + 1, "cfg": mm.get("cfg"), "n_params": mm.get("n_params"),
-                        "multiply_adds": mm.get("multiply_adds")})
-        sizes[m] = per
-    out = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "git": git_state(), "job": JOB,
-           "note": "Added after the development results (DESIGN.md amendment 4); not part of the gate.",
-           "models_new": new, "labels": LABELS, "best_simple": best_simple, "seeds_used": used,
-           "subset": res, "verdicts": verdicts, "chosen": sizes,
-           "two_by_two": {"cell average, month T": "lr_vci_t", "cell image, month T": "cnn_lr",
-                          "cell average, 12 months": "bilstm_vci", "cell image, 12 months": "cnn_bilstm"}}
+    for model, jobs in MODEL_JOBS.items():
+        for job in jobs:
+            per = []
+            for k in range(N_FOLDS):
+                mm = read_json(final_dir(model, job, k, FINAL_SEEDS[0]) / "meta.json") or {}
+                per.append({"fold": k + 1, "cfg": mm.get("cfg"), "n_params": mm.get("n_params"),
+                            "multiply_adds": mm.get("multiply_adds")})
+            sizes[f"{job}/{model}"] = per
+    out = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "git": git_state(),
+           "note": "Added after the development results (DESIGN.md amendments 4 and 4b); not part of the gate.",
+           "labels": LABELS, "model_jobs": {m: list(j) for m, j in MODEL_JOBS.items()}, "seeds_used": used,
+           "jobs": out_jobs, "chosen": sizes,
+           "two_by_two_job1": {"cell average, month T": "lr_vci_t", "cell image, month T": "cnn_lr",
+                               "cell average, 12 months": "bilstm_vci", "cell image, 12 months": "cnn_bilstm"}}
     write_json(SCORES / "posthoc.json", out)
     return out
