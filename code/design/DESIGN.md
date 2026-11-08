@@ -242,3 +242,20 @@ is trained.
 - **Order**: tiles are built after the planned development stages finish; the fresh test waits (`STOP_CHAIN`) until
   these three are trained, scored on the development folds and added to Phase 5. Extending them to other jobs would
   be a further dated amendment, committed before that training.
+
+## Amendment 4b (2026-11-08, about 15:40): `bilstm_vci` also for jobs 2 and 3
+
+Committed before any job-2 or job-3 outer-fold result was computed or seen: the score stage had not run, and only
+job 1's outer folds had been looked at (`DECISIONS.md` #50-#51). The user asked to keep pursuing the Bi-LSTM, whose
+case rests on the jobs that need the history: the missing month (job 2) and the forecast (job 3).
+
+- **`bilstm_vci` for jobs 2 and 3**: that job's own `bilstm` (its 30 search configurations and seeds, selection, 10
+  final seeds, job 2's hiding of month T, job 3's three heads and onset metric), with the same five channels zeroed as
+  for job 1. Job 4 is scored with the job-1 models, as before.
+- **Scoring**: the score stage's subsets and region draws for each job (job 2 against `lr_latest_age` and the gate's
+  best simple model; job 3 on the mean onset AUC over leads 1-3 against `lr_vci_t` and the best simple model), with the
+  gate's wording and the label "added after the development results".
+- **Fresh test**: as amendment 4 (development-chosen setting, all development data, 10 seeds, the single Phase 5
+  scoring).
+- The CNN models stay job 1 only: each CNN run costs several times more, and adding them would move the fresh test
+  past Wednesday.
