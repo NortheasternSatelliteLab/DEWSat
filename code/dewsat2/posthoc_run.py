@@ -91,8 +91,9 @@ def run_stage(stage: str, specs: list[dict], a, status: dict) -> list[dict]:
     by_dev = {"cpu": [], "mps": []}
     for s in todo:
         by_dev[posthoc.device_for(s["cfg"])].append(s)
-    for d in by_dev:                                   # fold by fold (prep and tiles are cached per worker), longest first
-        by_dev[d].sort(key=lambda s: (s["k"], -_cost(s)))
+    defer = set(filter(None, a.defer.split(",")))
+    for d in by_dev:              # deferred runs last; then fold by fold (prep and tiles cached per worker), longest first
+        by_dev[d].sort(key=lambda s: (posthoc.spec_name(s) in defer, s["k"], -_cost(s)))
     pools = {}
     if by_dev["cpu"]:
         pools["cpu"] = ProcessPoolExecutor(max_workers=a.cpu_workers, initializer=worker_init,
@@ -135,6 +136,8 @@ def main() -> int:
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--models", default=",".join(("bilstm_vci", "cnn_lr", "cnn_bilstm")),
                     help="comma-separated subset of the post-hoc models (search and final only)")
+    ap.add_argument("--defer", default="", help="comma-separated run names to queue last (e.g. a run another "
+                    "process is still finishing)")
     a = ap.parse_args()
     import posthoc
     from common import LOGS, read_json, write_json
