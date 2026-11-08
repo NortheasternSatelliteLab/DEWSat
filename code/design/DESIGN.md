@@ -191,3 +191,54 @@ For each job (1, 2, 3 on onsets, 4):
 One resumable pipeline: every run saves predictions, metadata (commit, device, seed, timings) and a DONE marker;
 restarts skip finished runs; a failed run is logged and skipped. Every stage is smoke-tested in a sandbox on a
 tiny subset first. STATUS.md is updated after every stage.
+
+## Amendment 4 (2026-11-08): three job-1 models added after the development results
+
+Added after the job-1 development results were seen (`DECISIONS.md` #50-#52), at the user's request, before the
+fresh test is scored. They are reported in their own rows, always labelled "added after the development results",
+and never enter the gate: section 9 and `gate.json` are unchanged. Their settings are fixed here, before any of them
+is trained.
+
+- **Why.** On job 1 the five networks trailed LR on VCI(T) on the outer folds, while on their own training windows
+  they scored far above it: the inputs NDVI_mean, NDVI_std, valid_frac and the season let them learn where and when
+  drought happened in the training years. The paper's architecture (a CNN on image tiles feeding a Bi-LSTM) was
+  never tested: every network here sees per-cell summaries.
+- **`bilstm_vci`** (VCI-only Bi-LSTM): `bilstm` exactly (layout, training, the same 30 job-1 search configurations,
+  selection, 10 seeds), with NDVI_mean, NDVI_std, valid_frac and both season channels set to zero in every window, so
+  only VCI_mean, VCI_p10, the observed flag and months-since-last-observation carry information.
+- **Tiles.** For every cell and month: the per-pixel VCI and usable-pixel rule behind VCI_mean (section 1, same VCI
+  table), averaged onto a 23 x 21 grid of near-equal pixel bins (a bin is usable if it holds at least one usable
+  pixel; its value is the mean VCI of those pixels), stored as whole numbers 0-100 with 255 for unusable. Built per
+  VCI table (f1-f4, all) from the same composites as the features (the paper's for the original 102). Model input:
+  two channels, VCI/100 (0 where unusable) and the usable flag; a month whose cell is unobserved (section 1) gets an
+  empty tile.
+- **Tile encoder** (shared by both CNN models): conv 3x3 (2 -> w), GELU; conv 3x3 stride 2 (w -> 2w), GELU; with
+  depth 3 a further conv 3x3 stride 2 (2w -> 2w), GELU; padding 1. Then each channel's mean over usable positions
+  (usable bins pooled to the output grid; zeros when none is usable) and the tile's usable share: 2w + 1 numbers.
+- **`cnn_lr`** (CNN + LR): the encoder on month T's tile, dropout, one linear layer to the logit; a logistic
+  regression on learned features of one month. No other input.
+- **`cnn_bilstm`** (CNN + Bi-LSTM): the encoder on each of the 12 monthly tiles (same weights); each month's 2w + 1
+  numbers plus the observed flag and months-since-last-observation go into the `bilstm` encoder and head (final
+  states + masked mean -> LayerNorm -> Linear -> GELU -> Dropout -> Linear).
+- **Training** as section 5 (binary cross-entropy, AdamW, cosine decay to 5%, gradient clip 1.0, batch 512, the
+  configuration's epochs, no early stopping); both CNN models are trained end to end. Masking augmentation for
+  `cnn_bilstm` as section 6 (months T-11..T-1 only; a hidden month gets an empty tile, observed 0, months-since
+  recomputed).
+- **Search** (drawn once with a fixed seed, one seed per configuration, evaluated on every outer fold's inner split,
+  selection by inner-validation AUC, then 10 seeds of the chosen setting on fold k's full training set):
+  `bilstm_vci` the 30 configurations above; `cnn_lr` 20 configurations: w from {8, 16, 32}, depth from {2, 3},
+  learning rate log-uniform 3e-4..3e-3, weight decay log-uniform 1e-6..1e-2, dropout uniform 0..0.5, epochs from
+  {6, 10, 15, 20}; `cnn_bilstm` 12 configurations: w from {8, 16}, depth from {2, 3}, hidden from
+  {16, 24, 32, 48, 64}, one layer, the same learning-rate, weight-decay and dropout ranges, masking off or on
+  (probability uniform 0.1..0.4), epochs from {6, 10, 15}. Fewer than 30 because a CNN run costs several times more.
+- **Scoring**: the same outer-fold windows, labels, within-fold AUC and region resamples as every job-1 model (the
+  score stage's draws), paired against `lr_vci_t` and the gate's best simple model, all regions and West/East, with
+  the gate's wording. Also reported: the 2 x 2 of cell average vs cell image and month T vs 12 months (`lr_vci_t`,
+  `cnn_lr`, `bilstm_vci`, `cnn_bilstm`), per-fold AUC, parameter counts and multiply-adds per prediction.
+- **Fresh test**: each at its development-chosen setting (section 11), trained on all development data (10 seeds)
+  with the Phase 5 table, scored in the same single Phase 5 scoring and reported in separate rows. Not in the
+  realistic-sampling part (per-scene records hold no per-pixel images). Phase 5 also saves every network it trains
+  (`model.pt`); this changes no prediction.
+- **Order**: tiles are built after the planned development stages finish; the fresh test waits (`STOP_CHAIN`) until
+  these three are trained, scored on the development folds and added to Phase 5. Extending them to other jobs would
+  be a further dated amendment, committed before that training.
