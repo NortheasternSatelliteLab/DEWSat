@@ -19,6 +19,13 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
+# PyTorch's Apple-GPU (MPS) allocator keeps freed memory cached until a process passes 1.4x the GPU's recommended
+# working set (its default low watermark). On 2026-11-08 the two MPS workers grew to ~10 GB each (8.9 GB of it cached
+# GPU buffers) and pushed ~20 GB into swap, slowing every worker (DECISIONS.md #48). Recycle cached memory above 25% of
+# the working set instead. Set here, before torch loads, so the spawned pool workers inherit it. Results are unchanged:
+# only when freed memory is reused differs.
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.25")
+
 STAGES = ("features", "simple", "search", "final", "score", "checks", "whatif", "weekly", "phase5", "phase6")
 _W: dict = {}
 
@@ -45,6 +52,19 @@ def worker_task(spec: dict) -> dict:
     except Exception as exc:  # noqa: BLE001
         record_failure(name, exc)
         return {"name": name, "ok": False, "seconds": time.time() - t0, "device": _W["device"], "error": str(exc)[:300]}
+    finally:
+        free_gpu_cache()
+
+
+def free_gpu_cache() -> None:
+    """Hand the MPS allocator's cached blocks back after every unit (DECISIONS.md #48); a no-op on CPU workers."""
+    if _W.get("device") != "mps":
+        return
+    try:
+        import torch
+        torch.mps.empty_cache()
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def spec_name(spec: dict) -> str:
