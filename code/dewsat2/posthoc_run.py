@@ -4,7 +4,7 @@
     caffeinate -dimsu nohup .venv/bin/python -u code/dewsat2/posthoc_run.py --stages search,final,score \
         --cpu-workers 4 --mps-workers 2 --threads 2 >> logs/posthoc/run.log 2>&1 &
 
-bilstm_vci runs on the CPU pool, the two CNN models on the MPS pool. Every run saves predictions, metadata and a DONE
+bilstm_vci runs where the pipeline runs a bilstm (GPU from 128 hidden units in total, else CPU), the CNN models on the GPU (MPS). Every run saves predictions, metadata and a DONE
 marker under runs/posthoc/; a restart skips finished runs; a failed run is written to runs/posthoc/failures/ and
 retried once at the end of its stage. Progress: logs/posthoc/status.json. Sandboxes set DEWSAT_V2_OUT.
 """
@@ -133,6 +133,8 @@ def main() -> int:
     ap.add_argument("--cpu-workers", type=int, default=4)
     ap.add_argument("--mps-workers", type=int, default=2)
     ap.add_argument("--threads", type=int, default=2)
+    ap.add_argument("--models", default=",".join(("bilstm_vci", "cnn_lr", "cnn_bilstm")),
+                    help="comma-separated subset of the post-hoc models (search and final only)")
     a = ap.parse_args()
     import posthoc
     from common import LOGS, read_json, write_json
@@ -141,7 +143,9 @@ def main() -> int:
     status.setdefault("stages", {})
     for stage in a.stages.split(","):
         if stage in ("search", "final"):
-            failed = run_stage(stage, posthoc.stage_specs(stage), a, status)
+            want = set(a.models.split(","))
+            failed = run_stage(stage, [s for s in posthoc.stage_specs(stage) if s["cfg"]["family"] in want], a,
+                               status)
             if failed:
                 say(f"{stage}: retrying {len(failed)} failed runs once")
                 run_stage(stage + "_retry", failed, a, status)

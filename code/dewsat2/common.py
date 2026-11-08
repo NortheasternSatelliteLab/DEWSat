@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 
 V2 = Path(os.environ.get("DEWSAT_V2", str(Path.home() / "Desktop" / "DEWSat_BiLSTM_v2")))
-CODE = V2 / "code"
+CODE = Path(__file__).resolve().parent.parent     # the repository this code runs from (worktrees too)
 OUT = Path(os.environ.get("DEWSAT_V2_OUT", str(V2)))       # sandboxes point this elsewhere
 DATA = V2 / "data"
 PAPER_REGIONS = V2 / "inputs" / "paper_data" / "regions"     # the paper's composites for the original 102

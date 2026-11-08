@@ -69,7 +69,12 @@ def configs(model: str, job: str = "job1") -> list[dict]:
 
 
 def device_for(cfg: dict) -> str:
-    return "cpu" if cfg["family"] == "bilstm_vci" else "mps"
+    """bilstm_vci as the pipeline places a bilstm (search.device_for: GPU from 128 hidden units in total), the CNN
+    models on the GPU."""
+    if cfg["family"] == "bilstm_vci":
+        import search
+        return search.device_for({**cfg, "family": "bilstm"})
+    return "mps"
 
 
 def search_dir(model: str, job: str, k: int, i: int):
