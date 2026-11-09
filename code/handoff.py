@@ -21,7 +21,7 @@ CHAIN = LOGS / "chain"
 FRESH_LOCK = DATA / "locked" / "FRESH_TEST_SCORED.lock"
 N_BATCHES = 12
 DEV_STAGES = ("features", "simple", "search", "final", "score", "checks", "whatif", "weekly")
-LATE_STAGES = ("phase5", "phase5_composite", "phase5_thinned", "phase6")
+LATE_STAGES = ("phase5", "phase5_composite", "phase5_thinned", "phase5_composite_retry", "phase5_thinned_retry", "phase6")
 UNIT_KINDS = ("simple", "search", "final", "whatif", "weekly")
 # (role, pgrep -f pattern). Patterns match the real processes' arguments, not shells that merely mention the names.
 PROCS = (
@@ -29,7 +29,12 @@ PROCS = (
     ("training launcher", r"code/launch_when_frozen\.sh"),
     ("pipeline run.py", r"code/dewsat2/run\.py --stages"),
     ("chain launcher", r"code/launch_after_dev\.py$"),
+    ("post-hoc runner", r"posthoc_run\.py --stages (search|final|score)"),
+    ("learning-curve runner", r"posthoc_run\.py --stages lcurve"),
 )
+# runners of the models added after the development results (DESIGN.md amendments 4-6): status file, stages
+RUNNERS = (("post-hoc runner", LOGS / "posthoc" / "status.json", "amendments 4 and 4b: bilstm_vci, cnn_lr, cnn_bilstm"),
+           ("learning-curve runner", LOGS / "lcurve" / "status.json", "amendment 5: job 1, years and regions axes"))
 
 
 def read_json(p, default=None):
@@ -145,6 +150,30 @@ def pipeline_lines(s) -> list[str]:
     return L
 
 
+def runner_lines(pr) -> list[str]:
+    """One line per post-hoc runner: its stages from its own status file (DECISIONS.md #52-#66)."""
+    L = []
+    for name, f, what in RUNNERS:
+        r = read_json(f)
+        if not r:
+            L.append(f"- **{name}** ({what}): no status file yet (`{f.relative_to(V2)}`).")
+            continue
+        alive = bool(work_pids(pr.get(name, [])))
+        parts = []
+        for k, v in r.get("stages", {}).items():
+            parts.append(f"{k} {v.get('state')}" + (f" {v.get('done')}/{v.get('total')}" if v.get("total") else "")
+                         + (f", {v.get('failed')} failed" if v.get("failed") else "")
+                         + (f", ETA {v['eta']}" if v.get("eta") and v.get("state") == "running" else "")
+                         + (f", finished {v['finished']}" if v.get("finished") else ""))
+        L.append(f"- **{name}** ({what}): process {r.get('pid')} " + ("running" if alive else "not running")
+                 + f", state {r.get('state')}; " + "; ".join(parts) + f". Status: `{f.relative_to(V2)}`.")
+    stop = V2 / "STOP_CHAIN"
+    if stop.exists():
+        L.append("- `STOP_CHAIN` exists: the chain launcher will not start Phase 5 (DECISIONS.md #51; removed when the "
+                 "post-hoc models are part of Phase 5, #66).")
+    return L
+
+
 def now_line(pr, st, s, fz, cs) -> str:
     if cs and cs.get("phase") == "done":
         return "Finished: Phases 1-6 done and the reports regenerated. Only the manual wrap-up (step 10) is left."
@@ -164,6 +193,11 @@ def now_line(pr, st, s, fz, cs) -> str:
                 + ". Training starts by itself at the freeze.")
     if pr["training launcher"]:
         return "Region set frozen; the training launcher is starting the development stages."
+    busy = [n for n, _, _ in RUNNERS if work_pids(pr.get(n, []))]
+    if busy:
+        return ("Development stages finished; " + " and ".join(busy) + " running (section 1 below). "
+                + ("Phase 5 waits for `STOP_CHAIN` to be removed." if (V2 / "STOP_CHAIN").exists() else
+                   f"Chain launcher: {(cs or {}).get('phase')}."))
     if cs:
         return f"Chain launcher: {cs.get('phase')}: {cs.get('note')}"
     return "Nothing is running and the chain launcher has no state: see sections 2 and 5."
@@ -182,12 +216,21 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
         (bool(fr), "Re-extract the original 102 per scene, then `data/FROZEN.json`", "automatic: pull driver (two halves)"),
         (dev_done, "Development stages features, simple, search, final, score, checks, whatif, weekly",
          "automatic: the training launcher becomes `code/dewsat2/run.py` (log `logs/run.log`)"),
+        (bool(read_json(SCORES / "posthoc.json")), "Post-hoc models (DESIGN.md amendments 4, 4b): search, final, "
+         "development scores (`scores/posthoc.json`)", "automatic: post-hoc runner (`code_posthoc/`, log "
+         "`logs/posthoc/run.log`)"),
+        (not (V2 / "STOP_CHAIN").exists() and bool(mark), "Amendment 6: the post-hoc models and the plain Bi-LSTM in "
+         "Phase 5; `STOP_CHAIN` removed, chain launcher restarted", "By hand, after reviewing `scores/posthoc.json` "
+         "(DECISIONS.md #66)"),
         (bool(mark), "Failure and sanity check of the development run",
          "automatic: chain launcher (`code/launch_after_dev.py`)"),
         (FRESH_LOCK.exists(), "Phase 5: fresh test scored once, realistic sampling; writes the lock",
          "automatic: chain launcher runs `run.py --stages phase5,phase6` (log `logs/run_phase56.log`)"),
         ("nldas" in p6 and "spei" in p6, "Phase 6: NLDAS-2 agreement and gridMET SPEI benchmark",
          "automatic: same run; if only Phase 6 fails it is retried at most twice"),
+        (bool(read_json(SCORES / "lcurve.json")), "Learning curve (amendment 5; secondary)", "learning-curve runner "
+         "(`code_lcurve/`, log `logs/lcurve/run.log`); it yields to Phase 5 (`touch logs/lcurve/STOP`) and resumes "
+         "afterwards"),
         (bool(cs) and cs.get("phase") == "done", "Reports regenerated (report.md, audit.md, "
          "fatemeh_numbers.md, data_card.md)", "automatic: run.py after every stage; the chain launcher at the end, with "
          "an automatic closing paragraph only if none was written by hand"),
@@ -260,6 +303,20 @@ mkdir -p logs/chain && caffeinate -dimsu nohup .venv/bin/python -u code/launch_a
 .venv/bin/python -u code/dewsat2/run.py --stages phase6 >> logs/run_phase56.log 2>&1
 ```
 
+- Post-hoc runner (only if `logs/posthoc/status.json` shows unfinished stages and it is not running; finished runs
+  are skipped). Graceful stop: `touch logs/posthoc/STOP` (running runs finish, no new ones start):
+
+```bash
+rm -f logs/posthoc/STOP && caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_posthoc/dewsat2/posthoc_run.py --stages search,final,score --cpu-workers 2 --mps-workers 2 --threads 2 >> logs/posthoc/run.log 2>&1 &
+```
+
+- Learning-curve runner (after Phase 5, or alongside Phase 6; finished runs are skipped; each runner keeps its own
+  worktree so every run of an experiment has the same commit). Graceful stop: `touch logs/lcurve/STOP`:
+
+```bash
+rm -f logs/lcurve/STOP && caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_lcurve/dewsat2/posthoc_run.py --stages lcurve,lcurve_score --cpu-workers 2 --mps-workers 1 --threads 2 >> logs/lcurve/run.log 2>&1 &
+```
+
 - Regenerate the reports:
 
 ```bash
@@ -276,6 +333,10 @@ FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status
   (written once, after scoring; Phase 5 refuses to run if it exists; Phase 6 refuses to run without it).
 - Chain launcher bookkeeping: `logs/chain/LOCK/` (one instance), `logs/chain/phase56_launched.json` (Phase 5 started
   once), `logs/chain/GO_PHASE5` (approval after a sanity stop), `STOP_CHAIN`.
+- Post-hoc models (amendments 4-6): `runs/posthoc/`, `scores/posthoc.json`, `logs/posthoc/` (status, STOP); tiles
+  `cache/tiles/` (`tiles.json`); learning curve `runs/lcurve/`, `scores/lcurve.json`, `logs/lcurve/`. Worktrees:
+  `code_posthoc/` (branch `posthoc`) and `code_lcurve/` (branch `lcurve`) are what the running runners use; `main`
+  contains both since `31b382e`.
 - Results: `scores/*.json`; reports `report.md`, `audit.md`, `fatemeh_numbers.md`, `data_card.md`.
 - Design and gate, fixed before training: `code/design/DESIGN.md`, `code/design/gate.json` (commit `f5e92aa`).
 - Code: `code/pull/` (pull), `code/dewsat2/` (pipeline; `run.py` is the entry point), `code/launch_when_frozen.sh`,
@@ -304,7 +365,19 @@ RESUME = """1. Read, in this order: this file, `STATUS.md`, `DECISIONS.md`, `cod
    the folder.
 """
 
-ESTIMATES = """Made 2026-11-07 11:30 from measured timings: pull batches 1.13-1.26 h (mean 1.18 h); network seconds per epoch
+ESTIMATES = """Updated 2026-11-09 03:45 (from the finished runs' seconds per epoch per 100k windows; Phase 5 trains on
+about 1.0 M job-1 windows, 2.4 times a final run's):
+
+| Stage | Work | Duration | Expected end |
+|---|---|---|---|
+| Post-hoc finals and scores | last CNN finals on the GPU | about 30 min | Nov 9 04:15 |
+| Phase 5 composite | 140 refits; the 20 tile-CNN refits on 2 GPU workers set the length | 3.5-5 h | Nov 9 09:00 |
+| Phase 5 thinned | 18 refits of each job's best network on 2 workers | 2.5-4 h | Nov 9 12:30 |
+| Phase 5 scoring | bootstrap of every row | 0.3-1 h | Nov 9 13:00 |
+| Phase 6 | NLDAS-2, SPEI | 1-3 h | Nov 9 15:00 |
+| Learning curve | 180 runs (90 done early); runs again after Phase 5 | 1-2 h | Nov 9 evening |
+
+Original estimate, kept for the record. Made 2026-11-07 11:30 from measured timings: pull batches 1.13-1.26 h (mean 1.18 h); network seconds per epoch
 per 100k windows on real windows (`logs/bench_real.json`); window counts of the 102-region sandbox (`smokeT`) scaled by
 cells (x5.35). Network stages use the pipeline's own cost model, calibrated on the benchmark (measured/model 0.83 CPU,
 0.88 MPS); the range allows 1.0-2.0x for six workers sharing 12 cores and one GPU. Script and output:
@@ -358,6 +431,7 @@ def render(path: Path = V2 / "HANDOFF.md") -> str:
     L.append("- Pull finished: " + (f"yes, `data/FROZEN.json` ({fr.get('stop_reason', fr.get('reason', ''))})." if fr
                                     else "not yet (`data/FROZEN.json`)."))
     L += pipeline_lines(s)
+    L += runner_lines(pr)
     left = outstanding_failures()
     L.append(f"- Failed units without a later success: {len(left)}" + (f" ({', '.join(left[:8])})" if left else "") + ".")
     L.append("- Chain launcher: " + (f"{cs.get('phase')}: {cs.get('note')} (checked {cs.get('updated')})" if cs
