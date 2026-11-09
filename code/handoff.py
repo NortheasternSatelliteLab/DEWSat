@@ -31,10 +31,12 @@ PROCS = (
     ("chain launcher", r"code/launch_after_dev\.py$"),
     ("post-hoc runner", r"posthoc_run\.py --stages (search|final|score)"),
     ("learning-curve runner", r"posthoc_run\.py --stages lcurve"),
+    ("ReLU runner", r"posthoc_run\.py --stages relu"),
 )
-# runners of the models added after the development results (DESIGN.md amendments 4-6): status file, stages
+# runners of the models added after the development results (DESIGN.md amendments 4-7): status file, stages
 RUNNERS = (("post-hoc runner", LOGS / "posthoc" / "status.json", "amendments 4 and 4b: bilstm_vci, cnn_lr, cnn_bilstm"),
-           ("learning-curve runner", LOGS / "lcurve" / "status.json", "amendment 5: job 1, years and regions axes"))
+           ("learning-curve runner", LOGS / "lcurve" / "status.json", "amendment 5: job 1, years and regions axes"),
+           ("ReLU runner", LOGS / "relu" / "status.json", "amendment 7: ReLU Bi-LSTM, job 1, development only"))
 
 
 def read_json(p, default=None):
@@ -181,6 +183,10 @@ def now_line(pr, st, s, fz, cs, para=None, lim=None) -> str:
             return ("Phases 1-6 done and the reports regenerated; " + " and ".join(busy) + " still running (section 1 "
                     "below).")
         if para and not para.get("automatic") and lim:
+            if read_json(SCORES / "relu.json"):
+                return ("Finished: Phases 1-6, the post-hoc models, the learning curve and the ReLU test (amendment 7) "
+                        "are done; the closing paragraph and the limitations are hand-written, the reports "
+                        "regenerated, and the cleanup the user approved is done. Nothing is left.")
             return ("Finished: Phases 1-6, the post-hoc models and the learning curve are done; the closing paragraph "
                     "and the limitations are hand-written and the reports regenerated. Left: only the cleanup that "
                     "needs the user's OK (section 7).")
@@ -240,13 +246,17 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
         (bool(read_json(SCORES / "lcurve.json")), "Learning curve (amendment 5; secondary)", "learning-curve runner "
          "(`posthoc_run.py --stages lcurve,lcurve_score`, run from the `lcurve` worktree, since merged into `main`; log "
          "`logs/lcurve/run.log`); it yielded to Phase 5 and finished after it"),
+        (bool(read_json(SCORES / "relu.json")), "ReLU Bi-LSTM (amendment 7; secondary, development only)", "ReLU "
+         "runner (`posthoc_run.py --stages relu_pilot,relu_pilot_score`, then `relu,relu_score`; log "
+         "`logs/relu/run.log`), after the checks `code/checks/verify_relu_cell.py` and `verify_relu_score.py`"),
         (bool(cs) and cs.get("phase") == "done", "Reports regenerated (report.md, audit.md, "
          "fatemeh_numbers.md, data_card.md)", "automatic: run.py after every stage; the chain launcher at the end, with "
          "an automatic closing paragraph only if none was written by hand"),
         (bool(para) and not para.get("automatic") and bool(lim), "Manual wrap-up",
          "by hand: a hand-written closing paragraph (`scores/conclusion_paragraph.json`, replacing any "
          "automatic one) and `scores/limitations.json`, regenerate the reports, final DECISIONS.md / FOLDERS.md "
-         "entries, commit `code/`, and ask before deleting the sandboxes and temp folders (section 7)"),
+         "entries, commit `code/`, and ask before deleting the sandboxes and temp folders (section 7; the user "
+         "approved the cleanup on Nov 9, DECISIONS.md #84)"),
     ]
     return [f"{i}. [{'x' if ok else ' '}] **{title}**: {who}." for i, (ok, title, who) in enumerate(steps, 1)]
 
@@ -326,11 +336,27 @@ rm -f logs/posthoc/STOP && caffeinate -dimsu nohup nice -n 10 .venv/bin/python -
 rm -f logs/lcurve/STOP && DEWSAT_LC_MODELS=bilstm,cnn_bilstm,bilstm_vci caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_rerun/dewsat2/posthoc_run.py --stages lcurve,lcurve_score --cpu-workers 2 --mps-workers 2 --threads 3 >> logs/lcurve/run.log 2>&1 &
 ```
 
+- ReLU Bi-LSTM (amendment 7): finished (`logs/relu/status.json`). The pilot runs first and must pass before the 40
+  runs start (`relu` refuses otherwise); finished runs are skipped. Graceful stop: `touch logs/relu/STOP`:
+
+```bash
+.venv/bin/python code/checks/verify_relu_cell.py && .venv/bin/python code/checks/verify_relu_score.py
+```
+
+```bash
+rm -f logs/relu/STOP && caffeinate -dimsu nohup .venv/bin/python -u code/dewsat2/posthoc_run.py --stages relu_pilot,relu_pilot_score --cpu-workers 4 --mps-workers 0 --threads 2 >> logs/relu/run.log 2>&1 &
+```
+
+```bash
+caffeinate -dimsu nohup .venv/bin/python -u code/dewsat2/posthoc_run.py --stages relu,relu_score --cpu-workers 3 --mps-workers 2 --threads 2 >> logs/relu/run.log 2>&1 &
+```
+
 - Regenerate the reports:
 
 ```bash
 .venv/bin/python -c "import sys; sys.path.insert(0, 'code/dewsat2'); import report; report.write_all()"
 ```
+
 """
 
 FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status_pipeline.json`, `logs/chain/state.json`.
@@ -348,6 +374,9 @@ FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status
   finished (DECISIONS.md #82).
 - Post-hoc analyses of the fresh test (after the lock; not a second test): `scores/fresh_posthoc.json`,
   `scores/fresh_labels_posthoc.json`; Phase 6 data `data/phase6/` (NLDAS-2 months, SPEI point series).
+- ReLU Bi-LSTM (amendment 7): `runs/relu/` (`bilstm_relu`, and the pilot's `bilstm_hand`), `scores/relu.json`,
+  `scores/relu_pilot.json`, `logs/relu/` (status, run log, `verify_cell.json`, `verify_score.json`); code
+  `code/dewsat2/relu.py`, `nets.HandLSTM`, `code/checks/verify_relu_*.py`.
 - Hand-written: `scores/conclusion_paragraph.json` (closing paragraph), `scores/limitations.json`.
 - Results: `scores/*.json`; reports `report.md`, `audit.md`, `fatemeh_numbers.md`, `data_card.md`.
 - Design and gate, fixed before training: `code/design/DESIGN.md`, `code/design/gate.json` (commit `f5e92aa`).
@@ -390,6 +419,7 @@ ESTIMATES = """Everything has finished. Actual ends (from `logs/status_pipeline.
 | Phase 5 (fresh test scored once, lock written) | Nov 9 09:36 |
 | Phase 6 (NLDAS-2, SPEI), retried once after two server changes | Nov 9 10:52 |
 | Learning curve (270 runs, three networks) and its scoring | Nov 9 13:25 |
+| ReLU Bi-LSTM (checks, pilot, 40 runs, scoring; amendment 7) | %%RELU_DONE%% |
 
 The estimate of Nov 9 03:45 put Phase 5's end at about 13:00 and Phase 6's at about 15:00; both finished earlier.
 
@@ -421,14 +451,32 @@ KNOWN = """- Fixed: `STATUS.md` used to show an empty "Phases 3-4 pipeline" sect
   asked, until the run finished; it is live since the `report` merge (`e4febc0`, DECISIONS.md #47 and #80).
 - PyTorch's Apple-GPU (MPS) backend creates an empty folder per compiled graph in the macOS per-user temp folder
   (`/var/folders/hz/_y4bwsp114bgsxv6j56hq81c0000gn/T/com.apple.MetalPerformanceShadersGraph/mpsgraph-<pid>-...`),
-  ignoring TMPDIR. There are 5,318 of them, all empty (0 bytes), from this task's benchmarks, sandboxes and GPU
-  workers. Remove them only with the user's OK (DECISIONS.md #46).
-- Also waiting for the user's OK before deletion (FOLDERS.md): the pipeline sandboxes `smoke/`, `smokeT/`, `smoke5/`
-  (167 MB), the check sandboxes under `tmp/` (about 1 GB) and `cache/tiles/regions/` (3.2 GB of per-region pieces;
-  the assembled tiles stay).
+  ignoring TMPDIR (DECISIONS.md #46). %%MPS_NOTE%%
+- Cleanup, approved by the user on Nov 9 and done (DECISIONS.md #84): the pipeline sandboxes `smoke/`, `smokeT/`,
+  `smoke5/`, the check sandboxes under `tmp/` and `cache/tiles/regions/` (the assembled tiles stay) were deleted.
 - An orphaned worker from an earlier runner (process 35678) is still alive and idle; it is left alone, as the user
   asked.
 """
+
+
+MPS_TMP = Path("/var/folders/hz/_y4bwsp114bgsxv6j56hq81c0000gn/T/com.apple.MetalPerformanceShadersGraph")
+
+
+def relu_done() -> str:
+    f = (((read_json(LOGS / "relu" / "status.json") or {}).get("stages") or {}).get("relu_score") or {}).get("finished")
+    return time.strftime("%b %-d %H:%M", time.strptime(f, "%Y-%m-%d %H:%M:%S")) if f else "running"
+
+
+def mps_note() -> str:
+    try:
+        dirs = [p for p in MPS_TMP.iterdir() if p.is_dir() and p.name.startswith("mpsgraph-")]
+    except OSError:
+        dirs = []
+    full = sum(1 for p in dirs if any(p.iterdir()))
+    if not dirs:
+        return "None are left: the empty ones were deleted with the user's OK (DECISIONS.md #86)."
+    return (f"{len(dirs):,} are there now ({full} not empty); the empty ones are deleted with the user's OK "
+            f"(DECISIONS.md #84, #86).")
 
 
 def render(path: Path = V2 / "HANDOFF.md") -> str:
@@ -471,7 +519,8 @@ def render(path: Path = V2 / "HANDOFF.md") -> str:
     L += ["", "## 2. What is left, in order, and what starts it", ""]
     L += step_lines(st, fz, fr, s, cs, mark, p6, para, lim)
     L += ["", "## 3. Exact commands", "", COMMANDS, "## 4. Files", "", FILES, "## 5. Resuming in a fresh session",
-          "", RESUME, "## 6. Timeline estimate", "", ESTIMATES, "## 7. Known issues", "", KNOWN]
+          "", RESUME, "## 6. Timeline estimate", "", ESTIMATES.replace("%%RELU_DONE%%", relu_done()),
+          "## 7. Known issues", "", KNOWN.replace("%%MPS_NOTE%%", mps_note())]
     text = "\n".join(L).rstrip() + "\n"
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(text)

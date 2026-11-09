@@ -178,6 +178,7 @@ def audit(d: dict) -> str:
                          f"{ci(ch_['second_largest_to_full'], signed=True)}: {X._lc_read(ch_).split(',')[0]}.")
         s = X.lcurve_summary(lc)
         L += ([f"- {s}"] if s else []) + [""]
+    L += relu_lines(d)
     ch = d["checks"]
     if ch:
         L += ["## Checks on the new models", ""]
@@ -247,6 +248,28 @@ def _fresh_posthoc_lines(f) -> list[str]:
     return L + [""]
 
 
+def relu_lines(d: dict, header: bool = True) -> list[str]:
+    """The ReLU Bi-LSTM (DESIGN.md amendment 7; development only): the audit's section, or fatemeh_numbers' line."""
+    import report_extra as X
+    r = d.get("relu")
+    if not r:
+        return []
+    L = ["## ReLU Bi-LSTM (amendment 7; job 1, development; no pass/fail)", ""] if header else []
+    for job, e in r["jobs"].items():
+        pr = e["paired"]
+        a, b, c0 = pr["bilstm_relu - bilstm"], pr["bilstm_relu - lr_vci_t"], pr["bilstm - lr_vci_t"]
+        L.append(f"- {job}: ReLU Bi-LSTM {ci(e['models']['bilstm_relu']['all'])} against Bi-LSTM "
+                 f"{ci(e['models']['bilstm']['all'])}; ReLU − tanh {ci(a['all'], signed=True)} (West "
+                 f"{ci(a['west'], signed=True)}, East {ci(a['east'], signed=True)}): "
+                 f"{e['verdicts']['bilstm_relu - bilstm']}. ReLU − LR on VCI(T) {ci(b['all'], signed=True)}; "
+                 f"Bi-LSTM − LR {ci(c0['all'], signed=True)}.")
+    if header:
+        s = X.relu_checks(d)
+        L += ([f"- {s}"] if s else []) + [f"- Every training loss fell: {'yes' if r['all_losses_fell'] else 'no'}; "
+                                          f"the fresh test was not scored (locked)."] + [""]
+    return L
+
+
 def fatemeh(d: dict) -> str:
     c = conclusion()
     L = ["# DEWSat: numbers for Prof. Ghoreishi", "", c.get("bottom_line", "Bottom line: pending (the run is still going)."), ""]
@@ -260,4 +283,8 @@ def fatemeh(d: dict) -> str:
     if c.get("dev_lines"):
         L += ["**Development** (4 outer folds, regions and years held out together; within-fold AUC, 95% intervals from "
               "2,000 whole-region resamples):"] + c["dev_lines"]
+    rl = relu_lines(d, header=False)
+    if rl:
+        L += ["", "**ReLU instead of tanh in the Bi-LSTM** (amendment 7, added after every result; development only, the "
+              "fresh test stays locked):"] + rl[:1]
     return "\n".join(L) + "\n"

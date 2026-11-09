@@ -58,7 +58,8 @@ def load_all() -> dict:
          "gate": json.loads((V2 / "code" / "design" / "gate.json").read_text()),
          "posthoc": read_json(SCORES / "posthoc.json"), "lcurve": read_json(SCORES / "lcurve.json"),
          "fresh_posthoc": read_json(SCORES / "fresh_posthoc.json"),
-         "fresh_labels_posthoc": read_json(SCORES / "fresh_labels_posthoc.json")}
+         "fresh_labels_posthoc": read_json(SCORES / "fresh_labels_posthoc.json"),
+         "relu": read_json(SCORES / "relu.json"), "relu_pilot": read_json(SCORES / "relu_pilot.json")}
     return d
 
 
@@ -373,7 +374,8 @@ def write_all() -> None:
             f"{' (uncommitted changes)' if gs['dirty'] else ''}. Every number is read from a logged run._", ""]
     import report_extra as X
     body = head + sec_answer(d) + sec_phase0(d) + sec_data(d) + sec_design() + sec_results(d) + X.sec_posthoc(d) + \
-        sec_checks(d) + sec_whatif(d) + sec_weekly(d) + X.sec_lcurve(d) + sec_fresh(d) + X.sec_fresh_posthoc(d) + \
+        sec_checks(d) + sec_whatif(d) + sec_weekly(d) + X.sec_lcurve(d) + X.sec_relu(d) + sec_fresh(d) + \
+        X.sec_fresh_posthoc(d) + \
         X.sec_sizes(d) + \
         sec_extras(d) + X.sec_fresh_labels(d) + sec_limits(d) + sec_sources()
     write_text(OUT / "report.md", "\n".join(body) + "\n")

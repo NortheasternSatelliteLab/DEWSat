@@ -8,7 +8,8 @@ from pathlib import Path
 
 from common import LEADS, RUNS, read_json
 
-PH_LABELS = {"bilstm_vci": "VCI-only Bi-LSTM", "cnn_lr": "CNN + LR", "cnn_bilstm": "CNN + Bi-LSTM"}
+PH_LABELS = {"bilstm_vci": "VCI-only Bi-LSTM", "cnn_lr": "CNN + LR", "cnn_bilstm": "CNN + Bi-LSTM",
+             "bilstm_relu": "ReLU Bi-LSTM", "bilstm_hand": "Bi-LSTM, hand-written cell (tanh)"}
 TWO_BY_TWO = (("Month T only", "lr_vci_t", "cnn_lr"), ("12 months", "bilstm_vci", "cnn_bilstm"))
 
 
@@ -118,6 +119,73 @@ def sec_lcurve(d: dict) -> list[str]:
     s = lcurve_summary(lc)
     if s:
         L += [f"**Across the two axes:** {s}", ""]
+    return L
+
+
+RELU_PAIRS = (("bilstm_relu - bilstm", "the primary comparison; reading fixed in amendment 7"),
+              ("bilstm_relu - lr_vci_t", "gate wording"), ("bilstm_relu - {best}", "gate wording"),
+              ("bilstm - lr_vci_t", "for reference"))
+
+
+def relu_checks(d: dict) -> str:
+    """One sentence on the checks that ran before the 40 ReLU runs (logs/relu/*.json, scores/relu_pilot.json)."""
+    from common import LOGS
+    vc, vs, pi = read_json(LOGS / "relu" / "verify_cell.json"), read_json(LOGS / "relu" / "verify_score.json"), \
+        d.get("relu_pilot")
+    bits = []
+    if vc:
+        worst = max(max(r.get(dev, {}).get("hand_minus_lstm", 0) for dev in vc["devices"]) for r in vc["rows"])
+        bits.append(f"with tanh, the hand-written cell matches `nn.LSTM` to within {worst:.1e} on "
+                    f"{' and '.join(vc['devices'])} ({'passed' if vc['passed'] else 'failed'})")
+    if pi:
+        dmax = max(abs(x["auc_difference"]) for x in pi["tanh_reproduction"])
+        bits.append(f"retrained as final runs on fold {pi['fold']}, it reproduced the original runs of seeds "
+                    f"{', '.join(str(x['seed']) for x in pi['tanh_reproduction'])} (AUC difference at most {dmax:.0e}; "
+                    f"{'passed' if pi['passed'] else 'failed'})")
+    if vs:
+        bits.append(f"pointed at the original runs, the scoring path returns the score stage's own AUCs "
+                    f"({'passed' if vs['passed'] else 'failed'})")
+    return ("Checks before the runs: " + "; ".join(bits) + ".") if bits else ""
+
+
+def sec_relu(d: dict) -> list[str]:
+    R = _r()
+    ci, lab = R.ci, R.lab
+    r = d.get("relu")
+    L = ["## 7c. ReLU Bi-LSTM (amendment 7; secondary, no pass/fail)", "",
+         "Added after every result, at the user's request: the plain Bi-LSTM with ReLU in place of tanh inside the LSTM "
+         "cell (candidate memory and output squash; the gates stay sigmoid), written step by step (`nets.HandLSTM`). "
+         "Each fold's chosen `bilstm` setting, the 10 final seeds, and the same initial weights and data order as the "
+         "original runs. Development folds only: the fresh test is locked and was not scored again.", ""]
+    s = relu_checks(d)
+    if s:
+        L += [s, ""]
+    if not r:
+        return L + ["Not scored yet (`scores/relu.json`).", ""]
+    for job, e in r["jobs"].items():
+        best = e["best_simple"]
+        L += [f"### {e['label']} ({e['n']:,} windows, {e['n_pos']:,} in drought)", "",
+              "| Model | Within-fold AUC | West | East | Per-fold AUC |", "|---|---|---|---|---|"]
+        for m, v in e["models"].items():
+            L.append(f"| {lab(m)} | {ci(v['all'])} | {ci(v['west'])} | {ci(v['east'])} | "
+                     f"{', '.join(f'{x:.3f}' for x in v['per_fold_auc'])} |")
+        L += ["", "| Comparison | All regions | West | East | Reading |", "|---|---|---|---|---|"]
+        for key, why in RELU_PAIRS:
+            k = key.format(best=best)
+            v = e["paired"].get(k)
+            if v:
+                a, b = k.split(" - ")
+                L.append(f"| {lab(a)} − {lab(b)} | {ci(v['all'], signed=True)} | {ci(v['west'], signed=True)} | "
+                         f"{ci(v['east'], signed=True)} | {e['verdicts'].get(k, '')} ({why}) |")
+        L += [""]
+    secs = [x["seconds"] for x in r["runs"]]
+    so = [x["seconds_original"] for x in r["runs"] if x.get("seconds_original")]
+    sizes = ", ".join(f"fold {z['fold']} {z['n_params']:,}" for z in r["sizes"])
+    L += [f"Runs: {len(r['runs'])} ({len(r['seeds'])} seeds x 4 folds). Every training loss fell: "
+          f"{'yes' if r['all_losses_fell'] else 'no'}; all finite: {'yes' if r['all_losses_finite'] else 'no'}. Saved "
+          f"seed-42 models reproduce their predictions to within {max(r['reproduce_max_logit_difference'].values()):.1e}. "
+          f"Mean seconds per run {sum(secs) / len(secs):.0f}, against {sum(so) / len(so):.0f} for the original runs (the "
+          f"hand-written cell gives up PyTorch's fused LSTM kernel). Parameters equal the Bi-LSTM's ({sizes}).", ""]
     return L
 
 
