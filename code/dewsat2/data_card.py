@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 
-from common import CACHE, SCORES, git_state, read_json
+from common import CACHE, DATA, LOCKED, SCORES, git_state, read_json
 from report import ci, lab
 
 
@@ -108,6 +108,7 @@ def card(d: dict) -> str:
               f"matches VCI_mean within {tj['check']['worst_vci_mean_diff_this_build']:.1e} VCI units, observed flags agree "
               f"({tj['check']['observed_mismatches_this_build']} mismatches). Files `cache/tiles/` (`tiles.json`); code "
               "`code/dewsat2/tiles.py`. No labels are read.", ""]
+    L += other_labels(d)
     L += ["## 3. Training, validation and results", "",
           "Four outer folds = four region groups (balanced East/West) × the year blocks 2016–17, 2018–19, 2020–21, 2022–23, "
           "12-month buffers (15 for forecasts). Inner validation holds out the next group and one year. 30-configuration "
@@ -115,12 +116,24 @@ def card(d: dict) -> str:
           "with 2,000 whole-region resamples. Rules: `code/design/DESIGN.md`, `gate.json`.", ""]
     sc = d.get("scores")
     if sc:
+        L += ["**Development** (gate rows):", ""]
         for gg in sc["gate"]:
             for r in gg.get("rows", []):
                 if r["kind"] == "gate":
                     L.append(f"- {gg['label']}: {lab(r['model'])} − {lab(r['comparator'])} "
                              f"{ci(r['dauc_within']['all'], signed=True)} → {r['verdict']}.")
         L += [""]
+    if sc and d.get("phase5"):
+        import report_extra as X
+        rows = X.fresh_verdict_rows(d)
+        lk = read_json(LOCKED / "FRESH_TEST_SCORED.lock") or {}
+        if rows:
+            L += [f"**Fresh test** (the fresh-test regions, 2025-01 to 2026-09, scored once, {lk.get('scored', 'date not recorded')}; "
+                  "the pre-registered rows and the rule of report.md section 9):", ""]
+            for r in rows:
+                L.append(f"- {r['label']}, {r['kind']}: {lab(r['model'])} − {lab(r['comparator'])} "
+                         f"{ci(r['diff']['all'], signed=True)} → {r['verdict']}.")
+            L += [""]
     L += ["## 4. Mission scope", "", "Unchanged from the 2026-11-05 card (`~/Desktop/DEWSat_Fatemeh_package/data_card.md`, "
           "section 4); this dataset changes no mission assumption. SWIR is used only in a labelled what-if, because DEWSat's "
           "camera has Red and NIR only.", "",
@@ -129,9 +142,63 @@ def card(d: dict) -> str:
           "- `data/pull_state.json`, `data/FROZEN.json`: pull timing, batches, frozen regions.",
           "- `scores/data_counts.json`: regions, cells, granules, views, windows, base rates, sizes.",
           "- `cache/dataset.json`: assembled cells and coverage; `logs/pull/fldas_check.json`: FLDAS agreement.",
-          "- `scores/scores.json`, `scores/phase5.json`: results.",
+          "- `scores/scores.json`, `scores/phase5.json`: results; `data/locked/FRESH_TEST_SCORED.lock`: when the fresh "
+          "test was scored.",
+          "- `scores/phase6.json`: NLDAS-2 and SPEI agreement with FLDAS, the SPEI timescale choice; "
+          "`scores/fresh_labels_posthoc.json`: the fresh-test predictions scored against those labels.",
           "- Land cover: ESA CCI Land Cover 2020 v2.1.1 via Planetary Computer `esa-cci-lc` (`data/landcover/*.json`).",
           "- Boundaries: U.S. Census Bureau `cb_2023_us_state_20m` (`data/boundaries/`).",
           "- HLS v2.0: NASA LP DAAC (HLSS30/HLSL30 v2.0, CMR) and Microsoft Planetary Computer (`hls2-s30`, `hls2-l30`).",
-          "- FLDAS: FLDAS_NOAH01_C_GL_M v001 (NASA GES DISC, Earthdata OPeNDAP).", ""]
+          "- FLDAS: FLDAS_NOAH01_C_GL_M v001 (NASA GES DISC, Earthdata OPeNDAP).",
+          "- NLDAS-2: NLDAS_NOAH0125_M v2.0 (NASA GES DISC, Earthdata OPeNDAP), `data/phase6/nldas/`.",
+          "- SPEI: gridMET drought indices (Abatzoglou), Northwest Knowledge Network THREDDS, NetCDF Subset Service "
+          "(`MET/spei/spei<timescale>.nc`), `data/phase6/spei/`.", ""]
     return "\n".join(L) + "\n"
+
+
+def other_labels(d: dict) -> list[str]:
+    """Section on the two other drought labels fetched after the fresh test was scored (Phase 6)."""
+    p6 = d.get("phase6") or {}
+    nl, sp = p6.get("nldas"), p6.get("spei")
+    if not (nl and sp):
+        return []
+    fl = ((d.get("fresh_labels_posthoc") or {}).get("jobs") or {}).get("job1") or {}
+    labs = fl.get("labels", {})
+    ch = sp["chosen_timescale"]
+    auc = sp["auc_minus_spei_for_fldas_flag_dev"]
+    order = sorted(auc, key=lambda k: -auc[k])
+    tc = sp["timescale_choice"]
+    nv, nt = nl["dev"], nl["test"]
+    n_series = len(list((DATA / "phase6" / "spei" / "series").glob("*.npy")))
+    n_nldas = len(list((DATA / "phase6" / "nldas").glob("*.npy")))
+    names = {"nldas": "NLDAS-2"}
+    agree = ", ".join(f"{names.get(k, k.replace('spei_', 'SPEI-'))} {v['agree_with_fldas']:.1%} (drought rate "
+                      f"{v['drought_rate']:.3f})" for k, v in labs.items() if k != "fldas")
+    lo, hi = (f"{x:+.2f}".replace("-", "−") for x in sp["series"]["value_range"])
+    L = ["### Other drought labels (Phase 6, fetched only after the fresh test was scored)", "",
+         "Two labels from other sources, used to ask whether the fresh-test result is specific to FLDAS. No model, "
+         "setting or input was chosen with them; the one choice made with SPEI (its timescale) used development cells only.", "",
+         "| | NLDAS-2 soil moisture | gridMET SPEI |", "|---|---|---|",
+         f"| Product | NLDAS_NOAH0125_M v2.0, `{nl['variable']}` (Noah model run with NLDAS-2 forcing) | gridMET SPEI "
+         f"(Abatzoglou), {len(sp['datasets'])} timescales 14 days to 5 years |",
+         "| Measures | Soil moisture in the same 10–40 cm layer as the label, from a second land-surface run with different "
+         "forcing | Climatic water balance (precipitation minus reference evapotranspiration), standardized |",
+         f"| Sampling | 0.125° CONUS grid, {n_nldas} monthly granules 2001-01 to 2026-09; each 0.1° cell takes the nearest "
+         "NLDAS cell | One point series per region at its centre, 2016-01 to 2026-09; a month takes the last value on or "
+         f"before its last day; fetched values {lo} to {hi} |",
+         "| Drought | Below the cell's calendar-month 20th percentile of 2001–2022 (the FLDAS rule) | SPEI ≤ −0.84 (the "
+         "standard-normal 20th percentile) |",
+         f"| Coverage | Every development and fresh-test cell | Timescale choice: {tc['per_side']} West + {tc['per_side']} East "
+         f"development regions (seed {tc['seed']}, {tc['dev_cells']:,} cells) × all timescales; scoring: every fresh-test "
+         f"region at {ch} and the two runners-up; {n_series} series in all |",
+         f"| Agreement with FLDAS, development 2016–2023 | Flags agree {nv['flag_agreement']:.1%}, Cohen's kappa "
+         f"{nv['kappa_drought']:.3f}, AUC of the NLDAS percentile for the FLDAS flag {nv['auc_nldas_pct_for_fldas_flag']:.3f} "
+         f"({nv['cell_months']:,} cell-months) | AUC of −SPEI for the FLDAS flag: "
+         + ", ".join(f"{k} {auc[k]:.3f}" for k in order[:4]) + f" (chosen: {ch}) |",
+         f"| Agreement with FLDAS, fresh test | Flags agree {nt['flag_agreement']:.1%}, kappa {nt['kappa_drought']:.3f}, AUC "
+         f"{nt['auc_nldas_pct_for_fldas_flag']:.3f} ({nt['cell_months']:,} cell-months) | See the next line |", ""]
+    if agree:
+        L += [f"On the {fl.get('common_windows', 0):,} job-1 fresh-test windows where every label exists (FLDAS drought rate "
+              f"{labs['fldas']['drought_rate']:.3f}), each label's call agrees with FLDAS's: {agree}. The scores against "
+              "these labels are in report.md section 9a.", ""]
+    return L
