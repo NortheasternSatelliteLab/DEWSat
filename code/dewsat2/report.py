@@ -56,7 +56,8 @@ def load_all() -> dict:
          "dataset": read_json(OUT / "cache" / "dataset.json"), "fldas_check": read_json(V2 / "logs" / "pull" / "fldas_check.json"),
          "datacount": read_json(SCORES / "data_counts.json"), "pipeline": read_json(OUT / "logs" / "status_pipeline.json"),
          "gate": json.loads((V2 / "code" / "design" / "gate.json").read_text()),
-         "posthoc": read_json(SCORES / "posthoc.json"), "lcurve": read_json(SCORES / "lcurve.json")}
+         "posthoc": read_json(SCORES / "posthoc.json"), "lcurve": read_json(SCORES / "lcurve.json"),
+         "fresh_posthoc": read_json(SCORES / "fresh_posthoc.json")}
     return d
 
 
@@ -251,6 +252,8 @@ def sec_fresh(d: dict) -> list[str]:
     if not p:
         return L + ["Not run yet. The fresh-test labels are locked (`data/locked/LOCK.json`).", ""]
     fr = p["fresh"]
+    import report_extra as X
+    L += X.fresh_verdict_table(d)
     am = p.get("amendment6") or {}
     if am:
         L += ["Rows added after the development results (DESIGN.md amendment 6; not part of the gate): " +
@@ -369,7 +372,8 @@ def write_all() -> None:
             f"{' (uncommitted changes)' if gs['dirty'] else ''}. Every number is read from a logged run._", ""]
     import report_extra as X
     body = head + sec_answer(d) + sec_phase0(d) + sec_data(d) + sec_design() + sec_results(d) + X.sec_posthoc(d) + \
-        sec_checks(d) + sec_whatif(d) + sec_weekly(d) + X.sec_lcurve(d) + sec_fresh(d) + X.sec_sizes(d) + \
+        sec_checks(d) + sec_whatif(d) + sec_weekly(d) + X.sec_lcurve(d) + sec_fresh(d) + X.sec_fresh_posthoc(d) + \
+        X.sec_sizes(d) + \
         sec_extras(d) + sec_limits(d) + sec_sources()
     write_text(OUT / "report.md", "\n".join(body) + "\n")
     try:
@@ -396,19 +400,26 @@ def sec_answer(d: dict) -> list[str]:
     if g1 and g1.get("rows"):
         for r in g1["rows"]:
             if r["kind"] in ("vs_lr_vci_t_bilstm", "gate"):
-                L.append(f"- Job 1, {lab(r['model'])} − {lab(r['comparator'])}: within-fold ΔAUC "
+                L.append(f"- Development, job 1, {lab(r['model'])} − {lab(r['comparator'])}: within-fold ΔAUC "
                          f"{ci(r['dauc_within']['all'], signed=True)} → **{r['verdict']}**.")
     p5 = d["phase5"]
     if p5 and p5["fresh"].get("job1"):
+        import report_extra as X
+        for r in X.fresh_verdict_rows(d):
+            if r["job"] == "job1":
+                L.append(f"- **Fresh test (pre-registered), job 1, {r['kind']}:** {lab(r['model'])} − {lab(r['comparator'])} "
+                         f"ΔAUC {ci(r['diff']['all'], signed=True)} (West {ci(r['diff']['west'], signed=True)}, East "
+                         f"{ci(r['diff']['east'], signed=True)}) → **{r['verdict']}**.")
         s = p5["fresh"]["job1"]
-        sel = sc.get("selection", {}).get("job1", {})
-        for a in dict.fromkeys([sel.get("best_bilstm"), sel.get("best_network"), "bilstm", "bilstm_vci", "cnn_bilstm",
-                                "cnn_lr"]):
-            v = s["paired"].get(f"{a} - lr_vci_t") if a else None
+        added = ((d.get("p5set") or {}).get("models", {}).get("job1") or {}).get("extra", [])
+        for a in added:
+            v = s["paired"].get(f"{a} - lr_vci_t")
             if v:
-                L.append(f"- Fresh test, job 1, {lab(a)} − {lab('lr_vci_t')}: ΔAUC "
-                         f"{ci(v['all']['dauc_within'], signed=True)} (West {ci(v['west']['dauc_within'], signed=True)}, "
-                         f"East {ci(v['east']['dauc_within'], signed=True)}).")
+                L.append(f"- Fresh test, job 1, {lab(a)} − {lab('lr_vci_t')} (added after the development results; not "
+                         f"in the gate): ΔAUC {ci(v['all']['dauc_within'], signed=True)} (West "
+                         f"{ci(v['west']['dauc_within'], signed=True)}, East {ci(v['east']['dauc_within'], signed=True)}).")
+        L += ["", "Development and the fresh test disagree; section 8a shows why (the networks' gap to LR follows the "
+              "training-set size) and section 10 lists the limits of a single test period."]
     return L + [""]
 
 
@@ -435,7 +446,8 @@ def sec_sources() -> list[str]:
     return ["## 11. Sources of the numbers", "",
             "`scores/scores.json` (development), `scores/checks.json`, `scores/whatif.json`, `scores/weekly.json`, "
             "`scores/posthoc.json` (post-hoc models, development), `scores/lcurve.json` (learning curve), "
-            "`scores/phase5.json` and `scores/phase5_settings.json` (fresh test), `scores/phase6.json`, "
+            "`scores/phase5.json` and `scores/phase5_settings.json` (fresh test), `scores/fresh_posthoc.json` (post-hoc "
+            "slices of the fresh test), `scores/phase6.json`, "
             "`audit/phase0_results.json`, `data/plan/plan.json`, `data/pull_state.json`, `data/FROZEN.json`, "
             "`cache/dataset.json`, `logs/pull/fldas_check.json`, `scores/data_counts.json`; per-run metadata under "
             "`runs/` (configuration, seed, device, commit, timings).", ""]

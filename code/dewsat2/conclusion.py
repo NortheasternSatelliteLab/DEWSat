@@ -44,20 +44,44 @@ def build() -> dict:
             return "worse"
         return "no detectable difference"
 
+    # verdict words: development from the gate rows (scores.json), fresh test from the section 9 rule (report_extra)
+    import report_extra as X
+    fresh_rows = X.fresh_verdict_rows({"scores": sc, "phase5": p5}) if p5 else []
+    fresh_v = {(r["model"], r["comparator"]): r["verdict"] for r in fresh_rows if r["job"] == "job1"}
+    dev_v = {(r["model"], r["comparator"]): r["verdict"] for g in sc["gate"] if g["job"] == "job1" for r in g.get("rows", [])}
     if dev_b:
-        line = (f"**Bottom line:** for estimating the current month's drought (job 1), the best Bi-LSTM variant "
-                f"({lab(b1)}) did not beat logistic regression on VCI(T)" if verdict(dev_b) != "better" or
-                (fr_b and verdict(fr_b) != "better") else
-                f"**Bottom line:** for estimating the current month's drought (job 1), the best Bi-LSTM variant "
-                f"({lab(b1)}) beat logistic regression on VCI(T)")
-        line += f": within-fold AUC difference {ci(dev_b, signed=True)} in development ({verdict(dev_b)})"
-        if fr_b:
-            line += f" and {ci(fr_b, signed=True)} on the fresh test ({verdict(fr_b)})"
-        line += "."
+        dv = dev_v.get((b1, "lr_vci_t")) or verdict(dev_b)
+        fv = fresh_v.get((b1, "lr_vci_t"))
+        if fv is None:
+            head = "beat" if dv == "passed" else "did not beat"
+            line = (f"**Bottom line:** for estimating the current month's drought (job 1), the best Bi-LSTM variant "
+                    f"({lab(b1)}) {head} logistic regression on VCI(T) in development: within-fold AUC difference "
+                    f"{ci(dev_b, signed=True)} ({dv}). The fresh test is not scored yet.")
+        else:
+            if fv == "passed":
+                head = ("beat logistic regression on VCI(T) in development and on the one-time fresh test" if dv == "passed"
+                        else "lost to logistic regression on VCI(T) in development but beat it on the one-time fresh test")
+            else:
+                head = ("beat logistic regression on VCI(T) in development but not on the one-time fresh test" if dv == "passed"
+                        else "did not beat logistic regression on VCI(T), in development or on the one-time fresh test")
+            line = (f"**Bottom line:** for estimating the current month's drought (job 1), the best Bi-LSTM variant chosen "
+                    f"in development ({lab(b1)}) {head}: AUC difference {ci(dev_b, signed=True)} in development ({dv}) and "
+                    f"{ci(fr_b, signed=True)} on the fresh test ({fv} under the pre-registered rule).")
         if n1 and n1 != b1 and dev_n:
+            fvn = fresh_v.get((n1, "lr_vci_t"))
             line += (f" The best temporal network overall ({lab(n1)}): {ci(dev_n, signed=True)} in development"
-                     + (f", {ci(fr_n, signed=True)} on the fresh test" if fr_n else "") + ".")
+                     + (f", {ci(fr_n, signed=True)} on the fresh test ({fvn})" if fr_n else "") + ".")
+        fp = read_json(SCORES / "fresh_posthoc.json")
+        pp = ((fp or {}).get("network_pairs") or {}).get("fresh_job1", {}).get("paired", {})
+        if pp.get("bilstm - gru") and pp.get("bilstm - resbilstm"):
+            line += (f" On the fresh test the full-input recurrent networks are close to each other, a small gap next "
+                     f"to their gain over LR: plain Bi-LSTM (added after the development results) − GRU "
+                     f"{ci(pp['bilstm - gru']['all'], signed=True)}, plain Bi-LSTM − residual Bi-LSTM "
+                     f"{ci(pp['bilstm - resbilstm']['all'], signed=True)}.")
         out["bottom_line"] = line
+    out["verdict_lines"] = [f"- {r['label']}, {r['kind']}: {lab(r['model'])} − {lab(r['comparator'])} "
+                            f"{ci(r['diff']['all'], signed=True)} (West {ci(r['diff']['west'], signed=True)}, East "
+                            f"{ci(r['diff']['east'], signed=True)}): **{r['verdict']}**." for r in fresh_rows]
     # development, one line per job (gate rows)
     for g in sc["gate"]:
         for r in g.get("rows", []):
