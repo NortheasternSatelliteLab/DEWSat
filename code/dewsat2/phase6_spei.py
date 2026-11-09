@@ -140,9 +140,10 @@ def score_models_against_spei(lab, series, meta) -> dict:
         ys = (spei <= -0.84).astype(int)
         sp, _ = P5.simple_preds(job, "composite", st["settings"][job]["simple"])
         preds = dict(sp["fresh"])
-        for fam in st["models"][job]["nets"]:
+        for fam in st["models"][job]["nets"] + st["models"][job].get("extra", []):   # amendment 6 rows too
             p, _ = P5._net_probs(job, "composite", fam, "fresh", P5.FINAL_SEEDS)
-            preds[fam] = p
+            if p is not None:
+                preds[fam] = p
         rows = []
         for m, p in preds.items():
             pp = p[:, 0] if p.ndim == 2 else p

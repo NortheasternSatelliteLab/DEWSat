@@ -54,8 +54,9 @@ def gbt_configs(job: str) -> list[dict]:
 
 
 def device_for(cfg: dict) -> str:
-    """MPS for temporal CNNs and large recurrent networks (benchmark: logs/bench_nets.json), CPU otherwise."""
-    if cfg["family"] == "tcn":
+    """MPS for temporal CNNs, the tile CNNs (post-hoc cnn_lr, cnn_bilstm) and large recurrent networks (benchmark:
+    logs/bench_nets.json), CPU otherwise."""
+    if cfg["family"] in ("tcn", "cnn_lr", "cnn_bilstm"):
         return "mps"
     size = cfg["hidden"] * cfg.get("layers", 1) * (2 if cfg.get("bidir") else 1)
     return "mps" if size >= 128 else "cpu"
@@ -63,6 +64,9 @@ def device_for(cfg: dict) -> str:
 
 def cost(cfg: dict, n_windows: int) -> float:
     """Rough seconds for one run on its preferred device (for scheduling and estimates only)."""
+    if cfg["family"] in ("cnn_lr", "cnn_bilstm"):           # GPU rates of the post-hoc runner (posthoc_run._est)
+        per = 1.5 + 0.15 * cfg["width"] if cfg["family"] == "cnn_lr" else 20.0 + 0.6 * cfg["width"]
+        return per * cfg["epochs"] * n_windows / 1e5 + 15
     per100k = {"cpu": 1.95 * (cfg["hidden"] / 32) ** 0.95 * cfg.get("layers", 1) * (1.0 if cfg.get("bidir") else 0.55),
                "mps": 2.0 + 0.012 * cfg["hidden"] * cfg.get("layers", 1)}
     dev = device_for(cfg)

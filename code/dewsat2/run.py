@@ -117,7 +117,7 @@ def run_specs(stage: str, specs: list[dict], n_cpu: int, n_mps: int, threads: in
             c_pref = search.cost(s["cfg"], n_win)
             if n_mps == 0:
                 dev = "cpu"
-            elif s["cfg"]["family"] == "tcn" or n_cpu == 0:
+            elif s["cfg"]["family"] in ("tcn", "cnn_lr", "cnn_bilstm") or n_cpu == 0:
                 dev = "mps"
             else:
                 alt = "cpu" if pref == "mps" else "mps"

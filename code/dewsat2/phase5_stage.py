@@ -2,6 +2,13 @@
 
 The fresh-test labels are read only here, after `check_lock()`; the scorer refuses to run if
 data/locked/FRESH_TEST_SCORED.lock exists and writes it after scoring.
+
+Amendment 6 (DESIGN.md, fixed before the fresh test is scored): beside the pre-registered rows, which are unchanged,
+the one scoring also covers the models added after the development results (EXTRA): the VCI-only Bi-LSTM (jobs 1-3),
+CNN + LR and CNN + Bi-LSTM (job 1, and job 4 through job 1), and the plain Bi-LSTM for jobs 1 and 2 (job 3 already
+has it). Each is trained like the pre-registered networks (all development data, the all-development VCI table, the
+10 final seeds, mean probability) at the search configuration with the highest mean inner metric over the 4 folds.
+Every network run saves model.pt, its parameter count and (where counted) multiply-adds per prediction.
 """
 
 from __future__ import annotations
@@ -18,7 +25,7 @@ import search
 import simple
 import units
 import views
-from common import (DEV_END, FRESH_END, FRESH_START, LEADS, LOCKED, MI, N_FOLDS, N_MONTHS, RUNS, SCORES, SEQ,
+from common import (CACHE, DEV_END, FRESH_END, FRESH_START, LEADS, LOCKED, MI, N_FOLDS, N_MONTHS, RUNS, SCORES, SEQ,
                     FINAL_SEEDS, git_state, log, read_json, save_npz, write_json)
 from features import labels_for, reference_mask
 from windows import (Base, baseline_features, gather, input_cube, obs_stats, raw_windows, scaler_for)
@@ -32,6 +39,12 @@ THIN_SEEDS = (42, 43, 44)
 THIN_JOBS = ("job1", "job2")
 _P5: dict = {}
 _KEEP = ("meta", "dev", "test", "base_dev", "base_test", "drought_test", "keep_test")
+# amendment 6: models added after the development results (not part of the gate)
+EXTRA = {"job1": ("bilstm", "bilstm_vci", "cnn_lr", "cnn_bilstm"), "job2": ("bilstm", "bilstm_vci"),
+         "job3": ("bilstm_vci",)}
+CNN = ("cnn_lr", "cnn_bilstm")
+# the 2x2 contrasts (cell average or cell image x month T or 12 months) and VCI-only vs all inputs
+PAIRS_POSTHOC = (("bilstm_vci", "bilstm"), ("cnn_bilstm", "bilstm_vci"), ("cnn_bilstm", "cnn_lr"))
 
 
 def _evict(prefix: str, keep_key=None) -> None:
@@ -87,6 +100,36 @@ def chosen_settings() -> dict:
         out[job]["simple"] = {"gbt": search.gbt_configs(job)[gi], "alpha": simple.ALPHAS[ai],
                               "gbt_mean_inner": float(np.nanmean(g, axis=0)[gi]),
                               "alpha_mean_inner": float(np.nanmean(a, axis=0)[ai])}
+    ph = posthoc_settings()
+    for job in units.JOBS:
+        out[job]["extra"] = {m: out[job]["nets"][m] if m in out[job]["nets"] else ph[job][m] for m in EXTRA.get(job, ())}
+    return out
+
+
+def posthoc_settings() -> dict:
+    """Per post-hoc model and job (amendments 4, 4b), the search configuration with the highest mean inner metric over
+    the 4 folds: the rule chosen_settings uses for the pre-registered networks."""
+    import posthoc
+    out: dict = {}
+    for model, jobs in posthoc.MODEL_JOBS.items():
+        for job in jobs:
+            cfgs = posthoc.configs(model, job)
+            scores, n_folds = [], []
+            for cfg in cfgs:
+                v = []
+                for k in range(N_FOLDS):
+                    d = posthoc.search_dir(model, job, k, cfg["id"])
+                    m = read_json(d / "meta.json")
+                    ok = m is not None and (d / "DONE").exists() and m["metric"]["metric"] is not None
+                    v.append(float(m["metric"]["metric"]) if ok else np.nan)
+                v = np.array(v, float)
+                scores.append(float(np.nanmean(v)) if np.isfinite(v).any() else -np.inf)
+                n_folds.append(int(np.isfinite(v).sum()))
+            i = int(np.argmax(scores))
+            if not np.isfinite(scores[i]):
+                raise RuntimeError(f"phase 5: no finished search run for the post-hoc model {model} ({job})")
+            out.setdefault(job, {})[model] = {"cfg": cfgs[i], "mean_inner": scores[i], "all_means": scores,
+                                              "folds_of_chosen": n_folds[i]}
     return out
 
 
@@ -104,6 +147,10 @@ def phase5_models() -> dict:
                    "best_simple": s4["best_simple"] if s4 else None, "lr": "lr_vci_t"}
     # job 4 is scored with job-1 models, so its chosen networks are refit with job 1's
     out["job1"]["nets"] = list(dict.fromkeys(out["job1"]["nets"] + out["job4"]["nets"]))
+    # amendment 6: the post-hoc rows, after (and never replacing) the pre-registered ones
+    for job in units.JOBS:
+        out[job]["extra"] = [m for m in EXTRA.get(job, ()) if m not in out[job]["nets"]]
+    out["job4"]["extra"] = [m for m in out["job1"]["extra"] if m not in out["job4"]["nets"]]
     return out
 
 
@@ -278,16 +325,17 @@ def unit_dir(spec):
     return RUNS / "phase5" / spec["train"] / spec["job"] / spec["cfg"]["family"] / f"seed{spec['seed']}"
 
 
-def eval_sets(job: str, scaler: dict, train: str) -> list[tuple[str, dict]]:
+def eval_sets(job: str, scaler: dict, train: str, fresh_only: bool = False) -> list[tuple[str, dict]]:
     """Evaluation windows for a Phase 5 model: the fresh test with composites (composite-trained models) and the
-    thinned fresh test for each revisit interval and start (jobs 1-2)."""
+    thinned fresh test for each revisit interval and start (jobs 1-2; not for the tile CNNs, fresh_only, since
+    no thinned tiles exist)."""
     c = ctx5()
     drought, keep = test_labels()
     out = []
     if train == "composite":
         out.append(("fresh", test_windows(job, c["test"]["feats"][REF_ALL], c["test"]["obs"][REF_ALL], scaler,
                                           drought, keep)))
-    if job in THIN_JOBS:
+    if job in THIN_JOBS and not fresh_only:
         Ns = REVISITS if train == "composite" else (int(train[4:]),)
         for N in Ns:
             for rep in range(STARTS):
@@ -350,7 +398,12 @@ def run_unit(spec: dict, device: str, threads: int) -> dict:
         write_json(d_out / "meta.json", meta)
         (d_out / "DONE").write_text("skipped\n")
         return meta
-    evs = eval_sets(job, d["scaler"], train)
+    fam = cfg["family"]
+    evs = eval_sets(job, d["scaler"], train, fresh_only=fam in CNN)
+    if fam in CNN:
+        res = _train_cnn(cfg, d, evs, spec["seed"], device, threads)
+        _save_unit(spec, d_out, device, res, d, evs, _macs(cfg, job))
+        return read_json(d_out / "meta.json")
     data = {"X_fit": d["X_fit"], "Y_fit": d["Y_fit"], "M_fit": d["M_fit"], "hide_ok": np.r_[np.ones(11, bool), False]}
     ev_list = []
     if cfg["family"] == "resbilstm":
@@ -372,16 +425,70 @@ def run_unit(spec: dict, device: str, threads: int) -> dict:
                 ev_list.append((nm, e["X"], (a[None] + b[None] * np.nan_to_num(e["V"][:, -1])[:, None]).astype(np.float32)))
     else:
         ev_list = [(nm, e["X"], None) for nm, e in evs]
+    net_cfg = cfg
+    if fam == "bilstm_vci":                 # amendment 4: the bilstm with only the VCI, observed and age channels
+        data["X_fit"] = _vci_only(data["X_fit"])
+        ev_list = [(nm, _vci_only(X), b) for nm, X, b in ev_list]
+        net_cfg = dict(cfg, family="bilstm")
     data["X_eval"] = ev_list
-    res = nets.train(cfg, data, spec["seed"], device=device, threads=threads)
+    res = nets.train(net_cfg, data, spec["seed"], device=device, threads=threads)
+    _save_unit(spec, d_out, device, res, d, evs, _macs(cfg, job))
+    return read_json(d_out / "meta.json")
+
+
+def _save_unit(spec, d_out, device, res, d, evs, macs) -> None:
+    """pred.npz (logits and window ids per evaluation set), model.pt, meta.json, then DONE."""
+    import torch
     d_out.mkdir(parents=True, exist_ok=True)
     save_npz(d_out / "pred.npz", **{f"logit_{nm}": z.astype(np.float32) for nm, z in res["logits"].items()},
              **{f"idx_{nm}": e["idx"].astype(np.int64) for nm, e in evs})
-    meta = {"spec": spec, "device": device, "git": git_state(), "seconds": res["seconds"], "n_fit": int(len(d["X_fit"])),
-            "evals": {nm: int(len(e["idx"])) for nm, e in evs}}
+    torch.save(res["state"], d_out / "model.pt")
+    meta = {"spec": spec, "device": device, "git": git_state(), "seconds": res["seconds"], "n_fit": int(len(d["fit"])),
+            "evals": {nm: int(len(e["idx"])) for nm, e in evs}, "n_params": res.get("n_params"),
+            "multiply_adds": macs, "history": res.get("history"), "scaler": d["scaler"],
+            "tiles": "cache/tiles/dev_all.npy, cache/tiles/test_all.npy" if spec["cfg"]["family"] in CNN else None}
     write_json(d_out / "meta.json", meta)
     (d_out / "DONE").write_text(meta["git"]["commit"] + "\n")
-    return meta
+
+
+def _vci_only(X: np.ndarray) -> np.ndarray:
+    import posthoc
+    X = X.copy()
+    X[:, :, posthoc.ZERO_CH] = 0.0
+    return X
+
+
+def _macs(cfg: dict, job: str) -> int | None:
+    """Multiply-adds per prediction where counted: the tile CNNs (cnn.multiply_adds) and the plain and VCI-only
+    Bi-LSTM (posthoc.lstm_macs; the VCI-only one without its zeroed inputs). Other families: None."""
+    import posthoc
+    heads = len(LEADS) if job == "job3" else 1
+    if cfg["family"] in CNN:
+        import cnn
+        return int(cnn.multiply_adds(cfg))
+    if cfg["family"] in ("bilstm", "bilstm_vci"):
+        n_in = 9 - (len(posthoc.ZERO_CH) if cfg["family"] == "bilstm_vci" else 0)
+        return posthoc.lstm_macs(cfg["hidden"], cfg.get("layers", 1), n_in, heads)
+    return None
+
+
+def _tiles(part: str) -> np.ndarray:
+    """The all-development-table tiles, memory-mapped so the GPU workers share one copy in the page cache."""
+    key = ("tiles", part)
+    if key not in _P5:
+        _P5[key] = np.load(CACHE / "tiles" / f"{part}_all.npy", mmap_mode="r")
+    return _P5[key]
+
+
+def _train_cnn(cfg: dict, d: dict, evs: list, seed: int, device: str, threads: int) -> dict:
+    """A tile CNN on all development windows (dev tiles) with predictions on the fresh test (test tiles)."""
+    import cnn
+    c = ctx5()
+    steps = 1 if cfg["family"] == "cnn_lr" else 12
+    bd, tb = c["base_dev"], c["base_test"]
+    fit = cnn.Batches(_tiles("dev"), bd.w_cell[d["fit"]], bd.w_T[d["fit"]], d["X_fit"], steps)
+    evals = [(nm, cnn.Batches(_tiles("test"), tb.w_cell[e["idx"]], tb.w_T[e["idx"]], e["X"], steps)) for nm, e in evs]
+    return cnn.train(cfg, fit, d["Y_fit"], d["M_fit"], seed, device=device, threads=threads, evals=evals)
 
 
 # ------------------------------------------------------------------------------------------- run and score
@@ -416,6 +523,10 @@ def run(status=None) -> dict:
             cfg = st[job]["nets"][fam]["cfg"]
             for s in FINAL_SEEDS:
                 specs.append({"type": "p5", "job": job, "train": "composite", "cfg": cfg, "seed": s})
+        for fam in models[job]["extra"]:                    # amendment 6
+            cfg = st[job]["extra"][fam]["cfg"]
+            for s in FINAL_SEEDS:
+                specs.append({"type": "p5", "job": job, "train": "composite", "cfg": cfg, "seed": s})
         if job in THIN_JOBS:
             fam = models[job]["nets"][0]
             cfg = st[job]["nets"][fam]["cfg"]
@@ -424,8 +535,13 @@ def run(status=None) -> dict:
                     specs.append({"type": "p5", "job": job, "train": f"thin{N}", "cfg": cfg, "seed": s})
     comp = [x for x in specs if x["train"] == "composite"]
     thin = [x for x in specs if x["train"] != "composite"]
-    runner.run_specs("phase5_composite", comp, n_cpu=4, n_mps=2, threads=2, status=status)
-    runner.run_specs("phase5_thinned", thin, n_cpu=1, n_mps=1, threads=4, status=status)
+    # 3 CPU workers (amendment 6): the GPU-only tile CNNs set the stage's length; one fewer process saves memory
+    for name, sp, kw in (("phase5_composite", comp, {"n_cpu": 3, "n_mps": 2, "threads": 2}),
+                         ("phase5_thinned", thin, {"n_cpu": 1, "n_mps": 1, "threads": 4})):
+        r = runner.run_specs(name, sp, status=status, **kw)
+        if r["failed"]:                       # one retry of failed units (a worker crash), before anything is scored
+            log(f"{name}: retrying {len(r['failed'])} failed units once")
+            runner.run_specs(name + "_retry", r["failed"], status=status, **kw)
     res = score_all(st, models, lock)
     res["seconds"] = round(time.time() - t0, 1)
     write_json(SCORES / "phase5.json", res)
@@ -435,12 +551,16 @@ def run(status=None) -> dict:
 
 
 def _net_probs(job, train, fam, name, seeds):
+    """Mean probability over the seeds' predictions for one evaluation set; (None, None) if any seed lacks it (a
+    missing run, or a tile CNN on a thinned set)."""
     ps, idx = [], None
     for s in seeds:
         p = unit_dir({"job": job, "train": train, "cfg": {"family": fam}, "seed": s}) / "pred.npz"
         if not p.exists():
             return None, None
         with np.load(p) as z:
+            if f"logit_{name}" not in z.files:
+                return None, None
             ps.append(1 / (1 + np.exp(-z[f"logit_{name}"].astype(float))))
             idx = z[f"idx_{name}"]
     return np.mean(ps, axis=0), idx
@@ -452,14 +572,22 @@ def score_all(st: dict, models: dict, lock: dict) -> dict:
     R = tb.n_regions
     fold0 = np.zeros(R, np.int64)
     sc_dev = read_json(SCORES / "scores.json")
-    out = {"git": git_state(), "lock": {"files": len(lock["files"])}, "fresh": {}, "realistic": {}}
+    out = {"git": git_state(), "lock": {"files": len(lock["files"])}, "fresh": {}, "realistic": {},
+           "amendment6": {"extra": {j: list(m.get("extra", [])) for j, m in models.items()},
+                          "pairs": [f"{a} - {b}" for a, b in PAIRS_POSTHOC],
+                          "note": "Rows added after the development results (DESIGN.md amendment 6); not part of the "
+                                  "gate. The tile CNNs are scored on the composites only."}}
     for job in units.JOBS:
         sp, evs = simple_preds(job, "composite", st[job]["simple"])
         for nm, e in evs:
             preds = {m: p for m, p in sp[nm].items()}
-            for fam in models[job]["nets"]:
+            for fam in models[job]["nets"] + models[job]["extra"]:
                 p, idx = _net_probs(job, "composite", fam, nm, FINAL_SEEDS)
-                assert np.array_equal(idx, e["idx"])
+                if p is None and fam in CNN and nm != "fresh":
+                    continue                                # the tile CNNs are scored on the composites only
+                if p is None:
+                    raise RuntimeError(f"phase 5: {job}/{fam}: predictions for {nm} missing; nothing was scored")
+                assert np.array_equal(idx, e["idx"]), f"{job}/{fam}/{nm}: window ids differ"
                 preds[fam] = p
             if nm == "fresh":
                 out["fresh"].update(score_fresh(job, e, preds, models, R, fold0, sc_dev))
@@ -491,6 +619,7 @@ def score_simple_set(name, e, preds, R, fold0, mj) -> dict:
     pr = {m: p for m, p in pr.items() if np.isfinite(p).all()}
     comps = [c for c in dict.fromkeys([mj["best_simple"], mj["lr"]]) if c in pr]
     pairs = [(m, cc) for cc in comps for m in pr if m != cc]
+    pairs += [(a, b) for a, b in PAIRS_POSTHOC if a in pr and b in pr and (a, b) not in pairs]
     s = scoring.score_subset(name, y, e["region"], e["west"], pr, fold0, R, 1, pairs)
     s["n_windows"] = int(len(y))
     return s
@@ -522,9 +651,10 @@ def score_fresh(job, e, preds, models, R, fold0, sc_dev) -> dict:
             pr = {mm: p for mm, p in pr.items() if np.isfinite(p).all()}
             sub = {"y": yh[m], "region": e["region"][m], "west": e["west"][m], "preds": pr}
             comps = [cc for cc in dict.fromkeys([mj["best_simple"], mj["lr"]]) if cc in pr]
+            prs = [(a, b) for b in comps for a in pr if a != b]
+            prs += [(a, b) for a, b in PAIRS_POSTHOC if a in pr and b in pr and (a, b) not in prs]
             out[f"job3_lead{h}_{kind}"] = scoring.score_subset(f"fresh_job3_{h}_{kind}", sub["y"], sub["region"],
-                                                               sub["west"], pr, fold0, R, 1,
-                                                               [(a, b) for b in comps for a in pr if a != b])
+                                                               sub["west"], pr, fold0, R, 1, prs)
             if kind == "onset":
                 subsets.append(sub)
     mods = sorted(set.intersection(*[set(s["preds"]) for s in subsets]))
@@ -535,6 +665,9 @@ def score_fresh(job, e, preds, models, R, fold0, sc_dev) -> dict:
             for a in mv:
                 if a != b:
                     ent["paired"][f"{a} - {b}"] = {sd: scoring.ci(mv[a][sd] - mv[b][sd]) for sd in scoring.SIDES}
+    for a, b in PAIRS_POSTHOC:
+        if a in mv and b in mv and f"{a} - {b}" not in ent["paired"]:
+            ent["paired"][f"{a} - {b}"] = {sd: scoring.ci(mv[a][sd] - mv[b][sd]) for sd in scoring.SIDES}
     out["job3_mean_onset"] = ent
     return out
 

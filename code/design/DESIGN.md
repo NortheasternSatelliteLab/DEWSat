@@ -300,3 +300,40 @@ of any model or the fresh test.
 - **Runs**: 180 network runs: 2 networks x (2 folds x 9 year subsets + 4 folds x 3 region fractions) x 3 seeds. They
   are written to `runs/lcurve/`, `scores/lcurve.json` and `logs/lcurve/`, and run with the post-hoc runner
   (`--stages lcurve,lcurve_score`). They use spare capacity and never delay Phase 5.
+
+## Amendment 6 (2026-11-09, about 03:40): the post-hoc models in the one fresh-test scoring
+
+Written before Phase 5 has started and before any fresh-test label has been read. The pre-registered Phase 5 rows,
+the gate and the selection of Section 11 are unchanged. These rows are added beside them and are not part of the gate.
+
+- **Models added** (`phase5_stage.EXTRA`), each trained like the pre-registered Phase 5 networks: all development
+  windows, the all-development VCI table, the 10 final seeds, and the mean probability as the prediction.
+  - `bilstm_vci` (amendments 4 and 4b) for jobs 1, 2 and 3 (job 4 through job 1).
+  - `cnn_lr` and `cnn_bilstm` (amendment 4) for job 1 (job 4 through job 1), on the all-development tiles
+    (`cache/tiles/dev_all.npy`, `test_all.npy`).
+  - The plain `bilstm` for jobs 1 and 2. Job 3 already scores it as its best Bi-LSTM variant. The paper's question
+    is about this network, and the fresh test can be scored only once.
+- **Settings**: per model and job, the search configuration with the highest mean inner-validation metric over the 4
+  folds. This is the rule Section 11 uses for the pre-registered networks (`posthoc_settings()`, written to
+  `scores/phase5_settings.json`).
+- **Evaluation sets**:
+  - All of them: the fresh test with composites.
+  - `bilstm` and `bilstm_vci` for jobs 1-2: also the thinned fresh test (composite-trained, version (a) of
+    DECISIONS.md #41).
+  - The tile CNNs: no thinned version, since no thinned tiles exist.
+  - None of them is retrained on thinned inputs; that stays with each job's best network.
+- **Scoring**:
+  - Every added model against the job's LR and best simple model, as for the pre-registered networks.
+  - The 2x2 and input contrasts: `bilstm_vci - bilstm`, `cnn_bilstm - bilstm_vci`, `cnn_bilstm - cnn_lr`
+    (`cnn_lr - lr_vci_t` and `bilstm_vci - lr_vci_t` are among the comparisons with LR).
+  - Phase 6's SPEI benchmark also scores the added models.
+- **Saved models**: every Phase 5 network run, pre-registered or added, saves `model.pt`, its parameter count and,
+  for the tile CNNs and both Bi-LSTMs, multiply-adds per prediction (Jetson sizing).
+- **Running**:
+  - The composite stage uses 3 CPU workers instead of 4, plus 2 GPU workers. The GPU-only tile CNNs set the stage's
+    length, and one fewer CPU process leaves memory headroom.
+  - Failed runs are retried once before anything is scored.
+  - A missing prediction stops the scoring before the lock is written, so no partial scoring can use up the fresh
+    test.
+  - Sandbox check: `tmp/phase5_sandbox` (the `smoke5` pseudo-test regions, a sandbox lock). Every added model trained,
+    scored and saved; no real fresh-test label was read.
