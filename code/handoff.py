@@ -174,9 +174,18 @@ def runner_lines(pr) -> list[str]:
     return L
 
 
-def now_line(pr, st, s, fz, cs) -> str:
+def now_line(pr, st, s, fz, cs, para=None, lim=None) -> str:
     if cs and cs.get("phase") == "done":
-        return "Finished: Phases 1-6 done and the reports regenerated. Only the manual wrap-up (step 10) is left."
+        busy = [n for n, _, _ in RUNNERS if work_pids(pr.get(n, []))]
+        if busy:
+            return ("Phases 1-6 done and the reports regenerated; " + " and ".join(busy) + " still running (section 1 "
+                    "below).")
+        if para and not para.get("automatic") and lim:
+            return ("Finished: Phases 1-6, the post-hoc models and the learning curve are done; the closing paragraph "
+                    "and the limitations are hand-written and the reports regenerated. Left: only the cleanup that "
+                    "needs the user's OK (section 7).")
+        return ("Finished: Phases 1-6 done and the reports regenerated. Only the manual wrap-up (the last step of "
+                "section 2) is left.")
     if pr["pipeline run.py"] and s:
         running = [k for k, v in s.get("stages", {}).items() if v.get("state") == "running"]
         cur = running[-1] if running else "?"
@@ -217,8 +226,8 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
         (dev_done, "Development stages features, simple, search, final, score, checks, whatif, weekly",
          "automatic: the training launcher becomes `code/dewsat2/run.py` (log `logs/run.log`)"),
         (bool(read_json(SCORES / "posthoc.json")), "Post-hoc models (DESIGN.md amendments 4, 4b): search, final, "
-         "development scores (`scores/posthoc.json`)", "automatic: post-hoc runner (`code_posthoc/`, log "
-         "`logs/posthoc/run.log`)"),
+         "development scores (`scores/posthoc.json`)", "automatic: post-hoc runner (`posthoc_run.py`, run from the "
+         "`posthoc` worktree, since merged into `main`; log `logs/posthoc/run.log`)"),
         (not (V2 / "STOP_CHAIN").exists() and bool(mark), "Amendment 6: the post-hoc models and the plain Bi-LSTM in "
          "Phase 5; `STOP_CHAIN` removed, chain launcher restarted", "By hand, after reviewing `scores/posthoc.json` "
          "(DECISIONS.md #66)"),
@@ -229,15 +238,15 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
         ("nldas" in p6 and "spei" in p6, "Phase 6: NLDAS-2 agreement and gridMET SPEI benchmark",
          "automatic: same run; if only Phase 6 fails it is retried at most twice"),
         (bool(read_json(SCORES / "lcurve.json")), "Learning curve (amendment 5; secondary)", "learning-curve runner "
-         "(`code_lcurve/`, log `logs/lcurve/run.log`); it yields to Phase 5 (`touch logs/lcurve/STOP`) and resumes "
-         "afterwards"),
+         "(`posthoc_run.py --stages lcurve,lcurve_score`, run from the `lcurve` worktree, since merged into `main`; log "
+         "`logs/lcurve/run.log`); it yielded to Phase 5 and finished after it"),
         (bool(cs) and cs.get("phase") == "done", "Reports regenerated (report.md, audit.md, "
          "fatemeh_numbers.md, data_card.md)", "automatic: run.py after every stage; the chain launcher at the end, with "
          "an automatic closing paragraph only if none was written by hand"),
         (bool(para) and not para.get("automatic") and bool(lim), "Manual wrap-up",
          "by hand: a hand-written closing paragraph (`scores/conclusion_paragraph.json`, replacing any "
          "automatic one) and `scores/limitations.json`, regenerate the reports, final DECISIONS.md / FOLDERS.md "
-         "entries, commit `code/`, and ask before removing the empty MPS temp folders (section 7)"),
+         "entries, commit `code/`, and ask before deleting the sandboxes and temp folders (section 7)"),
     ]
     return [f"{i}. [{'x' if ok else ' '}] **{title}**: {who}." for i, (ok, title, who) in enumerate(steps, 1)]
 
@@ -303,18 +312,18 @@ mkdir -p logs/chain && caffeinate -dimsu nohup .venv/bin/python -u code/launch_a
 .venv/bin/python -u code/dewsat2/run.py --stages phase6 >> logs/run_phase56.log 2>&1
 ```
 
-- Post-hoc runner (only if `logs/posthoc/status.json` shows unfinished stages and it is not running; finished runs
-  are skipped). Graceful stop: `touch logs/posthoc/STOP` (running runs finish, no new ones start):
+- Post-hoc and learning-curve runners: both finished (`logs/posthoc/status.json`, `logs/lcurve/status.json`).
+  They ran from worktrees of the branches `posthoc` and `lcurve`, so code edits never reached a running process; both
+  branches are merged into `main` and the worktrees were removed (DECISIONS.md #82). To rerun either, make a fresh
+  worktree first (`git -C code worktree add ../code_rerun main`) and run from it; finished runs are skipped.
+  Graceful stop: `touch logs/posthoc/STOP` or `touch logs/lcurve/STOP` (running runs finish, no new ones start):
 
 ```bash
-rm -f logs/posthoc/STOP && caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_posthoc/dewsat2/posthoc_run.py --stages search,final,score --cpu-workers 2 --mps-workers 2 --threads 2 >> logs/posthoc/run.log 2>&1 &
+rm -f logs/posthoc/STOP && caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_rerun/dewsat2/posthoc_run.py --stages search,final,score --cpu-workers 2 --mps-workers 2 --threads 2 >> logs/posthoc/run.log 2>&1 &
 ```
 
-- Learning-curve runner (after Phase 5, or alongside Phase 6; finished runs are skipped; each runner keeps its own
-  worktree so every run of an experiment has the same commit). Graceful stop: `touch logs/lcurve/STOP`:
-
 ```bash
-rm -f logs/lcurve/STOP && caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_lcurve/dewsat2/posthoc_run.py --stages lcurve,lcurve_score --cpu-workers 2 --mps-workers 1 --threads 2 >> logs/lcurve/run.log 2>&1 &
+rm -f logs/lcurve/STOP && DEWSAT_LC_MODELS=bilstm,cnn_bilstm,bilstm_vci caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code_rerun/dewsat2/posthoc_run.py --stages lcurve,lcurve_score --cpu-workers 2 --mps-workers 2 --threads 3 >> logs/lcurve/run.log 2>&1 &
 ```
 
 - Regenerate the reports:
@@ -334,9 +343,12 @@ FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status
 - Chain launcher bookkeeping: `logs/chain/LOCK/` (one instance), `logs/chain/phase56_launched.json` (Phase 5 started
   once), `logs/chain/GO_PHASE5` (approval after a sanity stop), `STOP_CHAIN`.
 - Post-hoc models (amendments 4-6): `runs/posthoc/`, `scores/posthoc.json`, `logs/posthoc/` (status, STOP); tiles
-  `cache/tiles/` (`tiles.json`); learning curve `runs/lcurve/`, `scores/lcurve.json`, `logs/lcurve/`. Worktrees:
-  `code_posthoc/` (branch `posthoc`) and `code_lcurve/` (branch `lcurve`) are what the running runners use; `main`
-  contains both since `31b382e`.
+  `cache/tiles/` (`tiles.json`); learning curve `runs/lcurve/`, `scores/lcurve.json`, `logs/lcurve/`. The branches
+  `posthoc`, `lcurve` and `report` are merged into `main`; their worktrees were removed after the learning curve
+  finished (DECISIONS.md #82).
+- Post-hoc analyses of the fresh test (after the lock; not a second test): `scores/fresh_posthoc.json`,
+  `scores/fresh_labels_posthoc.json`; Phase 6 data `data/phase6/` (NLDAS-2 months, SPEI point series).
+- Hand-written: `scores/conclusion_paragraph.json` (closing paragraph), `scores/limitations.json`.
 - Results: `scores/*.json`; reports `report.md`, `audit.md`, `fatemeh_numbers.md`, `data_card.md`.
 - Design and gate, fixed before training: `code/design/DESIGN.md`, `code/design/gate.json` (commit `f5e92aa`).
 - Code: `code/pull/` (pull), `code/dewsat2/` (pipeline; `run.py` is the entry point), `code/launch_when_frozen.sh`,
@@ -359,23 +371,27 @@ RESUME = """1. Read, in this order: this file, `STATUS.md`, `DECISIONS.md`, `cod
    `STATUS.md`, this file and the logs. Never start `run.py` by hand while the training launcher, a `run.py` or the
    chain launcher is alive.
 4. If a process died, use the matching command in section 3, after reading its log tail, and log what you did.
-5. When step 9 is ticked, do step 10: replace the automatic closing paragraph with a hand-written yes/no paragraph
+5. When the reports step of section 2 is ticked, do the manual wrap-up (its last step; done on 2026-11-09): replace
+   the automatic closing paragraph with a hand-written yes/no paragraph
    that says why, using only logged numbers; write `scores/limitations.json` (`{"items": [...]}`); regenerate the
    reports; update `DECISIONS.md`, `STATUS.md` and `FOLDERS.md`; commit `code/`. Ask before deleting anything outside
    the folder.
 """
 
-ESTIMATES = """Updated 2026-11-09 03:45 (from the finished runs' seconds per epoch per 100k windows; Phase 5 trains on
-about 1.0 M job-1 windows, 2.4 times a final run's):
+ESTIMATES = """Everything has finished. Actual ends (from `logs/status_pipeline.json`, `logs/posthoc/status.json`,
+`logs/lcurve/status.json` and the lock file):
 
-| Stage | Work | Duration | Expected end |
-|---|---|---|---|
-| Post-hoc finals and scores | last CNN finals on the GPU | about 30 min | Nov 9 04:15 |
-| Phase 5 composite | 140 refits; the 20 tile-CNN refits on 2 GPU workers set the length | 3.5-5 h | Nov 9 09:00 |
-| Phase 5 thinned | 18 refits of each job's best network on 2 workers | 2.5-4 h | Nov 9 12:30 |
-| Phase 5 scoring | bootstrap of every row | 0.3-1 h | Nov 9 13:00 |
-| Phase 6 | NLDAS-2, SPEI | 1-3 h | Nov 9 15:00 |
-| Learning curve | 180 runs (90 done early); runs again after Phase 5 | 1-2 h | Nov 9 evening |
+| Stage | Finished |
+|---|---|
+| Region set frozen, development stages started | Nov 7 23:40 |
+| Pull finished (originals re-extracted, `data/FROZEN.json`) | Nov 8 03:03 |
+| Development stages (features to weekly) | Nov 9 03:04 |
+| Post-hoc models (search, final, scores) | Nov 9 09:24 |
+| Phase 5 (fresh test scored once, lock written) | Nov 9 09:36 |
+| Phase 6 (NLDAS-2, SPEI), retried once after two server changes | Nov 9 10:52 |
+| Learning curve (270 runs, three networks) and its scoring | Nov 9 13:25 |
+
+The estimate of Nov 9 03:45 put Phase 5's end at about 13:00 and Phase 6's at about 15:00; both finished earlier.
 
 Original estimate, kept for the record. Made 2026-11-07 11:30 from measured timings: pull batches 1.13-1.26 h (mean 1.18 h); network seconds per epoch
 per 100k windows on real windows (`logs/bench_real.json`); window counts of the 102-region sandbox (`smokeT`) scaled by
@@ -400,13 +416,18 @@ cells (x5.35). Network stages use the pipeline's own cost model, calibrated on t
 The task's 6-day limit (pull included) ends Nov 13 03:03, so the latest estimate leaves more than 3 days.
 """
 
-KNOWN = """- `STATUS.md` shows an empty "Phases 3-4 pipeline" section: `code/status.py` reads `logs/status_pipeline.json`,
-  but the pipeline writes its table to `logs/status_pipeline_lines.json`. Nothing is lost; section 1 of this file
-  shows the table. The one-line fix in `code/status.py` waits for the user's OK (DECISIONS.md #47).
+KNOWN = """- Fixed: `STATUS.md` used to show an empty "Phases 3-4 pipeline" section (`code/status.py` read
+  `logs/status_pipeline.json`, but the table is in `logs/status_pipeline_lines.json`). The fix waited, as the user
+  asked, until the run finished; it is live since the `report` merge (`e4febc0`, DECISIONS.md #47 and #80).
 - PyTorch's Apple-GPU (MPS) backend creates an empty folder per compiled graph in the macOS per-user temp folder
   (`/var/folders/hz/_y4bwsp114bgsxv6j56hq81c0000gn/T/com.apple.MetalPerformanceShadersGraph/mpsgraph-<pid>-...`),
-  ignoring TMPDIR. 4,708 empty folders (0 bytes) came from the benchmarks and sandboxes on Nov 7 03:19-04:55, and the
-  MPS workers will add more. Remove them only with the user's OK, after the run (DECISIONS.md #46).
+  ignoring TMPDIR. There are 5,318 of them, all empty (0 bytes), from this task's benchmarks, sandboxes and GPU
+  workers. Remove them only with the user's OK (DECISIONS.md #46).
+- Also waiting for the user's OK before deletion (FOLDERS.md): the pipeline sandboxes `smoke/`, `smokeT/`, `smoke5/`
+  (167 MB), the check sandboxes under `tmp/` (about 1 GB) and `cache/tiles/regions/` (3.2 GB of per-region pieces;
+  the assembled tiles stay).
+- An orphaned worker from an earlier runner (process 35678) is still alive and idle; it is left alone, as the user
+  asked.
 """
 
 
@@ -424,7 +445,7 @@ def render(path: Path = V2 / "HANDOFF.md") -> str:
     L = ["# HANDOFF: DEWSat_BiLSTM_v2", "",
          f"_Rendered {time.strftime('%Y-%m-%d %H:%M:%S')} by `code/handoff.py`. The chain launcher re-renders it every 2 "
          "minutes while it runs; if this time is old, that launcher has stopped (section 3)._", "",
-         "## 1. Where things stand", "", f"**Now:** {now_line(pr, st, s, fz, cs)}", ""]
+         "## 1. Where things stand", "", f"**Now:** {now_line(pr, st, s, fz, cs, para, lim)}", ""]
     L += pull_lines(st)
     L.append(f"- Freeze: " + (f"region set frozen {fz.get('frozen')}: {json.dumps(fz.get('counts'))}, failed regions "
                               f"{fz.get('failed_regions') or 'none'}." if fz else "not yet (`data/FROZEN_REGIONS.json`)."))
