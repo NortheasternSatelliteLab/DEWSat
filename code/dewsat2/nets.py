@@ -1,4 +1,6 @@
-"""Temporal networks (DESIGN.md section 5): bilstm, resbilstm, gru, lstm, tcn; training and inference.
+"""Temporal networks (DESIGN.md section 5): bilstm, resbilstm, gru, lstm, tcn; training and inference. Amendment 7 adds
+bilstm_relu (the bilstm with ReLU in place of tanh inside the cell) and bilstm_hand (its hand-written cell with tanh,
+for the checks).
 
 The Bi-LSTM layout is the lab's DroughtBiLSTM (as in the capability run's neural.py, commit e13e7a4): final states of
 both directions plus the masked mean of the outputs -> LayerNorm -> Linear -> GELU -> Dropout -> Linear, logits out.
@@ -17,6 +19,59 @@ import torch
 from torch import nn
 
 
+class HandLSTM(nn.Module):
+    """`nn.LSTM` (batch_first, bidirectional) written out step by step, so that the activation of the candidate memory
+    and of the output squash can be changed (DESIGN.md amendment 7). The gates stay sigmoid.
+
+    The weights are copied from an `nn.LSTM` built with the same arguments at the same point, under the parameter names
+    `nn.LSTM` uses. The copies make no random draws, so for a given seed the initial weights (and every later draw,
+    such as the head's) are exactly those of the `bilstm` family. act "tanh" reproduces `nn.LSTM` (a check);
+    "relu" is the variant. With two layers, dropout acts on the first layer's outputs during training, as in
+    `nn.LSTM`."""
+
+    def __init__(self, n_in: int, hidden: int, layers: int, dropout: float, act: str):
+        super().__init__()
+        if act not in ("tanh", "relu"):
+            raise ValueError(act)
+        ref = nn.LSTM(n_in, hidden, num_layers=layers, batch_first=True, bidirectional=True,
+                      dropout=dropout if layers > 1 else 0.0)
+        self.hidden, self.layers, self.act = hidden, layers, act
+        self.dropout = dropout if layers > 1 else 0.0
+        for name, p in ref.named_parameters():          # weight_ih_l0, weight_hh_l0, bias_ih_l0, ..., *_reverse
+            setattr(self, name, nn.Parameter(p.detach().clone()))
+
+    def _f(self, x):
+        return torch.relu(x) if self.act == "relu" else torch.tanh(x)
+
+    def _direction(self, x, layer: int, sfx: str):
+        w_ih, b_ih = getattr(self, f"weight_ih_l{layer}{sfx}"), getattr(self, f"bias_ih_l{layer}{sfx}")
+        w_hh, b_hh = getattr(self, f"weight_hh_l{layer}{sfx}"), getattr(self, f"bias_hh_l{layer}{sfx}")
+        xs = nn.functional.linear(x, w_ih, b_ih)         # input projections of every step at once
+        h = x.new_zeros(x.shape[0], self.hidden)
+        c = x.new_zeros(x.shape[0], self.hidden)
+        outs = []
+        for t in range(x.shape[1]):
+            i, f, g, o = (xs[:, t] + nn.functional.linear(h, w_hh, b_hh)).chunk(4, dim=1)    # nn.LSTM's gate order
+            c = torch.sigmoid(f) * c + torch.sigmoid(i) * self._f(g)
+            h = torch.sigmoid(o) * self._f(c)
+            outs.append(h)
+        return torch.stack(outs, dim=1), h
+
+    def forward(self, x):
+        finals = []
+        for layer in range(self.layers):
+            if layer > 0 and self.dropout > 0:
+                x = nn.functional.dropout(x, self.dropout, self.training)
+            fw, hf = self._direction(x, layer, "")
+            bw, hb = self._direction(x.flip(1), layer, "_reverse")
+            x = torch.cat((fw, bw.flip(1)), dim=2)
+            finals += [hf, hb]
+        return x, (torch.stack(finals), None)            # as nn.LSTM: outputs, (h_n, -); h_n[-2:] = last layer
+
+
+HAND = {"bilstm_relu": "relu", "bilstm_hand": "tanh"}   # amendment 7: the ReLU variant and its tanh check
+
+
 class Encoder(nn.Module):
     def __init__(self, family: str, n_in: int, hidden: int, layers: int, dropout: float, bidir: bool):
         super().__init__()
@@ -24,6 +79,10 @@ class Encoder(nn.Module):
         if family in ("bilstm", "resbilstm", "lstm"):
             self.rnn = nn.LSTM(n_in, hidden, num_layers=layers, batch_first=True, bidirectional=bidir,
                                dropout=dropout if layers > 1 else 0.0)
+        elif family in HAND:
+            if not bidir:
+                raise ValueError(f"{family} is bidirectional")
+            self.rnn = HandLSTM(n_in, hidden, layers, dropout, HAND[family])
         elif family == "gru":
             self.rnn = nn.GRU(n_in, hidden, num_layers=layers, batch_first=True, bidirectional=bidir,
                               dropout=dropout if layers > 1 else 0.0)
@@ -80,7 +139,7 @@ class SeqNet(nn.Module):
             self.enc = TCNEncoder(n_in, hidden, layers, dropout)
         else:
             if bidir is None:
-                bidir = family in ("bilstm", "resbilstm")
+                bidir = family in ("bilstm", "resbilstm", *HAND)
             self.enc = Encoder(family, n_in, hidden, layers, dropout, bidir)
         d = 2 * self.enc.out_dim
         mlp = 2 * hidden

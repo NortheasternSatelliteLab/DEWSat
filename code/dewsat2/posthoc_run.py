@@ -19,6 +19,9 @@ and failures (logs/lcurve/, runs/lcurve/failures/):
     cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && mkdir -p logs/lcurve && rm -f logs/lcurve/STOP
     caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code/dewsat2/posthoc_run.py --stages lcurve,lcurve_score \
         --cpu-workers 2 --mps-workers 1 --threads 2 >> logs/lcurve/run.log 2>&1 &
+
+The ReLU Bi-LSTM (DESIGN.md amendment 7, relu.py) does too (logs/relu/, runs/relu/failures/): stages relu_pilot and
+relu_pilot_score first, then relu and relu_score (commands in relu.py).
 """
 
 from __future__ import annotations
@@ -43,15 +46,23 @@ def say(msg: str) -> None:
 
 
 def _ns() -> str:
-    """'posthoc' or 'lcurve': the folder of this runner's status, STOP file and failures (inherited by the workers)."""
+    """'posthoc', 'lcurve' or 'relu': the folder of this runner's status, STOP file and failures (inherited by the
+    workers)."""
     return os.environ.get("DEWSAT_RUNNER_NS", "posthoc")
 
 
+GROUPS = {"lcurve": ("lcurve", "lcurve_score"), "relu": ("relu_pilot", "relu_pilot_score", "relu", "relu_score")}
+HAND_FAMILIES = ("bilstm_relu", "bilstm_hand")            # amendment 7: the hand-written cell (slower than nn.LSTM)
+
+
 def _mod(spec: dict):
-    """The module that owns a run: lcurve for learning-curve runs, posthoc otherwise."""
+    """The module that owns a run: lcurve for learning-curve runs, relu for the ReLU Bi-LSTM, posthoc otherwise."""
     if spec["type"] == "lc":
         import lcurve
         return lcurve
+    if spec["type"] == "relu":
+        import relu
+        return relu
     import posthoc
     return posthoc
 
@@ -113,10 +124,12 @@ def _est(s: dict, dev: str) -> float:
         import lcurve
         n = 5.0 * lcurve.data_fraction(s["slice"])
     else:
-        n = 5.0 if s["type"] == "ph_final" else 2.0
-    if c["family"] in ("bilstm_vci", "bilstm"):
+        n = 5.0 if s["type"] in ("ph_final", "relu") else 2.0
+    if c["family"] in ("bilstm_vci", "bilstm", *HAND_FAMILIES):
         h, layers = c["hidden"], c.get("layers", 1)
         per = 2.0 + 0.012 * h * layers if dev == "mps" else 2 * 1.95 * (h / 32) ** 0.95 * layers
+        if c["family"] in HAND_FAMILIES:                    # timing check (DECISIONS.md #83): x1.1-1.3 CPU, x3-4 MPS
+            per *= 3.5 if dev == "mps" else 1.25
     elif c["family"] == "cnn_lr":
         per = 1.5 + 0.15 * c["width"]
     else:
@@ -131,7 +144,7 @@ def _pick(dev: str, pending: list[dict], pools: dict, n_mps: int) -> dict | None
             if _mod(s).device_for(s["cfg"]) == "mps":
                 return pending.pop(i)
         return pending.pop(0) if pending else None          # then anything (CPU-placed recurrent runs)
-    flex = [i for i, s in enumerate(pending) if s["cfg"]["family"] in ("bilstm_vci", "bilstm")]
+    flex = [i for i, s in enumerate(pending) if s["cfg"]["family"] in ("bilstm_vci", "bilstm", *HAND_FAMILIES)]
     for i in flex:                                          # CPU-placed runs first, in queue order
         if _mod(pending[i]).device_for(pending[i]["cfg"]) == "cpu":
             return pending.pop(i)
@@ -250,10 +263,14 @@ def main() -> int:
     import posthoc
     from common import read_json, write_json
     stages = a.stages.split(",")
-    lc = [s.startswith("lcurve") for s in stages]
-    if any(lc) and not all(lc):
-        raise SystemExit("run the learning-curve stages (lcurve, lcurve_score) on their own")
-    os.environ["DEWSAT_RUNNER_NS"] = "lcurve" if all(lc) else "posthoc"     # before any worker starts
+    ns = "posthoc"
+    for group, names in GROUPS.items():
+        hit = [s in names for s in stages]
+        if any(hit) and not all(hit):
+            raise SystemExit(f"run the {group} stages ({', '.join(names)}) on their own")
+        if all(hit):
+            ns = group
+    os.environ["DEWSAT_RUNNER_NS"] = ns                     # before any worker starts
     if stop_file().exists():
         say(f"{stop_file()} exists; delete it to run. Nothing started.")
         return 0
@@ -261,11 +278,15 @@ def main() -> int:
     status.update({"pid": os.getpid(), "process_started": time.strftime("%Y-%m-%d %H:%M:%S"), "state": "running"})
     status.setdefault("stages", {})
     for stage in stages:
-        if stage in ("search", "final", "lcurve"):
+        if stage in ("search", "final", "lcurve", "relu_pilot", "relu"):
             if stage == "lcurve":
                 import lcurve
                 specs = lcurve.stage_specs()
                 say(f"lcurve: networks {lcurve.models()}, seeds {list(lcurve.SEEDS)}")
+            elif stage in ("relu_pilot", "relu"):
+                import relu
+                specs = relu.stage_specs(stage)
+                say(f"{stage}: {len(specs)} runs, families {sorted({s['cfg']['family'] for s in specs})}")
             else:
                 want = set(a.models.split(","))
                 specs = [s for s in posthoc.stage_specs(stage) if s["cfg"]["family"] in want]
@@ -278,6 +299,36 @@ def main() -> int:
                 write_json(status_file(), status)
                 say("stopped (STOP file); a restart resumes from the finished runs")
                 return 0
+        elif stage == "relu_pilot_score":
+            import relu
+            res = relu.pilot_check()
+            for r in res["tanh_reproduction"]:
+                say(f"  pilot seed {r['seed']}: AUC hand {r['auc_hand']:.5f} original {r['auc_original']:.5f} "
+                    f"(difference {r['auc_difference']:+.5f}), max |logit difference| {r['max_logit_difference']}")
+            if res["relu_run"]:
+                say(f"  pilot ReLU run: loss {['%.4f' % x for x in res['relu_run']['loss']]}")
+            status["stages"]["relu_pilot_score"] = {"state": "passed" if res["passed"] else "failed",
+                                                    "failures": res["failures"],
+                                                    "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
+            if not res["passed"]:
+                status["state"] = "pilot failed"
+                write_json(status_file(), status)
+                say(f"pilot FAILED: {res['failures']}; nothing more is trained")
+                return 1
+            say("pilot passed")
+        elif stage == "relu_score":
+            import relu
+            t0 = time.time()
+            res = relu.score()
+            for job, e in res["jobs"].items():
+                for m, v in e["models"].items():
+                    say(f"  {job} {m}: within-fold AUC {v['all']}")
+                for k, v in e["verdicts"].items():
+                    say(f"  {job} {k}: {e['paired'][k]['all']} -> {v}")
+            say(f"  losses fell {res['all_losses_fell']}, finite {res['all_losses_finite']}; reproduce "
+                f"{res['reproduce_max_logit_difference']}")
+            status["stages"]["relu_score"] = {"state": "done", "minutes": round((time.time() - t0) / 60, 1),
+                                              "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
         elif stage == "lcurve_score":
             import lcurve
             t0 = time.time()
