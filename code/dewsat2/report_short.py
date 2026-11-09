@@ -118,18 +118,35 @@ def audit(d: dict) -> str:
             for m, v in j3["within"].items():
                 L.append(f"| {lab(m)} | {ci(v['all'])} | {ci(v['west'])} | {ci(v['east'])} |")
             L += [""]
+    ph = d.get("posthoc")
+    if ph:
+        L += ["## Models added after the development results (amendments 4 and 4b; development; not in the gate)", "",
+              "VCI-only Bi-LSTM (jobs 1-3: only VCI, observed flag and months since a view as inputs); CNN + LR and "
+              "CNN + Bi-LSTM on 23x21 VCI image tiles of each cell (job 1). Same folds, seeds and resamples.", ""]
+        for job, e in ph["jobs"].items():
+            L.append(f"- {e['label']}: " + "; ".join(
+                f"{lab(k.split(' - ')[0])} − {lab(k.split(' - ')[1])} {ci(v['all'], signed=True)} ({e['verdicts'].get(k)})"
+                for k, v in e["paired"].items() if k.split(" - ")[1] in ("lr_vci_t", "lr_latest_age", "bilstm",
+                                                                         "bilstm_vci", "cnn_lr")) + ".")
+        L += [""]
     if p5:
         L += ["## Fresh test (scored once; regions >= 0.5° from all development regions, 2025-01..2026-09)", ""]
+        vl = conclusion().get("verdict_lines", [])
+        if vl:
+            L += ["**Pre-registered verdicts** (section 9 rule: interval above zero over all regions, neither side "
+                  "entirely below zero):", ""] + vl + [""]
         for key, title in (("job1", "Job 1"), ("job2", "Job 2"), ("job4", "Job 4")):
             sub = p5["fresh"].get(key)
             if sub:
                 L += [f"**{title}** ({sub['n']:,} windows, {sub['sides']['all']['regions']} regions):", ""] + \
-                     _compact(sub, _key_models(sub)) + [""]
-                L += [f"- {lab(pp.split(' - ')[0])} − {lab(pp.split(' - ')[1])}: {ci(v['all']['dauc_within'], signed=True)}"
-                      for pp, v in sub["paired"].items() if pp.split(" - ")[0] in ("bilstm", "resbilstm", "gru", "lstm", "tcn")] + [""]
+                     _compact(sub, _key_models(sub, ("bilstm_vci", "cnn_lr", "cnn_bilstm"))) + [""]
+                L += [f"- {lab(pp.split(' - ')[0])} − {lab(pp.split(' - ')[1])}: {ci(v['all']['dauc_within'], signed=True)} "
+                      f"(West {ci(v['west']['dauc_within'], signed=True)}, East {ci(v['east']['dauc_within'], signed=True)})"
+                      for pp, v in sub["paired"].items() if pp.split(" - ")[0] in ("bilstm", "resbilstm", "gru", "lstm", "tcn", "bilstm_vci", "cnn_lr", "cnn_bilstm")] + [""]
         m3 = p5["fresh"].get("job3_mean_onset")
         if m3:
             L += ["**Job 3** mean onset AUC: " + "; ".join(f"{lab(m)} {ci(v['all'])}" for m, v in m3["models"].items()), ""]
+        L += _fresh_posthoc_lines(d.get("fresh_posthoc"))
         c = conclusion()
         L += ["## Realistic sampling", ""] + c.get("realistic_lines", []) + [""]
     w = d["whatif"]
@@ -148,6 +165,16 @@ def audit(d: dict) -> str:
         L += ["## Weekly inputs (secondary)", "", "- " + "; ".join(
             f"{lab(m)} {ci(v['all']['auc_within'])}" for m, v in s3["models"].items()) + "; difference " +
               "; ".join(ci(v['all']['dauc_within'], signed=True) for v in s3["paired"].values()) + ".", ""]
+    lc = d.get("lcurve")
+    if lc:
+        L += ["## Learning curve (amendment 5; job 1, development; no pass/fail)", ""]
+        for axis, e in lc["axes"].items():
+            for m in lc["networks"]:
+                diffs = "; ".join(f"{r['size']}: {ci(r['network_minus_lr'][m]['all'], signed=True)}" for r in e["sizes"])
+                ch_ = e["change_in_difference"][m]
+                L.append(f"- {axis}, {lab(m)} − LR by training size ({diffs}); change second-largest to full "
+                         f"{ci(ch_['second_largest_to_full'], signed=True)}.")
+        L += [""]
     ch = d["checks"]
     if ch:
         L += ["## Checks on the new models", ""]
@@ -167,9 +194,45 @@ def audit(d: dict) -> str:
     return "\n".join(L) + "\n"
 
 
+def _fresh_posthoc_lines(f) -> list[str]:
+    """A compact version of report section 8a (post-hoc slices of the fresh test, after the lock)."""
+    if not f:
+        return []
+    L = ["**Post-hoc slices of the fresh test** (after the lock; the same predictions, not a second test):", ""]
+    rc = f.get("reload_check")
+    if rc:
+        L.append(f"- Validity: {rc['models']} saved networks reproduce their scored logits (max difference "
+                 f"{rc['max_abs_logit_diff']:.1e}); parameter counts match; every training loss fell.")
+    pp = (f.get("network_pairs") or {}).get("fresh_job1", {}).get("paired", {})
+    if pp:
+        L.append("- Networks against each other (job 1): " + "; ".join(
+            f"{lab(k.split(' - ')[0])} − {lab(k.split(' - ')[1])} {ci(pp[k]['all'], signed=True)}"
+            for k in ("bilstm - resbilstm", "bilstm - gru", "resbilstm - gru", "bilstm - bilstm_vci") if k in pp) + ".")
+    wr, by = f.get("within_region"), f.get("by_year")
+    if wr:
+        mm = wr["all"]["models"]
+        L.append("- Over time (pairs within a region), network − LR: " + "; ".join(
+            f"{lab(m)} {ci(mm[m]['minus_lr'], signed=True)}" for m in ("bilstm", "resbilstm", "gru", "bilstm_vci") if m in mm) + ".")
+    if by:
+        L.append("- By year, Bi-LSTM − LR (pooled AUC): " + "; ".join(
+            f"{k.replace('_', ' ')} {v['auc']['bilstm'] - v['auc']['lr_vci_t']:+.3f} (drought {v['drought_rate']:.2f})"
+            for k, v in by.items()) + ".")
+    dv = f.get("dev_folds")
+    if dv:
+        rows = sorted(dv["folds"], key=lambda r: r["training_windows"])
+        L.append("- Bi-LSTM − LR by training-set size: " + "; ".join(
+            f"fold {r['fold']} ({r['validation_years']}, {r['training_windows'] / 1e3:.0f}K windows) "
+            f"{r['auc']['bilstm'] - r['auc']['lr_vci_t']:+.3f}" for r in rows) +
+            f"; Phase 5 ({dv['phase5_training_windows'] / 1e3:.0f}K windows, fresh test) "
+            f"{dv['fresh_auc']['bilstm'] - dv['fresh_auc']['lr_vci_t']:+.3f}.")
+    return L + [""]
+
+
 def fatemeh(d: dict) -> str:
     c = conclusion()
     L = ["# DEWSat: numbers for Prof. Ghoreishi", "", c.get("bottom_line", "Bottom line: pending (the run is still going)."), ""]
+    if c.get("verdict_lines"):
+        L += ["**Pre-registered verdicts on the fresh test:**", ""] + c["verdict_lines"] + [""]
     p5 = d["phase5"]
     if p5:
         L += c.get("fresh_lines", []) + [""]

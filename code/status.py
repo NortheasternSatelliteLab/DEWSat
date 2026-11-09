@@ -58,10 +58,24 @@ def render() -> None:
     for name, title in (("audit", "Phase 0 audit"), ("pipeline", "Phases 3-4 pipeline"),
                         ("weekly", "Weekly-input experiment"), ("fresh", "Phase 5 fresh test"),
                         ("extras", "Phase 6 extras")):
+        if name == "pipeline":
+            # the pipeline writes its rendered section (header, data line, stage table) to its own lines file
+            s = _read(V2 / "logs" / "status_pipeline_lines.json")
+            if s:
+                lines += list(s.get("lines", [])) + [""]
+            continue
         s = _read(V2 / "logs" / f"status_{name}.json")
         if s:
             lines += [f"## {title}", ""] + [f"- {x}" for x in s.get("lines", [])] + [""]
-    path = V2 / "STATUS.md"
+    # ---- the post-hoc models' and the learning curve's runners (DESIGN.md amendments 4-6)
+    try:
+        import handoff
+        rl = handoff.runner_lines(handoff.processes())
+        if rl:
+            lines += ["## Post-hoc models and learning curve", ""] + rl + [""]
+    except Exception:  # noqa: BLE001
+        pass
+    path = Path(os.environ.get("DEWSAT_STATUS_OUT", str(V2 / "STATUS.md")))
     tmp = path.with_name("STATUS.md.tmp")
     tmp.write_text("\n".join(lines) + "\n")
     os.replace(tmp, path)

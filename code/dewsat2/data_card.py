@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 
-from common import SCORES, git_state, read_json
+from common import CACHE, SCORES, git_state, read_json
 from report import ci, lab
 
 
@@ -96,6 +96,18 @@ def card(d: dict) -> str:
         L += [f"**Size on disk**: new regions {dk.get('new_regions_bytes', 0) / 1e9:.1f} GB, re-extracted originals "
               f"{dk.get('reextract_bytes', 0) / 1e9:.1f} GB, copy of the paper's composites {dk.get('paper_regions_copy_bytes', 0) / 1e9:.1f} GB, "
               f"feature cache {dk.get('cache_bytes', 0) / 1e9:.1f} GB.", ""]
+    tj = read_json(CACHE / "tiles" / "tiles.json")
+    if tj:
+        dv, ts = tj["parts"]["dev"], tj["parts"]["test"]
+        L += ["### VCI image tiles (input of the CNN models added after the development results, amendment 4)", "",
+              f"Per cell and month, the pixel VCI behind VCI_mean averaged onto a {tj['tile'][0]} x {tj['tile'][1]} grid of "
+              "near-equal pixel bins (uint8 0-100; an empty bin, or a month the cell is unobserved, is marked empty). One "
+              f"array per VCI table: development {dv['cells']:,} cells x {dv['months']} months for the 4 fold tables and the "
+              f"all-development table; fresh test {ts['cells']:,} cells x {ts['months']} months (all-development table). "
+              f"Built {tj['built']} in {tj['minutes']} minutes; check: each cell's mean VCI recomputed from the same pixels "
+              f"matches VCI_mean within {tj['check']['worst_vci_mean_diff_this_build']:.1e} VCI units, observed flags agree "
+              f"({tj['check']['observed_mismatches_this_build']} mismatches). Files `cache/tiles/` (`tiles.json`); code "
+              "`code/dewsat2/tiles.py`. No labels are read.", ""]
     L += ["## 3. Training, validation and results", "",
           "Four outer folds = four region groups (balanced East/West) × the year blocks 2016–17, 2018–19, 2020–21, 2022–23, "
           "12-month buffers (15 for forecasts). Inner validation holds out the next group and one year. 30-configuration "
