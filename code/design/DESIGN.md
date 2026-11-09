@@ -337,3 +337,41 @@ the gate and the selection of Section 11 are unchanged. These rows are added bes
     test.
   - Sandbox check: `tmp/phase5_sandbox` (the `smoke5` pseudo-test regions, a sandbox lock). Every added model trained,
     scored and saved; no real fresh-test label was read.
+
+## Amendment 7 (2026-11-09, about 15:10): ReLU Bi-LSTM for job 1, development only (secondary, no pass/fail)
+
+Added after every result, including the one fresh-test scoring, at the user's request: could the Bi-LSTM use ReLU
+in place of tanh? Development folds only. The fresh test stays locked (Section 11) and is not scored again. Nothing
+changes in the gate, the selection, the fresh-test rows or any earlier result.
+
+- **Question**: with everything else fixed, does replacing tanh by ReLU inside the Bi-LSTM's cell change its job-1
+  within-fold AUC, and its gap to LR on VCI(T)?
+- **Model `bilstm_relu`**: `bilstm` exactly (layout, head, inputs, training, each fold's chosen setting, the 10 final
+  seeds), except inside the LSTM cell:
+  - The candidate memory and the output squash use ReLU instead of tanh.
+  - The input, forget and output gates stay sigmoid. ReLU gates would be unbounded and could shut for good.
+  - The cell is written step by step, since `nn.LSTM` fixes its activations. With two layers, dropout acts between
+    them as in `nn.LSTM`.
+  - Initial weights are copied from an `nn.LSTM` created at the same point with the same seed. So each seed starts
+    from exactly the weights of the original `bilstm` run, and the data order is the same.
+- **Checks before the 40 runs**:
+  - With tanh, the hand-written cell reproduces `nn.LSTM`'s outputs given the same weights (largest difference below
+    1e-5), for the three settings `bilstm` uses (hidden 24 x 1 layer, 128 x 1, 128 x 2). For the same seed, the whole
+    model's initial weights and logits equal `bilstm`'s.
+  - Pilot on fold 1 (CPU): the hand-written cell with tanh, trained as a final run, reproduces the original `bilstm`
+    runs of seeds 42, 43 and 46 (trained on the CPU): each seed's outer-validation AUC within 0.001. Then one
+    `bilstm_relu` run: its training loss falls and stays finite.
+  - If a check fails, nothing more is trained until the cause is found, fixed and logged.
+- **Scoring**: the score stage's job-1 subset (job 4 through job 1), within-fold AUC and its 2,000 whole-region
+  resamples (the same draws as every job-1 model), all regions and West/East. Pairs:
+  - `bilstm_relu - bilstm` (the primary comparison);
+  - `bilstm_relu - lr_vci_t` and `bilstm_relu - gbt_mono` (the gate's best simple model), with the gate's wording;
+  - `bilstm - lr_vci_t`, for reference.
+- **Reading, stated in advance** (primary pair, all regions): interval entirely above zero -> "ReLU helps in
+  development"; interval includes zero -> "no detectable difference"; entirely below zero -> "ReLU is worse in
+  development". West/East are reported but do not change the reading. Also reported: per-fold AUC, whether every
+  run's training loss fell, and seconds per run.
+- **Limits**: the settings were chosen for tanh, and there is no search for ReLU. Development only, so it cannot
+  change the fresh-test verdict.
+- **Runs**: 40 (4 folds x 10 seeds) in `runs/relu/`, scores in `scores/relu.json`, logs in `logs/relu/`, with the
+  post-hoc runner (`--stages relu,relu_score`).
