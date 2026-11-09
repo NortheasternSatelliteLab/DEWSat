@@ -371,7 +371,7 @@ FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status
 - Post-hoc models (amendments 4-6): `runs/posthoc/`, `scores/posthoc.json`, `logs/posthoc/` (status, STOP); tiles
   `cache/tiles/` (`tiles.json`); learning curve `runs/lcurve/`, `scores/lcurve.json`, `logs/lcurve/`. The branches
   `posthoc`, `lcurve` and `report` are merged into `main`; their worktrees were removed after the learning curve
-  finished (DECISIONS.md #82).
+  finished (DECISIONS.md #82). The ReLU test's branch `relu` was fast-forwarded into `main` (DECISIONS.md #87).
 - Post-hoc analyses of the fresh test (after the lock; not a second test): `scores/fresh_posthoc.json`,
   `scores/fresh_labels_posthoc.json`; Phase 6 data `data/phase6/` (NLDAS-2 months, SPEI point series).
 - ReLU Bi-LSTM (amendment 7): `runs/relu/` (`bilstm_relu`, and the pilot's `bilstm_hand`), `scores/relu.json`,
