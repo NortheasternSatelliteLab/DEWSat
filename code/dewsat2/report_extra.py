@@ -111,18 +111,47 @@ def sec_lcurve(d: dict) -> list[str]:
                      " | ".join(ci(row["network_minus_lr"][m]["all"], signed=True) for m in nets_) + " |")
         L += [""]
         for m, ch in e["change_in_difference"].items():
-            last, first = ch["second_largest_to_full"], ch["smallest_to_full"]
-            if last[1] is not None and last[1] > 0:
-                read = "still rising at the full data, so more of this kind of data would likely help"
-            elif first[1] is not None and first[1] > 0:
-                read = "rose, then flattened before the full data, so more of this kind is not expected to close the gap"
-            else:
-                read = "flat, so more of this kind is not expected to close the gap"
             L.append(f"- {lab(m)}: change in (network − LR) from the smallest slice to the full data "
-                     f"{ci(first, signed=True)}; from the second-largest to the full data {ci(last, signed=True)}: "
-                     f"{read} (reading rule fixed in amendment 5).")
+                     f"{ci(ch['smallest_to_full'], signed=True)}; from the second-largest to the full data "
+                     f"{ci(ch['second_largest_to_full'], signed=True)}: {_lc_read(ch)} (reading rule fixed in amendment 5).")
         L += [""]
+    s = lcurve_summary(lc)
+    if s:
+        L += [f"**Across the two axes:** {s}", ""]
     return L
+
+
+def lcurve_summary(lc: dict) -> str | None:
+    """One sentence comparing the two axes of the learning curve, from the amendment-5 reading of each network."""
+    ax, nets_ = lc["axes"], lc["networks"]
+    if not {"years", "regions"} <= set(ax):
+        return None
+    rising = {a: [m for m, ch in ax[a]["change_in_difference"].items() if _lc_rising(ch)] for a in ("years", "regions")}
+    grow = {a: ax[a]["sizes"][-1]["mean_training_windows"] / ax[a]["sizes"][0]["mean_training_windows"]
+            for a in ("years", "regions")}
+    s = (f"{len(rising['years'])} of {len(nets_)} networks are still rising at the full data when years are added "
+         f"(training windows × {grow['years']:.1f}), {len(rising['regions'])} of {len(nets_)} when regions are added "
+         f"(× {grow['regions']:.1f}).")
+    if len(rising["years"]) == len(nets_) and not rising["regions"]:
+        s += (" More windows from more places did not narrow the gap; more years did. What these networks lack in "
+              "development is years of record, not training windows.")
+    return s
+
+
+def _lc_rising(ch: dict) -> bool:
+    last = ch["second_largest_to_full"]
+    return last[1] is not None and last[1] > 0
+
+
+def _lc_read(ch: dict) -> str:
+    """Amendment 5's reading of one network's curve on one axis."""
+    last, first = ch["second_largest_to_full"], ch["smallest_to_full"]
+    if _lc_rising(ch):
+        return "still rising at the full data, so more of this kind of data would likely help"
+    if first[1] is not None and first[1] > 0:
+        turn = "fell slightly" if last[2] is not None and last[2] < 0 else "flattened"
+        return f"rose, then {turn} before the full data, so more of this kind is not expected to close the gap"
+    return "flat, so more of this kind is not expected to close the gap"
 
 
 def macs_for(cfg: dict, n_in: int, n_heads: int, steps: int = 12) -> int | None:

@@ -169,13 +169,15 @@ def audit(d: dict) -> str:
     lc = d.get("lcurve")
     if lc:
         L += ["## Learning curve (amendment 5; job 1, development; no pass/fail)", ""]
+        import report_extra as X
         for axis, e in lc["axes"].items():
             for m in lc["networks"]:
                 diffs = "; ".join(f"{r['size']}: {ci(r['network_minus_lr'][m]['all'], signed=True)}" for r in e["sizes"])
                 ch_ = e["change_in_difference"][m]
                 L.append(f"- {axis}, {lab(m)} − LR by training size ({diffs}); change second-largest to full "
-                         f"{ci(ch_['second_largest_to_full'], signed=True)}.")
-        L += [""]
+                         f"{ci(ch_['second_largest_to_full'], signed=True)}: {X._lc_read(ch_).split(',')[0]}.")
+        s = X.lcurve_summary(lc)
+        L += ([f"- {s}"] if s else []) + [""]
     ch = d["checks"]
     if ch:
         L += ["## Checks on the new models", ""]
