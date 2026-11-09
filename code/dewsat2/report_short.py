@@ -147,6 +147,7 @@ def audit(d: dict) -> str:
         if m3:
             L += ["**Job 3** mean onset AUC: " + "; ".join(f"{lab(m)} {ci(v['all'])}" for m, v in m3["models"].items()), ""]
         L += _fresh_posthoc_lines(d.get("fresh_posthoc"))
+        L += _fresh_labels_lines(d.get("fresh_labels_posthoc"))
         c = conclusion()
         L += ["## Realistic sampling", ""] + c.get("realistic_lines", []) + [""]
     w = d["whatif"]
@@ -194,6 +195,22 @@ def audit(d: dict) -> str:
     return "\n".join(L) + "\n"
 
 
+def _fresh_labels_lines(f, jobs=("job1", "job2")) -> list[str]:
+    """One line per drought label: the fresh-test predictions scored against SPEI and NLDAS-2 drought (report 9a)."""
+    if not f:
+        return []
+    import report_extra as X
+    L = ["**Against other drought labels** (post-hoc, report section 9a; the same predictions scored against SPEI and "
+         "NLDAS-2 drought on common windows):", ""]
+    for job in jobs:
+        for r in X.label_rows(f, job):
+            parts = "; ".join(f"{lab(m)} − LR {ci(v['all'], signed=True)}" for m, v in r["minus_lr"].items()
+                              if m in ("resbilstm", "gru", "bilstm"))
+            L.append(f"- {job}, {r['label']} (drought rate {r['drought_rate']:.2f}, agrees with FLDAS {r['agree']:.0%}): "
+                     f"LR AUC {ci(r['lr_auc'])}; {parts}.")
+    return L + [""]
+
+
 def _fresh_posthoc_lines(f) -> list[str]:
     """A compact version of report section 8a (post-hoc slices of the fresh test, after the lock)."""
     if not f:
@@ -233,6 +250,7 @@ def fatemeh(d: dict) -> str:
     L = ["# DEWSat: numbers for Prof. Ghoreishi", "", c.get("bottom_line", "Bottom line: pending (the run is still going)."), ""]
     if c.get("verdict_lines"):
         L += ["**Pre-registered verdicts on the fresh test:**", ""] + c["verdict_lines"] + [""]
+    L += _fresh_labels_lines(d.get("fresh_labels_posthoc"), jobs=("job1",))
     p5 = d["phase5"]
     if p5:
         L += c.get("fresh_lines", []) + [""]

@@ -324,3 +324,58 @@ def sec_fresh_posthoc(d: dict) -> list[str]:
               "Caveats: five points; training size is confounded with which years and regions each fold trained on; "
               "the fresh test is one unusually dry 21-month period.", ""]
     return L
+
+
+# ------------------------------------------------------------------------- fresh test against other drought labels
+LABEL_NAMES = {"fldas": "FLDAS (training label)", "nldas": "NLDAS-2 soil moisture"}
+
+
+def _label_name(k: str, chosen: str | None) -> str:
+    if k.startswith("spei_"):
+        t = k[5:]
+        return f"SPEI-{t}" + (" (Phase 6's choice)" if t == chosen else " (runner-up)")
+    return LABEL_NAMES.get(k, k)
+
+
+def label_rows(f: dict, job: str) -> list[dict]:
+    """Per label: name, drought rate, agreement with FLDAS, LR AUC and network − LR differences (all regions)."""
+    e = (f or {}).get("jobs", {}).get(job)
+    if not e:
+        return []
+    lr, rows = e["lr"], []
+    for k, v in e["labels"].items():
+        rows.append({"label": _label_name(k, f.get("spei_chosen")), "key": k, "drought_rate": v["drought_rate"],
+                     "agree": v["agree_with_fldas"], "lr_auc": v["auc"].get(lr),
+                     "minus_lr": {m: v["paired"][f"{m} - {lr}"] for m in ("resbilstm", "gru", "bilstm", "bilstm_vci",
+                                                                            "cnn_lr", "cnn_bilstm")
+                                  if f"{m} - {lr}" in v["paired"]}})
+    return rows
+
+
+def sec_fresh_labels(d: dict) -> list[str]:
+    R = _r()
+    ci, lab = R.ci, R.lab
+    f = d.get("fresh_labels_posthoc")
+    L = ["## 9a. Fresh-test predictions against other drought labels (post-hoc, after Phase 6)", ""]
+    if not f:
+        return L + ["Not computed yet (`code/dewsat2/fresh_labels_posthoc.py`).", ""]
+    L += ["Every model learned the FLDAS label. To see whether their fresh-test ranking holds for drought defined "
+          "another way, the same saved predictions are scored against SPEI drought (SPEI <= -0.84) at the timescale "
+          "Phase 6 chose on development cells and at the two runners-up within 0.01 AUC of it, and against the NLDAS-2 "
+          "drought flag (the same 20th-percentile rule on another land model's 10-40 cm soil moisture). All labels use "
+          "the windows where every label exists; paired differences use 2,000 whole-region resamples "
+          "(`scores/fresh_labels_posthoc.json`). Post-hoc: nothing was chosen or changed on these results.", ""]
+    for job, title in (("job1", "Job 1, estimation now"), ("job2", "Job 2, missing month")):
+        rows = label_rows(f, job)
+        if not rows:
+            continue
+        e = f["jobs"][job]
+        ms = [m for m in ("resbilstm", "gru", "bilstm", "bilstm_vci", "cnn_lr", "cnn_bilstm") if m in rows[0]["minus_lr"]]
+        L += [f"**{title}** ({e['common_windows']:,} of {e['windows']:,} windows have every label):", "",
+              f"| Label | Drought rate | Agrees with FLDAS | {lab(e['lr'])} AUC | " +
+              " | ".join(f"{lab(m)} − LR" for m in ms) + " |", "|---|---|---|---|" + "---|" * len(ms)]
+        for r in rows:
+            L.append(f"| {r['label']} | {r['drought_rate']:.3f} | {r['agree']:.1%} | {ci(r['lr_auc'])} | " +
+                     " | ".join(ci(r["minus_lr"][m]["all"], signed=True) for m in ms) + " |")
+        L += [""]
+    return L

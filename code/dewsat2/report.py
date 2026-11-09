@@ -57,7 +57,8 @@ def load_all() -> dict:
          "datacount": read_json(SCORES / "data_counts.json"), "pipeline": read_json(OUT / "logs" / "status_pipeline.json"),
          "gate": json.loads((V2 / "code" / "design" / "gate.json").read_text()),
          "posthoc": read_json(SCORES / "posthoc.json"), "lcurve": read_json(SCORES / "lcurve.json"),
-         "fresh_posthoc": read_json(SCORES / "fresh_posthoc.json")}
+         "fresh_posthoc": read_json(SCORES / "fresh_posthoc.json"),
+         "fresh_labels_posthoc": read_json(SCORES / "fresh_labels_posthoc.json")}
     return d
 
 
@@ -374,7 +375,7 @@ def write_all() -> None:
     body = head + sec_answer(d) + sec_phase0(d) + sec_data(d) + sec_design() + sec_results(d) + X.sec_posthoc(d) + \
         sec_checks(d) + sec_whatif(d) + sec_weekly(d) + X.sec_lcurve(d) + sec_fresh(d) + X.sec_fresh_posthoc(d) + \
         X.sec_sizes(d) + \
-        sec_extras(d) + sec_limits(d) + sec_sources()
+        sec_extras(d) + X.sec_fresh_labels(d) + sec_limits(d) + sec_sources()
     write_text(OUT / "report.md", "\n".join(body) + "\n")
     try:
         import report_short
@@ -447,7 +448,7 @@ def sec_sources() -> list[str]:
             "`scores/scores.json` (development), `scores/checks.json`, `scores/whatif.json`, `scores/weekly.json`, "
             "`scores/posthoc.json` (post-hoc models, development), `scores/lcurve.json` (learning curve), "
             "`scores/phase5.json` and `scores/phase5_settings.json` (fresh test), `scores/fresh_posthoc.json` (post-hoc "
-            "slices of the fresh test), `scores/phase6.json`, "
+            "slices of the fresh test), `scores/fresh_labels_posthoc.json` (fresh test against other labels), `scores/phase6.json`, "
             "`audit/phase0_results.json`, `data/plan/plan.json`, `data/pull_state.json`, `data/FROZEN.json`, "
             "`cache/dataset.json`, `logs/pull/fldas_check.json`, `scores/data_counts.json`; per-run metadata under "
             "`runs/` (configuration, seed, device, commit, timings).", ""]
