@@ -42,7 +42,8 @@ def lab(m):
     for suf in ("_weekly", "_ndmi_on", "_ndmi_off", "_cell", "_pixel"):
         if m.endswith(suf) and m[: -len(suf)] in LABELS:
             return f"{LABELS[m[: -len(suf)]]} ({suf[1:].replace('_', ' ')})"
-    return LABELS.get(m, m)
+    from report_extra import PH_LABELS
+    return LABELS.get(m, PH_LABELS.get(m, m))
 
 
 def load_all() -> dict:
@@ -54,7 +55,8 @@ def load_all() -> dict:
          "frozen": read_json(V2 / "data" / "FROZEN.json"), "frozen_regions": read_json(V2 / "data" / "FROZEN_REGIONS.json"),
          "dataset": read_json(OUT / "cache" / "dataset.json"), "fldas_check": read_json(V2 / "logs" / "pull" / "fldas_check.json"),
          "datacount": read_json(SCORES / "data_counts.json"), "pipeline": read_json(OUT / "logs" / "status_pipeline.json"),
-         "gate": json.loads((V2 / "code" / "design" / "gate.json").read_text())}
+         "gate": json.loads((V2 / "code" / "design" / "gate.json").read_text()),
+         "posthoc": read_json(SCORES / "posthoc.json"), "lcurve": read_json(SCORES / "lcurve.json")}
     return d
 
 
@@ -249,6 +251,21 @@ def sec_fresh(d: dict) -> list[str]:
     if not p:
         return L + ["Not run yet. The fresh-test labels are locked (`data/locked/LOCK.json`).", ""]
     fr = p["fresh"]
+    am = p.get("amendment6") or {}
+    if am:
+        L += ["Rows added after the development results (DESIGN.md amendment 6; not part of the gate): " +
+              "; ".join(f"{j}: {', '.join(lab(m) for m in ms)}" for j, ms in am.get("extra", {}).items() if ms) +
+              ". The pre-registered rows are each job's best network and best Bi-LSTM variant (section 4).", ""]
+    if fr.get("job1"):
+        import report_extra as X
+        j1 = fr["job1"]
+
+        def auc(m):
+            return ((j1["models"].get(m) or {}).get("all") or {}).get("auc_within")
+
+        def diff(a, b):
+            return ((j1["paired"].get(f"{a} - {b}") or {}).get("all") or {}).get("dauc_within")
+        L += X.two_by_two(auc, diff, "job 1, fresh test, AUC, all regions")
     for key, title in (("job1", "Job 1"), ("job2", "Job 2"), ("job4", "Job 4")):
         s = fr.get(key)
         if not s:
@@ -350,8 +367,10 @@ def write_all() -> None:
     head = ["# DEWSat_BiLSTM_v2: report", "",
             f"_Generated {time.strftime('%Y-%m-%d %H:%M:%S')} by `code/dewsat2/report.py` at commit `{gs['short']}`"
             f"{' (uncommitted changes)' if gs['dirty'] else ''}. Every number is read from a logged run._", ""]
-    body = head + sec_answer(d) + sec_phase0(d) + sec_data(d) + sec_design() + sec_results(d) + sec_checks(d) + \
-        sec_whatif(d) + sec_weekly(d) + sec_fresh(d) + sec_extras(d) + sec_limits(d) + sec_sources()
+    import report_extra as X
+    body = head + sec_answer(d) + sec_phase0(d) + sec_data(d) + sec_design() + sec_results(d) + X.sec_posthoc(d) + \
+        sec_checks(d) + sec_whatif(d) + sec_weekly(d) + X.sec_lcurve(d) + sec_fresh(d) + X.sec_sizes(d) + \
+        sec_extras(d) + sec_limits(d) + sec_sources()
     write_text(OUT / "report.md", "\n".join(body) + "\n")
     try:
         import report_short
@@ -382,9 +401,14 @@ def sec_answer(d: dict) -> list[str]:
     p5 = d["phase5"]
     if p5 and p5["fresh"].get("job1"):
         s = p5["fresh"]["job1"]
-        for pp, v in s["paired"].items():
-            L.append(f"- Fresh test, job 1, {lab(pp.split(' - ')[0])} − {lab(pp.split(' - ')[1])}: ΔAUC "
-                     f"{ci(v['all']['dauc_within'], signed=True)}.")
+        sel = sc.get("selection", {}).get("job1", {})
+        for a in dict.fromkeys([sel.get("best_bilstm"), sel.get("best_network"), "bilstm", "bilstm_vci", "cnn_bilstm",
+                                "cnn_lr"]):
+            v = s["paired"].get(f"{a} - lr_vci_t") if a else None
+            if v:
+                L.append(f"- Fresh test, job 1, {lab(a)} − {lab('lr_vci_t')}: ΔAUC "
+                         f"{ci(v['all']['dauc_within'], signed=True)} (West {ci(v['west']['dauc_within'], signed=True)}, "
+                         f"East {ci(v['east']['dauc_within'], signed=True)}).")
     return L + [""]
 
 
@@ -410,6 +434,7 @@ def sec_limits(d: dict) -> list[str]:
 def sec_sources() -> list[str]:
     return ["## 11. Sources of the numbers", "",
             "`scores/scores.json` (development), `scores/checks.json`, `scores/whatif.json`, `scores/weekly.json`, "
+            "`scores/posthoc.json` (post-hoc models, development), `scores/lcurve.json` (learning curve), "
             "`scores/phase5.json` and `scores/phase5_settings.json` (fresh test), `scores/phase6.json`, "
             "`audit/phase0_results.json`, `data/plan/plan.json`, `data/pull_state.json`, `data/FROZEN.json`, "
             "`cache/dataset.json`, `logs/pull/fldas_check.json`, `scores/data_counts.json`; per-run metadata under "
