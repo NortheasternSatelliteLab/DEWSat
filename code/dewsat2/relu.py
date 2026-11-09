@@ -295,10 +295,11 @@ def score(write: bool = True) -> dict:
                          "auc": m["metric"]["metric"], "auc_original": (o.get("metric") or {}).get("metric"),
                          "loss_finite": finite, "loss_fell": fell, "loss_last": m["history"][-1]["train_loss"],
                          "loss_last_original": (o.get("history") or [{}])[-1].get("train_loss")})
-    sizes = [{"fold": k + 1, "cfg": read_json(run_dir(MODEL, k, SEEDS[0]) / "meta.json")["cfg"],
-              "n_params": read_json(run_dir(MODEL, k, SEEDS[0]) / "meta.json")["n_params"],
-              "multiply_adds": read_json(run_dir(MODEL, k, SEEDS[0]) / "meta.json")["multiply_adds"]}
-             for k in range(N_FOLDS)]
+    sizes = []
+    for k in range(N_FOLDS):
+        m = read_json(run_dir(MODEL, k, SEEDS[0]) / "meta.json")
+        sizes.append({"fold": k + 1, "cfg": m["cfg"], "n_params": m["n_params"],
+                      "multiply_adds": m.get("multiply_adds")})     # the original bilstm runs (the check) lack it
     out = {"generated": time.strftime("%Y-%m-%d %H:%M:%S"), "git": git_state(),
            "note": "DESIGN.md amendment 7: secondary, no pass/fail, development folds only; the fresh test is not scored",
            "labels": LABELS, "seeds": list(SEEDS), "seeds_used": used, "jobs": jobs, "runs": runs,
