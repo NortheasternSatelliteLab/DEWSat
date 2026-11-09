@@ -259,3 +259,44 @@ case rests on the jobs that need the history: the missing month (job 2) and the 
   scoring).
 - The CNN models stay job 1 only: each CNN run costs several times more, and adding them would move the fresh test
   past Wednesday.
+
+## Amendment 5 (2026-11-09, about 00:40): learning curve for job 1 (secondary, no pass/fail)
+
+Added after the development results (every gate row "worse", `DECISIONS.md` #61), at the user's request, to ask
+whether more training data could close the gap. Development data only. It changes nothing in the gate, the selection
+of any model or the fresh test.
+
+- **Question**: as the labelled training data grow, does the Bi-LSTM's within-fold AUC difference to LR on VCI(T)
+  (job 1) move toward zero, and does it matter whether the extra data are more regions or more years?
+- **Models**:
+  - `lr_vci_t`, refit on every slice.
+  - `bilstm`, the lab's DroughtBiLSTM: the model the paper's question is about.
+  - The better job-1 Bi-LSTM of amendment 4: `bilstm_vci` or `cnn_bilstm`, whichever has the higher development
+    within-fold AUC in `scores/posthoc.json`.
+  - Each network keeps its fold's chosen setting (no re-tuning) and trains with seeds 42, 43 and 44. Its prediction
+    is the mean probability of the three seeds.
+  - LR's AUC cannot change with the data: with one input its ranking is VCI(T)'s whenever its slope is negative. It is
+    refit anyway, and its slopes are reported.
+- **Slices of each fold's outer training windows**. The scaler comes from each slice's own windows. The fold's VCI
+  table, the inputs and the scored windows are unchanged.
+  - *Years*: folds 1 and 4, five training years each (2019-2023 and 2016-2020). Training targets T are restricted to k
+    of the five years, k = 2, 3, 4. Three subsets per k are drawn without replacement from the C(5, k), with numpy
+    `default_rng(20261109 + fold index)`. All training regions.
+  - *Regions*: all four folds. A random 1/8, 1/4 or 1/2 of the fold's training regions, nested, drawn within West and
+    within East separately (`default_rng(20261109 + 100 + fold index)`), at least one per side. All training years.
+  - *Full data*: the existing final runs' seeds 42-44. Nothing is retrained.
+- **Scoring**: the job-1 outer-fold scored windows of the axis's folds, within-fold AUC, and 2,000 whole-region
+  resamples shared by every size and model of an axis. For each size:
+  - each model's AUC, and the paired difference network minus LR, for all regions and for West/East;
+  - on the years axis, the mean over the three subsets of each size (subset j of fold 1 pooled with subset j of
+    fold 4).
+  - Per network, the change in that difference from the smallest size to the full data, and from the second-largest
+    size to the full data, with intervals.
+- **Reading, stated in advance**:
+  - If the difference rises toward zero as training years are added, and is still rising at the full five years (the
+    last change's interval above zero), more years would likely help.
+  - If it is flat, more years of this kind are not expected to close the gap.
+  - The same reading applies to regions.
+- **Runs**: 180 network runs: 2 networks x (2 folds x 9 year subsets + 4 folds x 3 region fractions) x 3 seeds. They
+  are written to `runs/lcurve/`, `scores/lcurve.json` and `logs/lcurve/`, and run with the post-hoc runner
+  (`--stages lcurve,lcurve_score`). They use spare capacity and never delay Phase 5.

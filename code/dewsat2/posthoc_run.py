@@ -12,6 +12,13 @@ under runs/posthoc/; a restart skips finished runs; a failed run is written to r
 at the end of its stage. Graceful stop: create logs/posthoc/STOP; running runs finish and are saved, nothing new
 starts, and the process exits (delete the file before restarting). Progress: logs/posthoc/status.json. Sandboxes set
 DEWSAT_V2_OUT.
+
+The learning curve (DESIGN.md amendment 5, lcurve.py) runs through the same dispatcher with its own status, STOP file
+and failures (logs/lcurve/, runs/lcurve/failures/):
+
+    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && mkdir -p logs/lcurve && rm -f logs/lcurve/STOP
+    caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code/dewsat2/posthoc_run.py --stages lcurve,lcurve_score \
+        --cpu-workers 2 --mps-workers 1 --threads 2 >> logs/lcurve/run.log 2>&1 &
 """
 
 from __future__ import annotations
@@ -32,12 +39,31 @@ _W: dict = {}
 
 
 def say(msg: str) -> None:
-    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] posthoc: {msg}", flush=True)
+    print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {_ns()}: {msg}", flush=True)
+
+
+def _ns() -> str:
+    """'posthoc' or 'lcurve': the folder of this runner's status, STOP file and failures (inherited by the workers)."""
+    return os.environ.get("DEWSAT_RUNNER_NS", "posthoc")
+
+
+def _mod(spec: dict):
+    """The module that owns a run: lcurve for learning-curve runs, posthoc otherwise."""
+    if spec["type"] == "lc":
+        import lcurve
+        return lcurve
+    import posthoc
+    return posthoc
+
+
+def status_file() -> Path:
+    from common import LOGS
+    return LOGS / _ns() / "status.json"
 
 
 def stop_file() -> Path:
     from common import LOGS
-    return LOGS / "posthoc" / "STOP"
+    return LOGS / _ns() / "STOP"
 
 
 def worker_init(device: str, threads: int):
@@ -52,17 +78,17 @@ def worker_init(device: str, threads: int):
 
 def record_failure(name: str, exc: BaseException) -> None:
     from common import RUNS, write_json
-    write_json(RUNS / "posthoc" / "failures" / (name.replace("/", "__") + ".json"),
+    write_json(RUNS / _ns() / "failures" / (name.replace("/", "__") + ".json"),
                {"unit": name, "time": time.strftime("%Y-%m-%d %H:%M:%S"), "error": f"{type(exc).__name__}: {exc}",
                 "trace": traceback.format_exc()[-3000:]})
 
 
 def worker_task(spec: dict) -> dict:
-    import posthoc
-    name = posthoc.spec_name(spec)
+    mod = _mod(spec)
+    name = mod.spec_name(spec)
     t0 = time.time()
     try:
-        meta = posthoc.run_unit(spec, _W["device"], _W["threads"])
+        meta = mod.run_unit(spec, _W["device"], _W["threads"])
         return {"name": name, "ok": True, "seconds": time.time() - t0,
                 "metric": ((meta or {}).get("metric") or {}).get("metric")}
     except Exception as exc:  # noqa: BLE001
@@ -80,10 +106,15 @@ def worker_task(spec: dict) -> dict:
 def _est(s: dict, dev: str) -> float:
     """Rough seconds for one run on a device, for scheduling and the ETA only: search.cost's per-epoch rates for a
     bilstm (CPU doubled: the CPU workers share the machine at lower priority), CNN rates from the timing test and the
-    finished runs; ~200k fitting windows for a search run, ~500k for a final run."""
+    finished runs; ~200k fitting windows for a search run, ~500k for a final run (a learning-curve run: its slice's
+    share of a final run's)."""
     c = s["cfg"]
-    n = 5.0 if s["type"] == "ph_final" else 2.0
-    if c["family"] == "bilstm_vci":
+    if s["type"] == "lc":
+        import lcurve
+        n = 5.0 * lcurve.data_fraction(s["slice"])
+    else:
+        n = 5.0 if s["type"] == "ph_final" else 2.0
+    if c["family"] in ("bilstm_vci", "bilstm"):
         h, layers = c["hidden"], c.get("layers", 1)
         per = 2.0 + 0.012 * h * layers if dev == "mps" else 2 * 1.95 * (h / 32) ** 0.95 * layers
     elif c["family"] == "cnn_lr":
@@ -95,15 +126,14 @@ def _est(s: dict, dev: str) -> float:
 
 def _pick(dev: str, pending: list[dict], pools: dict, n_mps: int) -> dict | None:
     """The next run for a free worker on dev, or None (the worker waits)."""
-    import posthoc
     if dev == "mps":
         for i, s in enumerate(pending):                     # GPU-placed runs first, in queue order
-            if posthoc.device_for(s["cfg"]) == "mps":
+            if _mod(s).device_for(s["cfg"]) == "mps":
                 return pending.pop(i)
-        return pending.pop(0) if pending else None          # then anything (CPU-placed bilstm_vci)
-    flex = [i for i, s in enumerate(pending) if s["cfg"]["family"] == "bilstm_vci"]
+        return pending.pop(0) if pending else None          # then anything (CPU-placed recurrent runs)
+    flex = [i for i, s in enumerate(pending) if s["cfg"]["family"] in ("bilstm_vci", "bilstm")]
     for i in flex:                                          # CPU-placed runs first, in queue order
-        if posthoc.device_for(pending[i]["cfg"]) == "cpu":
+        if _mod(pending[i]).device_for(pending[i]["cfg"]) == "cpu":
             return pending.pop(i)
     if not flex:
         return None
@@ -115,33 +145,32 @@ def _pick(dev: str, pending: list[dict], pools: dict, n_mps: int) -> dict | None
 
 
 def _eta(pending: list[dict], ratio: float, a) -> str | None:
-    import posthoc
     if not pending:
         return None
-    gpu = sum(_est(s, "mps") for s in pending if posthoc.device_for(s["cfg"]) == "mps")
-    cpu = sum(_est(s, "cpu") for s in pending if posthoc.device_for(s["cfg"]) == "cpu")
+    gpu = sum(_est(s, "mps") for s in pending if _mod(s).device_for(s["cfg"]) == "mps")
+    cpu = sum(_est(s, "cpu") for s in pending if _mod(s).device_for(s["cfg"]) == "cpu")
     left = ratio * max(gpu / max(a.mps_workers, 1), cpu / max(a.cpu_workers, 1))
     return time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + left))
 
 
 def run_stage(stage: str, specs: list[dict], a, status: dict) -> tuple[list[dict], bool]:
     """Run one stage's unfinished runs; returns (failed runs, stopped by the STOP file)."""
-    import posthoc
-    from common import LOGS, write_json
-    todo = [s for s in specs if not (posthoc.spec_dir(s) / "DONE").exists()]
+    from common import write_json
+    todo = [s for s in specs if not (_mod(s).spec_dir(s) / "DONE").exists()]
     say(f"{stage}: {len(specs)} runs, {len(todo)} to do ({a.cpu_workers} CPU workers x {a.threads} threads, "
         f"{a.mps_workers} MPS)")
     st = status["stages"].setdefault(stage, {})
     st.update({"total": len(specs), "done": len(specs) - len(todo), "failed": 0, "state": "running",
                "started": time.strftime("%Y-%m-%d %H:%M:%S"), "workers": {"cpu": a.cpu_workers, "mps": a.mps_workers}})
-    write_json(LOGS / "posthoc" / "status.json", status)
+    write_json(status_file(), status)
     if not todo:
         st["state"] = "done"
-        write_json(LOGS / "posthoc" / "status.json", status)
+        write_json(status_file(), status)
         return [], False
     defer = set(filter(None, a.defer.split(",")))
-    # deferred runs last; then fold by fold (prep and tiles cached per worker), longest first
-    pending = sorted(todo, key=lambda s: (posthoc.spec_name(s) in defer, s["k"], -_est(s, "mps")))
+    # deferred runs last; then fold by fold and slice by slice (prep and tiles cached per worker), longest first
+    pending = sorted(todo, key=lambda s: (_mod(s).spec_name(s) in defer, s["k"], s.get("slice", {}).get("name", ""),
+                                          -_est(s, "mps")))
     n_workers = {"cpu": a.cpu_workers, "mps": a.mps_workers}
     make = {d: (lambda d=d: ProcessPoolExecutor(max_workers=n_workers[d], initializer=worker_init,
                                                 initargs=(d, a.threads if d == "cpu" else 2))) for d in n_workers}
@@ -171,8 +200,8 @@ def run_stage(stage: str, specs: list[dict], a, status: dict) -> tuple[list[dict
             try:
                 r = f.result()
             except Exception as exc:  # noqa: BLE001  (a worker process died: BrokenProcessPool)
-                record_failure(posthoc.spec_name(s), exc)
-                r = {"name": posthoc.spec_name(s), "ok": False, "seconds": 0.0,
+                record_failure(_mod(s).spec_name(s), exc)
+                r = {"name": _mod(s).spec_name(s), "ok": False, "seconds": 0.0,
                      "error": f"{type(exc).__name__}: {exc}"[:300]}
             n_done += 1
             n_new += 1
@@ -185,7 +214,7 @@ def run_stage(stage: str, specs: list[dict], a, status: dict) -> tuple[list[dict
             st.update({"done": n_done, "failed": len(failed), "elapsed_h": round((time.time() - t0) / 3600, 2),
                        "eta": _eta(pending, spent / guessed if guessed else 1.0, a), "last": r["name"],
                        "running": {dd: n_workers[dd] - free[dd] for dd in pools}, "queued": len(pending)})
-            write_json(LOGS / "posthoc" / "status.json", status)
+            write_json(status_file(), status)
             if n_new % 10 == 0 or not r["ok"] or (not pending and not inflight):
                 say(f"{stage}: {n_done}/{len(specs)} ({r['name']} {d} {r['seconds']:.0f}s, metric {r.get('metric')})")
         for d in list(pools):                               # replace a broken pool once its runs have drained
@@ -203,7 +232,7 @@ def run_stage(stage: str, specs: list[dict], a, status: dict) -> tuple[list[dict
     else:
         st["state"] = "done" if not failed else "done with failures"
     st["finished"] = time.strftime("%Y-%m-%d %H:%M:%S")
-    write_json(LOGS / "posthoc" / "status.json", status)
+    write_json(status_file(), status)
     return failed, stopping
 
 
@@ -219,26 +248,50 @@ def main() -> int:
                     "process is still finishing)")
     a = ap.parse_args()
     import posthoc
-    from common import LOGS, read_json, write_json
+    from common import read_json, write_json
+    stages = a.stages.split(",")
+    lc = [s.startswith("lcurve") for s in stages]
+    if any(lc) and not all(lc):
+        raise SystemExit("run the learning-curve stages (lcurve, lcurve_score) on their own")
+    os.environ["DEWSAT_RUNNER_NS"] = "lcurve" if all(lc) else "posthoc"     # before any worker starts
     if stop_file().exists():
         say(f"{stop_file()} exists; delete it to run. Nothing started.")
         return 0
-    status = read_json(LOGS / "posthoc" / "status.json") or {}
+    status = read_json(status_file()) or {}
     status.update({"pid": os.getpid(), "process_started": time.strftime("%Y-%m-%d %H:%M:%S"), "state": "running"})
     status.setdefault("stages", {})
-    for stage in a.stages.split(","):
-        if stage in ("search", "final"):
-            want = set(a.models.split(","))
-            failed, stopped = run_stage(stage, [s for s in posthoc.stage_specs(stage) if s["cfg"]["family"] in want],
-                                        a, status)
+    for stage in stages:
+        if stage in ("search", "final", "lcurve"):
+            if stage == "lcurve":
+                import lcurve
+                specs = lcurve.stage_specs()
+                say(f"lcurve: networks {lcurve.models()}, seeds {list(lcurve.SEEDS)}")
+            else:
+                want = set(a.models.split(","))
+                specs = [s for s in posthoc.stage_specs(stage) if s["cfg"]["family"] in want]
+            failed, stopped = run_stage(stage, specs, a, status)
             if failed and not stopped:
                 say(f"{stage}: retrying {len(failed)} failed runs once")
                 _, stopped = run_stage(stage + "_retry", failed, a, status)
             if stopped:
                 status["state"] = "stopped"
-                write_json(LOGS / "posthoc" / "status.json", status)
+                write_json(status_file(), status)
                 say("stopped (STOP file); a restart resumes from the finished runs")
                 return 0
+        elif stage == "lcurve_score":
+            import lcurve
+            t0 = time.time()
+            res = lcurve.score()
+            for axis, e in res["axes"].items():
+                for row in e["sizes"]:
+                    say(f"  {axis} {row['size']}: " + ", ".join(
+                        f"{m} {row['auc_within'][m]['all'][0]:.4f}" for m in row["auc_within"]) + " | " + ", ".join(
+                        f"{m} - LR {row['network_minus_lr'][m]['all']}" for m in row["network_minus_lr"]))
+                for m, ch in e["change_in_difference"].items():
+                    say(f"  {axis} {m}: change smallest->full {ch['smallest_to_full']}, "
+                        f"second largest->full {ch['second_largest_to_full']}")
+            status["stages"]["lcurve_score"] = {"state": "done", "minutes": round((time.time() - t0) / 60, 1),
+                                                "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
         elif stage == "score":
             t0 = time.time()
             res = posthoc.score_dev()
@@ -253,9 +306,9 @@ def main() -> int:
                                          "finished": time.strftime("%Y-%m-%d %H:%M:%S")}
         else:
             raise ValueError(f"unknown stage {stage!r}")
-        write_json(LOGS / "posthoc" / "status.json", status)
+        write_json(status_file(), status)
     status["state"] = "finished"
-    write_json(LOGS / "posthoc" / "status.json", status)
+    write_json(status_file(), status)
     say("finished")
     return 0
 
