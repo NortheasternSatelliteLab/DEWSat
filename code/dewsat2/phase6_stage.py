@@ -37,7 +37,7 @@ def nldas_pull(workers: int = 8) -> dict:
     """Monthly NLDAS-2 Noah 10-40 cm soil moisture over the NLDAS grid, one OPeNDAP ASCII request per month."""
     import httpx
     from grid import earthdata_token
-    from paper_pull_fldas import axis_endpoints, get_text, NUM
+    from paper_pull_fldas import ascii_url, axis_endpoints, get_text, NUM
     NLDAS_DIR.mkdir(parents=True, exist_ok=True)
     token = earthdata_token()
     CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json"
@@ -58,13 +58,15 @@ def nldas_pull(workers: int = 8) -> dict:
             raise SystemExit("no 10-40 cm soil moisture variable in the NLDAS DDS")
         dims = re.search(rf"{var}\[(?:time = )?(\d+)\]\[(?:lat = )?(\d+)\]\[(?:lon = )?(\d+)\]", dds)
         ny, nx = int(dims.group(2)), int(dims.group(3))
-        ax = get_text(http, grans[0][1] + f".ascii?lon[0:{nx - 1}:{nx - 1}],lat[0:{ny - 1}:{ny - 1}]", token)
+        # the cloud OPeNDAP server (opendap.earthdata.nasa.gov) answers 400 to unencoded [ ] in the query, so every
+        # constraint goes through ascii_url, which percent-encodes them (DECISIONS.md #77)
+        ax = get_text(http, ascii_url(grans[0][1], f"lon[0:{nx - 1}:{nx - 1}],lat[0:{ny - 1}:{ny - 1}]"), token)
         lon0, lon1 = axis_endpoints(ax, "lon")
         lat0, lat1 = axis_endpoints(ax, "lat")
         todo = [(m, u) for m, u in grans if not (NLDAS_DIR / f"{m}.npy").exists()]
 
         def one(m, u):
-            t = get_text(http, u + f".ascii?{var}[0:0][0:{ny - 1}][0:{nx - 1}]", token)
+            t = get_text(http, ascii_url(u, f"{var}[0:0][0:{ny - 1}][0:{nx - 1}]"), token)
             rows = {}
             for line in t.splitlines():
                 head, _, rest = line.partition(",")
