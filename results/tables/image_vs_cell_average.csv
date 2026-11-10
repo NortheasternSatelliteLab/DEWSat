@@ -1,0 +1,5 @@
+comparison,pair,development,dev_lo,dev_hi,fresh_test,fresh_lo,fresh_hi
+"Image minus cell average, month T only",cnn_lr - lr_vci_t,-0.0067,-0.0112,-0.0028,0.0162,0.0079,0.0239
+"Image minus cell average, 12 months",cnn_bilstm - bilstm_vci,0.0,-0.0049,0.0049,-0.0081,-0.0162,0.0003
+"12 months minus month T, cell average",bilstm_vci - lr_vci_t,-0.0276,-0.0367,-0.0187,0.023,0.0127,0.0333
+"12 months minus month T, image",cnn_bilstm - cnn_lr,-0.0209,-0.0292,-0.0123,-0.0013,-0.011,0.0085

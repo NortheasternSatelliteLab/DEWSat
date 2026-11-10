@@ -1,0 +1,7 @@
+axis,network,smallest_to_full,lo,hi,second_largest_to_full,lo,hi
+years,Bi-LSTM,0.0381,0.0283,0.0477,0.0085,0.0036,0.0135
+years,CNN + Bi-LSTM,0.0264,0.0198,0.0334,0.0058,0.0038,0.0079
+years,VCI-only Bi-LSTM,0.0223,0.0152,0.0302,0.0032,0.0013,0.005
+regions,Bi-LSTM,-0.0068,-0.0193,0.0059,-0.0049,-0.0122,0.0019
+regions,CNN + Bi-LSTM,0.0004,-0.0088,0.0088,-0.0033,-0.0069,0.0005
+regions,VCI-only Bi-LSTM,0.0094,0.0014,0.0176,-0.0038,-0.0069,-0.0007

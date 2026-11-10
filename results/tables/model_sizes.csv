@@ -1,0 +1,14 @@
+job,model,setting,parameters,multiply_adds,model_pt_kib,folder
+job1,Bi-LSTM,"hidden 24, layers 1",11617,80688,49.5,runs/phase5/composite/job1/bilstm
+job1,VCI-only Bi-LSTM,"hidden 24, layers 1",11617,69168,49.5,runs/phase5/composite/job1/bilstm_vci
+job1,CNN + Bi-LSTM,"hidden 16, layers 1, width 16, depth 3",23217,13030048,95.9,runs/phase5/composite/job1/cnn_bilstm
+job1,CNN + LR,"width 32, depth 3",56098,4038401,222.1,runs/phase5/composite/job1/cnn_lr
+job1,GRU,"hidden 32, layers 1",16833,102720,69.8,runs/phase5/composite/job1/gru
+job1,Residual Bi-LSTM,"hidden 24, layers 1",11617,80688,49.5,runs/phase5/composite/job1/resbilstm
+job2,Bi-LSTM,"hidden 16, layers 2",12097,114208,52.9,runs/phase5/composite/job2/bilstm
+job2,VCI-only Bi-LSTM,"hidden 16, layers 2",12097,106528,52.9,runs/phase5/composite/job2/bilstm_vci
+job2,GRU,"hidden 16, layers 1",4833,30880,23.0,runs/phase5/composite/job2/gru
+job2,Residual Bi-LSTM,"hidden 32, layers 2",44673,429120,180.2,runs/phase5/composite/job2/resbilstm
+job3,Bi-LSTM,"hidden 24, layers 1",11715,80784,49.8,runs/phase5/composite/job3/bilstm
+job3,VCI-only Bi-LSTM,"hidden 96, layers 1",157443,995904,619.1,runs/phase5/composite/job3/bilstm_vci
+job3,GRU,"hidden 64, layers 1",31555,184960,126.5,runs/phase5/composite/job3/gru

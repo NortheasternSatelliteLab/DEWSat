@@ -1,0 +1,152 @@
+{
+ "git": {
+  "commit": "516e4d786b0c303c6e1dab5316799a67ddbfdc15",
+  "short": "516e4d7",
+  "dirty": false
+ },
+ "nldas": {
+  "title": "Label check: NLDAS-2 Noah 10-40 cm vs FLDAS",
+  "variable": "SoilM_10_40cm",
+  "lines": [
+   "Development cells 2016-2023: 1,338,912 cell-months; Spearman correlation of percentiles 0.640; drought flags agree 80.8% of the time, Cohen's kappa 0.458; AUC of the NLDAS percentile for the FLDAS flag 0.824; drought rate FLDAS 0.221, NLDAS 0.238.",
+   "Fresh-test cells 2025-01..2026-09: 75,096 cell-months; Spearman correlation of percentiles 0.510; drought flags agree 70.8% of the time, Cohen's kappa 0.364; AUC of the NLDAS percentile for the FLDAS flag 0.740; drought rate FLDAS 0.394, NLDAS 0.310."
+  ],
+  "dev": {
+   "cell_months": 1338912,
+   "spearman_percentile": 0.639569057405586,
+   "kappa_drought": 0.4584156274093455,
+   "auc_nldas_pct_for_fldas_flag": 0.8241414876155272,
+   "flag_agreement": 0.8082286214478621,
+   "fldas_rate": 0.22126920962692095,
+   "nldas_rate": 0.23826584570158457
+  },
+  "test": {
+   "cell_months": 75096,
+   "spearman_percentile": 0.5099367526889014,
+   "kappa_drought": 0.3638330773566498,
+   "auc_nldas_pct_for_fldas_flag": 0.7401876161505743,
+   "flag_agreement": 0.7075343560242889,
+   "fldas_rate": 0.39417545541706617,
+   "nldas_rate": 0.3097368701395547
+  }
+ },
+ "spei": {
+  "title": "Benchmark: gridMET SPEI",
+  "datasets": [
+   [
+    "14d",
+    "MET/spei/spei14d.nc"
+   ],
+   [
+    "180d",
+    "MET/spei/spei180d.nc"
+   ],
+   [
+    "1y",
+    "MET/spei/spei1y.nc"
+   ],
+   [
+    "270d",
+    "MET/spei/spei270d.nc"
+   ],
+   [
+    "2y",
+    "MET/spei/spei2y.nc"
+   ],
+   [
+    "30d",
+    "MET/spei/spei30d.nc"
+   ],
+   [
+    "5y",
+    "MET/spei/spei5y.nc"
+   ],
+   [
+    "90d",
+    "MET/spei/spei90d.nc"
+   ]
+  ],
+  "packing": {
+   "14d": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "180d": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "1y": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "270d": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "2y": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "30d": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "5y": [
+    0.01,
+    -5.0,
+    32767.0
+   ],
+   "90d": [
+    0.01,
+    -5.0,
+    32767.0
+   ]
+  },
+  "timescale_choice": {
+   "sample_regions": 70,
+   "per_side": 35,
+   "seed": 20261109,
+   "dev_cells": 1735,
+   "cell_months": {
+    "14d": 166560,
+    "180d": 166560,
+    "1y": 166560,
+    "270d": 166560,
+    "2y": 166560,
+    "30d": 166560,
+    "5y": 166560,
+    "90d": 166560
+   },
+   "note": "chosen on a seeded sample of development regions (DECISIONS.md #77)"
+  },
+  "auc_minus_spei_for_fldas_flag_dev": {
+   "14d": 0.6113039675239041,
+   "180d": 0.8041283630299187,
+   "1y": 0.7759469034297589,
+   "270d": 0.7960867753033887,
+   "2y": 0.628075727343434,
+   "30d": 0.7053152221054052,
+   "5y": 0.5728706724503262,
+   "90d": 0.7963114153976855
+  },
+  "chosen_timescale": "180d",
+  "series": {
+   "fetched": 704,
+   "value_range": [
+    -2.09,
+    2.09
+   ]
+  },
+  "lines": [
+   "AUC of -SPEI for the FLDAS drought flag, development cells 2016-2023 of 70 sampled development regions (1,735 cells): 180d 0.804, 90d 0.796, 270d 0.796, 1y 0.776, 30d 0.705, 2y 0.628, 14d 0.611, 5y 0.573; chosen: 180d.",
+   "job1 fresh test (65,170 windows; SPEI-180d drought rate 0.354, FLDAS 0.395, the two calls agree on 66.0%): climatology: AUC vs SPEI drought 0.500, vs FLDAS 0.500; lr_vci_t: AUC vs SPEI drought 0.688, vs FLDAS 0.621; lr_latest_age: AUC vs SPEI drought 0.688, vs FLDAS 0.621; lr_trend: AUC vs SPEI drought 0.676, vs FLDAS 0.613; gbt_mono: AUC vs SPEI drought 0.686, vs FLDAS 0.621; state_ewma: AUC vs SPEI drought 0.690, vs FLDAS 0.620; gru: AUC vs SPEI drought 0.652, vs FLDAS 0.657; resbilstm: AUC vs SPEI drought 0.658, vs FLDAS 0.659; bilstm: AUC vs SPEI drought 0.656, vs FLDAS 0.663; bilstm_vci: AUC vs SPEI drought 0.671, vs FLDAS 0.644; cnn_lr: AUC vs SPEI drought 0.680, vs FLDAS 0.638; cnn_bilstm: AUC vs SPEI drought 0.667, vs FLDAS 0.636.",
+   "job2 fresh test (7,894 windows; SPEI-180d drought rate 0.529, FLDAS 0.436, the two calls agree on 62.9%): climatology: AUC vs SPEI drought 0.500, vs FLDAS 0.500; lr_latest_age: AUC vs SPEI drought 0.603, vs FLDAS 0.602; lr_trend: AUC vs SPEI drought 0.600, vs FLDAS 0.589; gbt_mono: AUC vs SPEI drought 0.610, vs FLDAS 0.603; state_ewma: AUC vs SPEI drought 0.608, vs FLDAS 0.593; gru: AUC vs SPEI drought 0.582, vs FLDAS 0.605; resbilstm: AUC vs SPEI drought 0.586, vs FLDAS 0.616; bilstm: AUC vs SPEI drought 0.598, vs FLDAS 0.618; bilstm_vci: AUC vs SPEI drought 0.592, vs FLDAS 0.605."
+  ]
+ }
+}

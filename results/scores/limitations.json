@@ -1,0 +1,17 @@
+{
+ "items": [
+  "**One test period.** The fresh test covers one 21-month period (2025-01 to 2026-09), and it was unusually dry: 39.5% of job-1 windows in drought, against 22% in development. Its intervals come from resampling regions, so they do not show how much another period would differ.",
+  "**Development and the fresh test disagree on job 1.** The training-size explanation (section 8a) rests on five points, and training size is confounded with which years and regions each fold trained on.",
+  "**The label is a model, not ground truth.** It is FLDAS Noah 10-40 cm soil moisture, not ground observations. FLDAS and NLDAS-2 agree on 81% of drought flags in development and 71% in the fresh period. The networks' gain holds against NLDAS-2 but reverses against climatic drought (SPEI over 180 and 270 days; section 9a), so the result is about soil-moisture drought only.",
+  "**Some rows were added after development.** The plain Bi-LSTM, the VCI-only Bi-LSTM and the two CNN models were added after the development results (DESIGN.md amendments 4-6) and are reported in their own rows. Only the GRU and the residual Bi-LSTM were pre-registered for the fresh test; both passed.",
+  "**Realistic sampling shrinks the gain.** With single clear views (one pass every 7, 16 or 32 days), the networks' gain over LR shrinks:\n  - about +0.02 AUC with a pass every 7 days for the residual Bi-LSTM and the GRU (intervals above zero for all three start dates);\n  - mostly inside the intervals at 16 days;\n  - none at 32 days.\n  The plain Bi-LSTM is less robust: its intervals include zero even at 7 days.",
+  "**The camera is not modelled.** The inputs are HLS (Landsat 8/9 and Sentinel-2) Red/NIR composites standing in for DEWSat's camera; its resolution, noise and calibration are not modelled.",
+  "**The SPEI timescale was chosen on a sample.** Each point request took about 22 s, so the timescale was chosen on a seeded sample of 70 development regions. The top three timescales were within 0.008 AUC; LR leads the networks at two of them, and they tie at the third. SPEI is read at region centres, which is coarser than the cells.",
+  "**Transfer beyond CONUS is untested.** Every fresh-test region is at least 0.5 degrees from every development region, but all lie in the same CONUS climates.",
+  "**Jobs 2 and 3 do not support a network.** The missing-month job shows no detectable difference overall (West better, East worse). Onset forecasting is near chance for every model (AUC at most 0.54).",
+  "**Memory and reproducibility.** Training ran on one 18 GB Mac. Side jobs were paused to keep memory from swap thrashing, which changed only timing. GPU-trained runs reproduce to float tolerance (about 1e-6); CPU runs reproduce exactly.",
+  "**Phase 6 needed a retry.** It first failed on two server changes: the NLDAS-2 cloud OPeNDAP server's bracket encoding, and the SPEI catalog's new path, variable name and packing. Both were fixed and the retry succeeded (DECISIONS.md #77)."
+ ],
+ "written": "2026-11-09 11:14:41",
+ "by": "Hand-written"
+}

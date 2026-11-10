@@ -1,0 +1,9 @@
+job,comparison,diff,diff_lo,diff_hi,diff_west,diff_west_lo,diff_west_hi,diff_east,diff_east_lo,diff_east_hi,reading
+job1,ReLU Bi-LSTM − Bi-LSTM,0.0009,-0.0029,0.005,-0.0014,-0.0057,0.0027,0.0042,-0.0019,0.0102,no detectable difference
+job1,ReLU Bi-LSTM − LR on VCI(T),-0.0583,-0.0741,-0.0422,-0.0314,-0.0493,-0.0137,-0.0442,-0.0649,-0.0218,worse
+job1,ReLU Bi-LSTM − Boosted trees (monotone in VCI),-0.0583,-0.0742,-0.0427,-0.0252,-0.0426,-0.0078,-0.053,-0.0734,-0.0323,worse
+job1,Bi-LSTM − LR on VCI(T),-0.0592,-0.0749,-0.0432,-0.03,-0.0482,-0.0125,-0.0484,-0.0713,-0.0245,worse
+job4,ReLU Bi-LSTM − Bi-LSTM,0.0011,-0.0039,0.0064,-0.0027,-0.009,0.0035,0.0036,-0.0042,0.0122,no detectable difference
+job4,ReLU Bi-LSTM − LR on VCI(T),-0.0589,-0.0791,-0.0391,-0.0354,-0.0557,-0.0163,-0.0465,-0.0747,-0.0175,worse
+job4,ReLU Bi-LSTM − Boosted trees (monotone in VCI),-0.0626,-0.0811,-0.044,-0.0316,-0.0515,-0.013,-0.0603,-0.0864,-0.0336,worse
+job4,Bi-LSTM − LR on VCI(T),-0.06,-0.0797,-0.0408,-0.0328,-0.0518,-0.0146,-0.0501,-0.0786,-0.0204,worse
