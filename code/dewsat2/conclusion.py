@@ -1,7 +1,7 @@
 """Short, email-ready lines for fatemeh_numbers.md, built only from logged scores (scores.json, phase5.json).
 
 The closing yes/no paragraph for audit.md is written by hand once the results are in (it needs a reason,
-not only numbers) and stored in scores/conclusion_paragraph.json; every number it quotes comes from these files.
+not only numbers) and stored in results/scores/conclusion_paragraph.json; every number it quotes comes from these files.
 """
 
 from __future__ import annotations

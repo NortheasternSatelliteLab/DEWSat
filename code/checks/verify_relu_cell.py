@@ -6,7 +6,7 @@ For each Bi-LSTM setting chosen in development (hidden 24 x 1 layer, 128 x 1, 12
   - `bilstm_relu` gives finite logits that differ from `bilstm`'s (the activation is really changed).
 Writes logs/relu/verify_cell.json; exits 1 if any check fails.
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && .venv/bin/python code/checks/verify_relu_cell.py
+    source env.sh && .venv/bin/python code/checks/verify_relu_cell.py
 """
 import sys
 from pathlib import Path

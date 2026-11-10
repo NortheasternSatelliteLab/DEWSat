@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-V2 = Path(os.environ.get("DEWSAT_V2", str(Path.home() / "Desktop" / "DEWSat_BiLSTM_v2")))
+V2 = Path(os.environ.get("DEWSAT_V2", str(Path(__file__).resolve().parents[2])))
 CODE = Path(__file__).resolve().parent.parent     # the repository this code runs from (worktrees too)
 OUT = Path(os.environ.get("DEWSAT_V2_OUT", str(V2)))       # sandboxes point this elsewhere
 DATA = V2 / "data"
@@ -23,7 +23,7 @@ FLDAS_DEV = DATA / "fldas" / "dev"
 LOCKED = Path(os.environ.get("DEWSAT_LOCKED", str(DATA / "locked")))   # sandboxes point at their own copy
 CACHE = OUT / "cache"
 RUNS = OUT / "runs"
-SCORES = OUT / "scores"
+SCORES = OUT / "results" / "scores"
 FIGURES = OUT / "figures"
 LOGS = OUT / "logs"
 

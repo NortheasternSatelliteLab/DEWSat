@@ -8,7 +8,7 @@ minutes; a region that still fails is retried once more after the last batch, th
 Stop rules (checked before each batch; STOP_PULL and the disk rule also between steps):
 - 72 hours since the first launch (data/pull_state.json keeps the start time across restarts);
 - free disk below 100 GB;
-- a file named STOP_PULL in ~/Desktop/DEWSat_BiLSTM_v2;
+- a file named STOP_PULL in the repository root;
 - no batch left.
 A batch cut short by STOP_PULL or the disk rule is left out of the frozen dataset, so every frozen batch is whole and
 balanced. When the driver stops it writes data/FROZEN.json, the frozen list of regions.

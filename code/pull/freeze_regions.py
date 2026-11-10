@@ -15,7 +15,7 @@ import sys
 import time
 from pathlib import Path
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[2]  # the repository root
 
 
 def main() -> int:

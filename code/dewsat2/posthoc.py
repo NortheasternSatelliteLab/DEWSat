@@ -9,7 +9,7 @@
                 job 1
 
 Runs live under runs/posthoc/{search,final}/<job>/<model>/ (search: inner split, one seed 1000 + id; final: outer
-split, FINAL_SEEDS, model.pt saved). Development scores in scores/posthoc.json, from the score stage's own pooling
+split, FINAL_SEEDS, model.pt saved). Development scores in results/scores/posthoc.json, from the score stage's own pooling
 (score_stage.collect), subset names and region draws, so the new rows line up with the pre-registered ones.
 """
 
@@ -214,7 +214,7 @@ def final_probs(model: str, job: str, k: int, wid: np.ndarray) -> tuple[np.ndarr
 def score_dev() -> dict:
     """Every job with every pre-registered and post-hoc model, pooled and resampled exactly as the score stage:
     score_stage.collect builds the subsets (the post-hoc models' seed means added to each fold's predictions), and the
-    official subset names give the same region draws. Writes scores/posthoc.json."""
+    official subset names give the same region draws. Writes results/scores/posthoc.json."""
     import dataset
     import score_stage
     import scoring

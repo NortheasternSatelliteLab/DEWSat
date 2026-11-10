@@ -13,7 +13,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[2]  # the repository root
 EXISTING_FILES = (V2 / "inputs" / "paper_code" / "paper_hls" / "regions.csv",
                   V2 / "inputs" / "paper_code" / "paper_hls" / "regions_new.csv")
 PLAN_FILE = V2 / "data" / "plan" / "regions_plan.csv"

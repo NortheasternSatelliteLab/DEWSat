@@ -26,7 +26,7 @@ import sys
 import time
 from pathlib import Path
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[2]  # the repository root
 os.environ["DEWSAT_CAP_OUT"] = str(V2 / "audit" / "cap_ws")
 os.environ["DEWSAT_PAPER"] = str(V2 / "audit" / "paper_root")
 OLD = V2 / "inputs" / "capability_code" / "capability"

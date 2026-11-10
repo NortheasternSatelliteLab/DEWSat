@@ -15,7 +15,7 @@ import numpy as np
 import rasterio
 from rasterio.windows import from_bounds
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[2]  # the repository root
 OUT = V2 / "data" / "landcover"
 BBOX = (-125.0, 24.0, -66.5, 49.5)   # W, S, E, N: CONUS
 STAC = "https://planetarycomputer.microsoft.com/api/stac/v1/search"

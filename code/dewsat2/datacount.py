@@ -1,4 +1,4 @@
-"""Data counts for STATUS.md, report.md and data_card.md (scores/data_counts.json), from the files on disk."""
+"""Data counts for STATUS.md, report.md and data_card.md (results/scores/data_counts.json), from the files on disk."""
 
 from __future__ import annotations
 

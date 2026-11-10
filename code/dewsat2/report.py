@@ -447,12 +447,12 @@ def sec_limits(d: dict) -> list[str]:
 
 def sec_sources() -> list[str]:
     return ["## 11. Sources of the numbers", "",
-            "`scores/scores.json` (development), `scores/checks.json`, `scores/whatif.json`, `scores/weekly.json`, "
-            "`scores/posthoc.json` (post-hoc models, development), `scores/lcurve.json` (learning curve), "
-            "`scores/phase5.json` and `scores/phase5_settings.json` (fresh test), `scores/fresh_posthoc.json` (post-hoc "
-            "slices of the fresh test), `scores/fresh_labels_posthoc.json` (fresh test against other labels), `scores/phase6.json`, "
+            "`results/scores/scores.json` (development), `results/scores/checks.json`, `results/scores/whatif.json`, `results/scores/weekly.json`, "
+            "`results/scores/posthoc.json` (post-hoc models, development), `results/scores/lcurve.json` (learning curve), "
+            "`results/scores/phase5.json` and `results/scores/phase5_settings.json` (fresh test), `results/scores/fresh_posthoc.json` (post-hoc "
+            "slices of the fresh test), `results/scores/fresh_labels_posthoc.json` (fresh test against other labels), `results/scores/phase6.json`, "
             "`audit/phase0_results.json`, `data/plan/plan.json`, `data/pull_state.json`, `data/FROZEN.json`, "
-            "`cache/dataset.json`, `logs/pull/fldas_check.json`, `scores/data_counts.json`; per-run metadata under "
+            "`cache/dataset.json`, `logs/pull/fldas_check.json`, `results/scores/data_counts.json`; per-run metadata under "
             "`runs/` (configuration, seed, device, commit, timings).", ""]
 
 

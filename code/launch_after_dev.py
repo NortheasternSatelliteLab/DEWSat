@@ -2,7 +2,7 @@
 run Phase 6, then regenerate the reports. It never starts the pull or the development stages: those belong to
 `code/pull/pull_driver.py` and `code/launch_when_frozen.sh`, so no stage can be started twice.
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && mkdir -p logs/chain
+    source env.sh && mkdir -p logs/chain
     caffeinate -dimsu nohup .venv/bin/python -u code/launch_after_dev.py >> logs/chain/launcher.log 2>&1 &
     .venv/bin/python code/launch_after_dev.py --check     # print what it would do now; changes nothing
 
@@ -17,7 +17,7 @@ Every 2 minutes it re-renders HANDOFF.md, then:
  4. starts `run.py --stages phase5,phase6` once (marker logs/chain/phase56_launched.json; Phase 5 itself refuses a
     second scoring through data/locked/FRESH_TEST_SCORED.lock). Phase 5 is never restarted. If only Phase 6 failed
     (the lock exists), Phase 6 alone is retried at most twice, 30 minutes apart;
- 5. writes an automatic closing paragraph (scores/conclusion_paragraph.json, marked automatic) only if none exists,
+ 5. writes an automatic closing paragraph (results/scores/conclusion_paragraph.json, marked automatic) only if none exists,
     regenerates the reports, renders HANDOFF.md and exits.
 A file STOP_CHAIN in the folder root makes it exit without starting anything further. It never kills a process.
 """
@@ -33,7 +33,7 @@ import sys
 import time
 from pathlib import Path
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[1]  # the repository root
 sys.path.insert(0, str(V2 / "code"))
 import handoff  # noqa: E402
 
@@ -100,15 +100,15 @@ def dev_problems(root: Path) -> list[str]:
     left = handoff.outstanding_failures(root / "runs")
     if left:
         out.append(f"{len(left)} failed unit(s) without a later success, e.g. {', '.join(left[:3])}")
-    sc = handoff.read_json(root / "scores" / "scores.json") or {}
+    sc = handoff.read_json(root / "results" / "scores" / "scores.json") or {}
     if sorted(g.get("job") for g in sc.get("gate", [])) != ["job1", "job2", "job3", "job4"]:
-        out.append("scores/scores.json lacks gate rows for all four jobs")
+        out.append("results/scores/scores.json lacks gate rows for all four jobs")
     return out
 
 
 def sanity_problems(root: Path) -> list[str]:
     out = []
-    sc = handoff.read_json(root / "scores" / "scores.json") or {}
+    sc = handoff.read_json(root / "results" / "scores" / "scores.json") or {}
     models = (sc.get("subsets", {}).get("job1") or {}).get("models", {})
 
     def auc(m):
@@ -119,7 +119,7 @@ def sanity_problems(root: Path) -> list[str]:
     miss = [f for f in FAMILIES if auc(f) is None]
     if miss:
         out.append(f"no job-1 within-fold AUC for {', '.join(miss)}")
-    pc = ((handoff.read_json(root / "scores" / "checks.json") or {}).get("positive_control") or {}).get("scores", {})
+    pc = ((handoff.read_json(root / "results" / "scores" / "checks.json") or {}).get("positive_control") or {}).get("scores", {})
     lrp = _point(pc.get("lr_vci_t"))
     nets = [x for x in (_point(v) for k, v in pc.items() if k in FAMILIES) if x is not None]
     if lrp is None or not nets or max(nets) < lrp + 0.05:
@@ -142,7 +142,7 @@ def assess(root: Path = V2, sandbox: bool = False) -> dict:
             return {"phase": "waiting while pipeline processes run", "action": "wait",
                     "note": "; ".join(f"{k} pid {', '.join(map(str, v))}" for k, v in busy.items())}
     mark = None if sandbox else handoff.read_json(MARK)
-    p6 = handoff.read_json(root / "scores" / "phase6.json", {}) or {}
+    p6 = handoff.read_json(root / "results" / "scores" / "phase6.json", {}) or {}
     if lock.exists():
         if "nldas" in p6 and "spei" in p6:
             return {"phase": "finalizing", "action": "finalize", "note": "fresh test scored and Phase 6 written"}
@@ -214,7 +214,7 @@ def automatic_paragraph(scores: Path):
     t += (" Why, in the terms fixed before training: a model counts as better only when the 95% interval of its paired "
           "within-fold AUC difference (2,000 whole-region resamples) lies above zero and it is not significantly worse "
           "on either side of 98 W. This paragraph was written automatically by code/launch_after_dev.py from "
-          "scores/scores.json and scores/phase5.json because the run finished without a hand-written one; it does "
+          "results/scores/scores.json and results/scores/phase5.json because the run finished without a hand-written one; it does "
           "not analyse the reasons behind the result (report.md has every table).")
     return t
 
@@ -244,10 +244,10 @@ def run_stages(stages: str) -> int:
 
 
 def finalize() -> None:
-    para = V2 / "scores" / "conclusion_paragraph.json"
+    para = V2 / "results" / "scores" / "conclusion_paragraph.json"
     if not para.exists():
         try:
-            t = automatic_paragraph(V2 / "scores")
+            t = automatic_paragraph(V2 / "results" / "scores")
             if t:
                 write_json(para, {"paragraph": t, "automatic": True, "written": now(), "by": "code/launch_after_dev.py"})
                 log("automatic closing paragraph written")
@@ -337,10 +337,10 @@ def main() -> int:
         root = Path(a.sandbox).resolve() if a.sandbox else V2
         print(json.dumps(assess(root, sandbox=bool(a.sandbox)), indent=1))
         if a.sandbox:
-            print(automatic_paragraph(root / "scores"))
+            print(automatic_paragraph(root / "results" / "scores"))
         return 0
     if not os.environ.get("TMPDIR", "").startswith(str(V2)):
-        log("TMPDIR is not inside ~/Desktop/DEWSat_BiLSTM_v2: source env.sh first")
+        log("TMPDIR is not inside the repository root: source env.sh first")
         return 2
     if not acquire():
         return 1

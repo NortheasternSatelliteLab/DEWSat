@@ -1,4 +1,4 @@
-"""Post-hoc analyses of the one fresh-test scoring, run after the lock: scores/fresh_posthoc.json.
+"""Post-hoc analyses of the one fresh-test scoring, run after the lock: results/scores/fresh_posthoc.json.
 
 Not a second test: the same saved predictions (Phase 5 networks' pred.npz, the simple models refit as Phase 5 did),
 sliced to explain the result. Written for the report (section 8b) and the audit.
@@ -12,7 +12,7 @@ sliced to explain the result. Written for the report (section 8b) and the audit.
   Phase 5 training-set size and the fresh-test drought rate.
 - reload_check: summary of logs/status_check_2026-11-09/reload_check_phase5.json.
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && .venv/bin/python -u code/dewsat2/fresh_posthoc.py
+    source env.sh && .venv/bin/python -u code/dewsat2/fresh_posthoc.py
 """
 
 from __future__ import annotations

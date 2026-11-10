@@ -20,7 +20,7 @@ def card(d: dict) -> str:
     reg = dc.get("regions", {})
     L = ["# DEWSat drought estimation: data card (DEWSat_BiLSTM_v2 dataset)", "",
          f"For Prof. Fatemeh Ghoreishi · {time.strftime('%Y-%m-%d')} · code `{gs['short']}` in "
-         "`~/Desktop/DEWSat_BiLSTM_v2/code`. Every number comes from a file listed under Sources; \"not recorded\" means "
+         "`code`. Every number comes from a file listed under Sources; \"not recorded\" means "
          "no file records it.", "",
          "**Credits.** As in the paper run: the original 102 regions, the HLS product and Fmask choices, the 30% clear-cell "
          "rule, the ~120 m pixel and the pull design are Austin Schlather's (`dewstat-northeastern@7adb8d6`); the 98° W "
@@ -140,12 +140,12 @@ def card(d: dict) -> str:
           "## Sources", "",
           "- `data/plan/plan.json`, `data/plan/regions_plan.csv`, `data/plan/batches.json`: candidate count, layout, batches.",
           "- `data/pull_state.json`, `data/FROZEN.json`: pull timing, batches, frozen regions.",
-          "- `scores/data_counts.json`: regions, cells, granules, views, windows, base rates, sizes.",
+          "- `results/scores/data_counts.json`: regions, cells, granules, views, windows, base rates, sizes.",
           "- `cache/dataset.json`: assembled cells and coverage; `logs/pull/fldas_check.json`: FLDAS agreement.",
-          "- `scores/scores.json`, `scores/phase5.json`: results; `data/locked/FRESH_TEST_SCORED.lock`: when the fresh "
+          "- `results/scores/scores.json`, `results/scores/phase5.json`: results; `data/locked/FRESH_TEST_SCORED.lock`: when the fresh "
           "test was scored.",
-          "- `scores/phase6.json`: NLDAS-2 and SPEI agreement with FLDAS, the SPEI timescale choice; "
-          "`scores/fresh_labels_posthoc.json`: the fresh-test predictions scored against those labels.",
+          "- `results/scores/phase6.json`: NLDAS-2 and SPEI agreement with FLDAS, the SPEI timescale choice; "
+          "`results/scores/fresh_labels_posthoc.json`: the fresh-test predictions scored against those labels.",
           "- Land cover: ESA CCI Land Cover 2020 v2.1.1 via Planetary Computer `esa-cci-lc` (`data/landcover/*.json`).",
           "- Boundaries: U.S. Census Bureau `cb_2023_us_state_20m` (`data/boundaries/`).",
           "- HLS v2.0: NASA LP DAAC (HLSS30/HLSL30 v2.0, CMR) and Microsoft Planetary Computer (`hls2-s30`, `hls2-l30`).",

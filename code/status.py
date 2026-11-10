@@ -1,4 +1,4 @@
-"""Render ~/Desktop/DEWSat_BiLSTM_v2/STATUS.md from every stage's state file (pull, audit, pipeline, fresh test)."""
+"""Render STATUS.md from every stage's state file (pull, audit, pipeline, fresh test)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import os
 import time
 from pathlib import Path
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[1]  # the repository root
 
 
 def _read(p: Path):

@@ -1,6 +1,6 @@
 """Report sections for the rows added after the development results (DESIGN.md amendments 4-6): the post-hoc models'
 development scores and the 2x2 table, the learning curve, the fresh-test 2x2 and the model sizes for the Jetson.
-Every number is read from a logged file (scores/posthoc.json, scores/lcurve.json, scores/phase5.json, run metadata)."""
+Every number is read from a logged file (results/scores/posthoc.json, results/scores/lcurve.json, results/scores/phase5.json, run metadata)."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def sec_posthoc(d: dict) -> list[str]:
     p = d.get("posthoc")
     L = ["## 4b. Models added after the development results (amendments 4 and 4b; development)", ""]
     if not p:
-        return L + ["Not scored yet (`scores/posthoc.json`).", ""]
+        return L + ["Not scored yet (`results/scores/posthoc.json`).", ""]
     L += ["Added after section 4's results, with their designs fixed before they were trained (DESIGN.md amendments 4 "
           "and 4b; not part of the gate):", "",
           "- **VCI-only Bi-LSTM**: each job's Bi-LSTM search, with NDVI, the valid fraction and the season channels "
@@ -94,7 +94,7 @@ def sec_lcurve(d: dict) -> list[str]:
     lc = d.get("lcurve")
     L = ["## 7b. Learning curve (amendment 5; secondary, no pass/fail)", ""]
     if not lc:
-        return L + ["Not scored yet (`scores/lcurve.json`).", ""]
+        return L + ["Not scored yet (`results/scores/lcurve.json`).", ""]
     nets_ = lc["networks"]
     L += [f"Does more training data close the gap to LR? Networks {', '.join(lab(m) for m in nets_)}, each fold's chosen "
           f"setting retrained on slices of the fold's training windows (seeds {', '.join(map(str, lc['seeds']))}); LR on "
@@ -128,7 +128,7 @@ RELU_PAIRS = (("bilstm_relu - bilstm", "the primary comparison; reading fixed in
 
 
 def relu_checks(d: dict) -> str:
-    """One sentence on the checks that ran before the 40 ReLU runs (logs/relu/*.json, scores/relu_pilot.json)."""
+    """One sentence on the checks that ran before the 40 ReLU runs (logs/relu/*.json, results/scores/relu_pilot.json)."""
     from common import LOGS
     vc, vs, pi = read_json(LOGS / "relu" / "verify_cell.json"), read_json(LOGS / "relu" / "verify_score.json"), \
         d.get("relu_pilot")
@@ -161,7 +161,7 @@ def sec_relu(d: dict) -> list[str]:
     if s:
         L += [s, ""]
     if not r:
-        return L + ["Not scored yet (`scores/relu.json`).", ""]
+        return L + ["Not scored yet (`results/scores/relu.json`).", ""]
     for job, e in r["jobs"].items():
         best = e["best_simple"]
         L += [f"### {e['label']} ({e['n']:,} windows, {e['n_pos']:,} in drought)", "",
@@ -263,7 +263,7 @@ def sec_sizes(d: dict) -> list[str]:
                      pt.parent.relative_to(RUNS.parent)))
     if not rows:
         return L + ["Not available until Phase 5 has trained (sizes of the development runs are in "
-                    "`scores/posthoc.json` and each run's `meta.json`).", ""]
+                    "`results/scores/posthoc.json` and each run's `meta.json`).", ""]
     L += ["One prediction is one cell-month window (12 monthly steps; a tile CNN reads one 23x21 tile per step). "
           "Multiply-adds are counted layer by layer (recurrent gates, convolutions, linear layers; norms and activations "
           "left out). Weights: `model.pt` (PyTorch state dict, float32) of the seed-42 run; the 10 seeds are the same "
@@ -346,7 +346,7 @@ def sec_fresh_posthoc(d: dict) -> list[str]:
     if not f:
         return L + ["Not computed yet (`code/dewsat2/fresh_posthoc.py`, after the fresh test is scored).", ""]
     L += ["The same saved fresh-test predictions as section 8 (job 1), sliced to explain the result "
-          "(`scores/fresh_posthoc.json`, `code/dewsat2/fresh_posthoc.py`). Nothing here was used to choose or change a "
+          "(`results/scores/fresh_posthoc.json`, `code/dewsat2/fresh_posthoc.py`). Nothing here was used to choose or change a "
           "model, and the fresh test was not scored again.", ""]
     rc = f.get("reload_check")
     if rc:
@@ -461,7 +461,7 @@ def sec_fresh_labels(d: dict) -> list[str]:
           "Phase 6 chose on development cells and at the two runners-up within 0.01 AUC of it, and against the NLDAS-2 "
           "drought flag (the same 20th-percentile rule on another land model's 10-40 cm soil moisture). All labels use "
           "the windows where every label exists; paired differences use 2,000 whole-region resamples "
-          "(`scores/fresh_labels_posthoc.json`). Post-hoc: nothing was chosen or changed on these results.", ""]
+          "(`results/scores/fresh_labels_posthoc.json`). Post-hoc: nothing was chosen or changed on these results.", ""]
     for job, title in (("job1", "Job 1, estimation now"), ("job2", "Job 2, missing month")):
         rows = label_rows(f, job)
         if not rows:

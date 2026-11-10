@@ -1,6 +1,6 @@
 """Runner for the post-hoc models (DESIGN.md amendments 4 and 4b): search, final, score.
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && mkdir -p logs/posthoc && rm -f logs/posthoc/STOP
+    source env.sh && mkdir -p logs/posthoc && rm -f logs/posthoc/STOP
     caffeinate -dimsu nohup .venv/bin/python -u code/dewsat2/posthoc_run.py --stages search,final,score \
         --cpu-workers 4 --mps-workers 2 --threads 2 >> logs/posthoc/run.log 2>&1 &
 
@@ -16,7 +16,7 @@ DEWSAT_V2_OUT.
 The learning curve (DESIGN.md amendment 5, lcurve.py) runs through the same dispatcher with its own status, STOP file
 and failures (logs/lcurve/, runs/lcurve/failures/):
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && mkdir -p logs/lcurve && rm -f logs/lcurve/STOP
+    source env.sh && mkdir -p logs/lcurve && rm -f logs/lcurve/STOP
     caffeinate -dimsu nohup nice -n 10 .venv/bin/python -u code/dewsat2/posthoc_run.py --stages lcurve,lcurve_score \
         --cpu-workers 2 --mps-workers 1 --threads 2 >> logs/lcurve/run.log 2>&1 &
 

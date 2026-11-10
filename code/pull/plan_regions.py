@@ -29,7 +29,7 @@ from pathlib import Path
 
 import numpy as np
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[2]  # the repository root
 LANDCOVER = V2 / "data" / "landcover" / "esa_cci_lc_2020_conus.tif"
 STATES = V2 / "data" / "boundaries" / "cb_2023_us_state_20m" / "cb_2023_us_state_20m.shp"
 EXISTING = [V2 / "inputs" / "paper_code" / "paper_hls" / "regions.csv",

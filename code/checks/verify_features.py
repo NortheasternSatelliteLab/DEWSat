@@ -3,7 +3,7 @@ tables_loyo/hls_fldas_drought.csv (features and target) for the listed regions. 
 import csv, json, os, sys, tempfile
 from pathlib import Path
 import numpy as np
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
+V2 = Path(__file__).resolve().parents[2]  # the repository root
 os.environ["DEWSAT_V2_OUT"] = tempfile.mkdtemp(dir=V2 / "tmp")
 sys.path.insert(0, str(V2 / "code" / "dewsat2"))
 import common, features, regions

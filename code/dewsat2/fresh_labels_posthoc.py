@@ -1,4 +1,4 @@
-"""Post-hoc, after the lock and Phase 6: are the fresh-test results specific to the FLDAS label? scores/fresh_labels_posthoc.json.
+"""Post-hoc, after the lock and Phase 6: are the fresh-test results specific to the FLDAS label? results/scores/fresh_labels_posthoc.json.
 
 The saved fresh-test predictions of jobs 1 and 2 (Phase 5 networks' pred.npz, the simple models refit as Phase 5 did)
 are scored against other drought labels on the same windows, with paired differences against LR and the job's best
@@ -10,7 +10,7 @@ simple model (scoring.score_subset, 2,000 whole-region resamples):
     Phase 6, at the NLDAS cell nearest each cell centre.
 Every label is compared on the windows where all of them exist. Not a second test of the FLDAS label.
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && .venv/bin/python -u code/dewsat2/fresh_labels_posthoc.py
+    source env.sh && .venv/bin/python -u code/dewsat2/fresh_labels_posthoc.py
 """
 
 from __future__ import annotations

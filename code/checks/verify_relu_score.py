@@ -1,9 +1,9 @@
 """DESIGN.md amendment 7, check of the scoring path: relu.score() with the ReLU runs pointed at the original `bilstm`
 runs must give `bilstm_relu - bilstm` exactly 0, the score stage's own within-fold AUCs for `bilstm`, LR on VCI(T)
-and the best simple model, and saved models that reproduce their predictions. Writes nothing to scores/; the result
+and the best simple model, and saved models that reproduce their predictions. Writes nothing to results/scores/; the result
 goes to logs/relu/verify_score.json. Exits 1 if any check fails.
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && .venv/bin/python code/checks/verify_relu_score.py
+    source env.sh && .venv/bin/python code/checks/verify_relu_score.py
 """
 import sys
 from pathlib import Path

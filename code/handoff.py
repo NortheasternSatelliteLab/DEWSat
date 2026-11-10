@@ -15,8 +15,8 @@ import subprocess
 import time
 from pathlib import Path
 
-V2 = Path.home() / "Desktop" / "DEWSat_BiLSTM_v2"
-DATA, LOGS, RUNS, SCORES = V2 / "data", V2 / "logs", V2 / "runs", V2 / "scores"
+V2 = Path(__file__).resolve().parents[1]  # the repository root
+DATA, LOGS, RUNS, SCORES = V2 / "data", V2 / "logs", V2 / "runs", V2 / "results" / "scores"
 CHAIN = LOGS / "chain"
 FRESH_LOCK = DATA / "locked" / "FRESH_TEST_SCORED.lock"
 N_BATCHES = 12
@@ -232,10 +232,10 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
         (dev_done, "Development stages features, simple, search, final, score, checks, whatif, weekly",
          "automatic: the training launcher becomes `code/dewsat2/run.py` (log `logs/run.log`)"),
         (bool(read_json(SCORES / "posthoc.json")), "Post-hoc models (DESIGN.md amendments 4, 4b): search, final, "
-         "development scores (`scores/posthoc.json`)", "automatic: post-hoc runner (`posthoc_run.py`, run from the "
+         "development scores (`results/scores/posthoc.json`)", "automatic: post-hoc runner (`posthoc_run.py`, run from the "
          "`posthoc` worktree, since merged into `main`; log `logs/posthoc/run.log`)"),
         (not (V2 / "STOP_CHAIN").exists() and bool(mark), "Amendment 6: the post-hoc models and the plain Bi-LSTM in "
-         "Phase 5; `STOP_CHAIN` removed, chain launcher restarted", "By hand, after reviewing `scores/posthoc.json` "
+         "Phase 5; `STOP_CHAIN` removed, chain launcher restarted", "By hand, after reviewing `results/scores/posthoc.json` "
          "(DECISIONS.md #66)"),
         (bool(mark), "Failure and sanity check of the development run",
          "automatic: chain launcher (`code/launch_after_dev.py`)"),
@@ -253,8 +253,8 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
          "fatemeh_numbers.md, data_card.md)", "automatic: run.py after every stage; the chain launcher at the end, with "
          "an automatic closing paragraph only if none was written by hand"),
         (bool(para) and not para.get("automatic") and bool(lim), "Manual wrap-up",
-         "by hand: a hand-written closing paragraph (`scores/conclusion_paragraph.json`, replacing any "
-         "automatic one) and `scores/limitations.json`, regenerate the reports, final DECISIONS.md / FOLDERS.md "
+         "by hand: a hand-written closing paragraph (`results/scores/conclusion_paragraph.json`, replacing any "
+         "automatic one) and `results/scores/limitations.json`, regenerate the reports, final DECISIONS.md / FOLDERS.md "
          "entries, commit `code/`, and ask before deleting the sandboxes and temp folders (section 7; the user "
          "approved the cleanup on Nov 9, DECISIONS.md #84)"),
     ]
@@ -264,7 +264,7 @@ def step_lines(st, fz, fr, s, cs, mark, p6, para, lim) -> list[str]:
 COMMANDS = """Run every command from the folder with its environment (it points TMPDIR and the caches inside the folder):
 
 ```bash
-cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh
+source env.sh
 ```
 
 See what is running (roles in section 1):
@@ -316,7 +316,7 @@ mkdir -p logs/chain && caffeinate -dimsu nohup .venv/bin/python -u code/launch_a
 - Approve Phase 5 after the chain launcher stopped on a sanity check, only after reviewing why: `touch logs/chain/GO_PHASE5`.
 - Stop the chain launcher before it starts anything further: `touch STOP_CHAIN` (it never kills a running stage).
 - Phase 6 alone, after the fresh-test lock exists and nothing else runs (Phase 6 keeps what it finished; if
-  `scores/phase6.json` says SPEI was "Not completed", remove its `spei` key first so SPEI is tried again):
+  `results/scores/phase6.json` says SPEI was "Not completed", remove its `spei` key first so SPEI is tried again):
 
 ```bash
 .venv/bin/python -u code/dewsat2/run.py --stages phase6 >> logs/run_phase56.log 2>&1
@@ -368,17 +368,17 @@ FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status
   (written once, after scoring; Phase 5 refuses to run if it exists; Phase 6 refuses to run without it).
 - Chain launcher bookkeeping: `logs/chain/LOCK/` (one instance), `logs/chain/phase56_launched.json` (Phase 5 started
   once), `logs/chain/GO_PHASE5` (approval after a sanity stop), `STOP_CHAIN`.
-- Post-hoc models (amendments 4-6): `runs/posthoc/`, `scores/posthoc.json`, `logs/posthoc/` (status, STOP); tiles
-  `cache/tiles/` (`tiles.json`); learning curve `runs/lcurve/`, `scores/lcurve.json`, `logs/lcurve/`. The branches
+- Post-hoc models (amendments 4-6): `runs/posthoc/`, `results/scores/posthoc.json`, `logs/posthoc/` (status, STOP); tiles
+  `cache/tiles/` (`tiles.json`); learning curve `runs/lcurve/`, `results/scores/lcurve.json`, `logs/lcurve/`. The branches
   `posthoc`, `lcurve` and `report` are merged into `main`; their worktrees were removed after the learning curve
   finished (DECISIONS.md #82). The ReLU test's branch `relu` was fast-forwarded into `main` (DECISIONS.md #87).
-- Post-hoc analyses of the fresh test (after the lock; not a second test): `scores/fresh_posthoc.json`,
-  `scores/fresh_labels_posthoc.json`; Phase 6 data `data/phase6/` (NLDAS-2 months, SPEI point series).
-- ReLU Bi-LSTM (amendment 7): `runs/relu/` (`bilstm_relu`, and the pilot's `bilstm_hand`), `scores/relu.json`,
-  `scores/relu_pilot.json`, `logs/relu/` (status, run log, `verify_cell.json`, `verify_score.json`); code
+- Post-hoc analyses of the fresh test (after the lock; not a second test): `results/scores/fresh_posthoc.json`,
+  `results/scores/fresh_labels_posthoc.json`; Phase 6 data `data/phase6/` (NLDAS-2 months, SPEI point series).
+- ReLU Bi-LSTM (amendment 7): `runs/relu/` (`bilstm_relu`, and the pilot's `bilstm_hand`), `results/scores/relu.json`,
+  `results/scores/relu_pilot.json`, `logs/relu/` (status, run log, `verify_cell.json`, `verify_score.json`); code
   `code/dewsat2/relu.py`, `nets.HandLSTM`, `code/checks/verify_relu_*.py`.
-- Hand-written: `scores/conclusion_paragraph.json` (closing paragraph), `scores/limitations.json`.
-- Results: `scores/*.json`; reports `report.md`, `audit.md`, `fatemeh_numbers.md`, `data_card.md`.
+- Hand-written: `results/scores/conclusion_paragraph.json` (closing paragraph), `results/scores/limitations.json`.
+- Results: `results/scores/*.json`; reports `report.md`, `audit.md`, `fatemeh_numbers.md`, `data_card.md`.
 - Design and gate, fixed before training: `code/design/DESIGN.md`, `code/design/gate.json` (commit `f5e92aa`).
 - Code: `code/pull/` (pull), `code/dewsat2/` (pipeline; `run.py` is the entry point), `code/launch_when_frozen.sh`,
   `code/launch_after_dev.py`, `code/handoff.py`, `code/status.py`.
@@ -387,7 +387,7 @@ FILES = """- State: `STATUS.md`, this file, `data/pull_state.json`, `logs/status
 RESUME = """1. Read, in this order: this file, `STATUS.md`, `DECISIONS.md`, `code/design/DESIGN.md` and `gate.json`,
    `audit/phase0_audit.md`, and `audit.md` once it has results.
 2. The user's standing rules for this task:
-   - Everything the task creates stays inside `~/Desktop/DEWSat_BiLSTM_v2/` (code, venv, downloads, caches, temp
+   - Everything the task creates stays inside the repository (code, venv, downloads, caches, temp
      files, runs, logs, reports). Source `env.sh` before every command.
    - The older folders (`DEW ML`, `DEWSat_Paper_BiLSTM`, `DEWSat_Capability_Tests`, `DEWSat_Fatemeh_package`,
      `DEWSat_transfer`) are read-only: change nothing there, permissions included. Copy what you need.
@@ -402,7 +402,7 @@ RESUME = """1. Read, in this order: this file, `STATUS.md`, `DECISIONS.md`, `cod
 4. If a process died, use the matching command in section 3, after reading its log tail, and log what you did.
 5. When the reports step of section 2 is ticked, do the manual wrap-up (its last step; done on 2026-11-09): replace
    the automatic closing paragraph with a hand-written yes/no paragraph
-   that says why, using only logged numbers; write `scores/limitations.json` (`{"items": [...]}`); regenerate the
+   that says why, using only logged numbers; write `results/scores/limitations.json` (`{"items": [...]}`); regenerate the
    reports; update `DECISIONS.md`, `STATUS.md` and `FOLDERS.md`; commit `code/`. Ask before deleting anything outside
    the folder.
 """
@@ -450,7 +450,7 @@ KNOWN = """- Fixed: `STATUS.md` used to show an empty "Phases 3-4 pipeline" sect
   `logs/status_pipeline.json`, but the table is in `logs/status_pipeline_lines.json`). The fix waited, as the user
   asked, until the run finished; it is live since the `report` merge (`e4febc0`, DECISIONS.md #47 and #80).
 - PyTorch's Apple-GPU (MPS) backend creates an empty folder per compiled graph in the macOS per-user temp folder
-  (`/var/folders/hz/_y4bwsp114bgsxv6j56hq81c0000gn/T/com.apple.MetalPerformanceShadersGraph/mpsgraph-<pid>-...`),
+  (`com.apple.MetalPerformanceShadersGraph/mpsgraph-<pid>-...` in the folder `getconf DARWIN_USER_TEMP_DIR` names),
   ignoring TMPDIR (DECISIONS.md #46). %%MPS_NOTE%%
 - Cleanup, approved by the user on Nov 9 and done (DECISIONS.md #84): the pipeline sandboxes `smoke/`, `smokeT/`,
   `smoke5/`, the check sandboxes under `tmp/` and `cache/tiles/regions/` (the assembled tiles stay) were deleted.
@@ -459,7 +459,15 @@ KNOWN = """- Fixed: `STATUS.md` used to show an empty "Phases 3-4 pipeline" sect
 """
 
 
-MPS_TMP = Path("/var/folders/hz/_y4bwsp114bgsxv6j56hq81c0000gn/T/com.apple.MetalPerformanceShadersGraph")
+def _user_tmp() -> str:
+    try:
+        return subprocess.run(["getconf", "DARWIN_USER_TEMP_DIR"], capture_output=True, text=True,
+                              timeout=5).stdout.strip() or "/tmp"
+    except Exception:  # noqa: BLE001
+        return "/tmp"
+
+
+MPS_TMP = Path(_user_tmp()) / "com.apple.MetalPerformanceShadersGraph"
 
 
 def relu_done() -> str:

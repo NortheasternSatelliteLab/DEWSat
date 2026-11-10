@@ -7,14 +7,14 @@ the same data order and the same initial weights as the original runs. The fresh
 Stages (posthoc_run.py, namespace "relu": logs/relu/, runs/relu/failures/):
     relu_pilot        fold 1 on the CPU: `bilstm_hand` (the hand-written cell with tanh) for PILOT_SEEDS, and
                       `bilstm_relu` seed 42 (kept: it is also that seed's run in the main stage)
-    relu_pilot_score  scores/relu_pilot.json: each `bilstm_hand` seed's outer-validation AUC within PILOT_TOL of the
+    relu_pilot_score  results/scores/relu_pilot.json: each `bilstm_hand` seed's outer-validation AUC within PILOT_TOL of the
                       original `bilstm` run of that seed (trained on the CPU); the ReLU run's loss fell and stayed finite
     relu              the 40 `bilstm_relu` runs; refuses to start unless the pilot passed
-    relu_score        scores/relu.json: jobs 1 and 4 (through job 1), the score stage's subsets and region draws
+    relu_score        results/scores/relu.json: jobs 1 and 4 (through job 1), the score stage's subsets and region draws
 
 Runs: runs/relu/<family>/fold<k>/seed<s>/ (pred.npz, model.pt, meta.json, DONE).
 
-    cd ~/Desktop/DEWSat_BiLSTM_v2 && source env.sh && mkdir -p logs/relu && rm -f logs/relu/STOP
+    source env.sh && mkdir -p logs/relu && rm -f logs/relu/STOP
     caffeinate -dimsu nohup .venv/bin/python -u code/dewsat2/posthoc_run.py --stages relu_pilot,relu_pilot_score \
         --cpu-workers 4 --mps-workers 0 --threads 2 >> logs/relu/run.log 2>&1 &
     caffeinate -dimsu nohup .venv/bin/python -u code/dewsat2/posthoc_run.py --stages relu,relu_score \
@@ -57,7 +57,7 @@ def stage_specs(stage: str) -> list[dict]:
     if stage == "relu":
         pilot = read_json(SCORES / "relu_pilot.json")
         if not pilot or not pilot.get("passed"):
-            raise SystemExit("relu: the pilot has not passed (scores/relu_pilot.json); nothing started")
+            raise SystemExit("relu: the pilot has not passed (results/scores/relu_pilot.json); nothing started")
         return [{"type": "relu", "job": "job1", "k": k, "cfg": cfg_for(k), "seed": s}
                 for k in range(N_FOLDS) for s in SEEDS]
     raise ValueError(stage)
@@ -133,7 +133,7 @@ def _loss_ok(meta: dict) -> tuple[bool, bool]:
 
 # --------------------------------------------------------------------------------------------- pilot
 def pilot_check() -> dict:
-    """scores/relu_pilot.json: the hand-written tanh cell reproduces the original CPU runs; the ReLU run trains."""
+    """results/scores/relu_pilot.json: the hand-written tanh cell reproduces the original CPU runs; the ReLU run trains."""
     import units
     rows, bad = [], []
     for s in PILOT_SEEDS:
@@ -222,7 +222,7 @@ def reproduce(k: int) -> float:
 
 
 def score(write: bool = True) -> dict:
-    """scores/relu.json: `bilstm_relu` on jobs 1 and 4 beside `bilstm`, LR on VCI(T) and the gate's best simple
+    """results/scores/relu.json: `bilstm_relu` on jobs 1 and 4 beside `bilstm`, LR on VCI(T) and the gate's best simple
     model, pooled and resampled exactly as the score stage (its subsets and region draws). write=False: the check
     code/checks/verify_relu_score.py, which points the ReLU runs at the original ones."""
     import dataset

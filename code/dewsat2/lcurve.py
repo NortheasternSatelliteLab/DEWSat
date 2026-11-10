@@ -12,7 +12,7 @@ The full-data point is the existing final runs' SEEDS (nothing retrained).
              within East (default_rng(LC_SEED + 100 + fold index)), at least one per side; all training years
 
 The scaler comes from each slice's own training windows (DESIGN.md 1); the fold's VCI table and inputs are unchanged.
-Runs: runs/lcurve/<model>/fold<k>/<slice>/seed<s>/ (pred.npz, meta.json, DONE). Scores: scores/lcurve.json.
+Runs: runs/lcurve/<model>/fold<k>/<slice>/seed<s>/ (pred.npz, meta.json, DONE). Scores: results/scores/lcurve.json.
 DEWSAT_LC_MODELS (comma-separated) overrides the two networks; sandboxes use it to exercise every model's code path.
 """
 
@@ -127,14 +127,14 @@ def prep_slice(sl: dict) -> dict:
 
 # --------------------------------------------------------------------------------------------- models and runs
 def best_new_model() -> str:
-    """The amendment-4 Bi-LSTM with the higher job-1 development within-fold AUC (scores/posthoc.json)."""
+    """The amendment-4 Bi-LSTM with the higher job-1 development within-fold AUC (results/scores/posthoc.json)."""
     sc = read_json(SCORES / "posthoc.json")
     if not sc or "job1" not in sc.get("jobs", {}):
-        raise RuntimeError("scores/posthoc.json has no job-1 scores: the learning curve picks its second Bi-LSTM there")
+        raise RuntimeError("results/scores/posthoc.json has no job-1 scores: the learning curve picks its second Bi-LSTM there")
     m = sc["jobs"]["job1"]["models"]
     cands = [x for x in NEW_CANDIDATES if x in m and m[x]["all"][0] is not None]
     if not cands:
-        raise RuntimeError(f"none of {NEW_CANDIDATES} is scored in scores/posthoc.json")
+        raise RuntimeError(f"none of {NEW_CANDIDATES} is scored in results/scores/posthoc.json")
     return max(cands, key=lambda x: m[x]["all"][0])
 
 
@@ -286,7 +286,7 @@ def _slice_of(k: int, axis: str, size, j: int) -> dict | None:
 
 
 def score() -> dict:
-    """scores/lcurve.json: per axis and size, each model's within-fold AUC and network minus LR, with intervals."""
+    """results/scores/lcurve.json: per axis and size, each model's within-fold AUC and network minus LR, with intervals."""
     import scoring
     import units
     c = units.ctx()
