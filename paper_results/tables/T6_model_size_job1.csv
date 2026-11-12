@@ -1,0 +1,7 @@
+﻿Model,Setting,Parameters,Multiply-adds per prediction,"Weights, float32 (KiB)"
+VCI-only Bi-LSTM,"hidden 24, layers 1","11,617","69,168",49.5
+Bi-LSTM,"hidden 24, layers 1","11,617","80,688",49.5
+Residual Bi-LSTM,"hidden 24, layers 1","11,617","80,688",49.5
+GRU,"hidden 32, layers 1","16,833","102,720",69.8
+CNN + LR,"width 32, depth 3","56,098","4,038,401",222.1
+CNN + Bi-LSTM,"hidden 16, layers 1, width 16, depth 3","23,217","13,030,048",95.9

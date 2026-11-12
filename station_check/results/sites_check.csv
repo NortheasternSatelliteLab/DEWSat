@@ -1,0 +1,279 @@
+site_id,network,name,lat,lon,fldas_ix,fldas_iy,v2_region,v2_role,side,v2_cell_id
+scan_2001,SCAN,Rogers Farm #1,40.84617,-96.46625,285,168,,,east,
+scan_2002,SCAN,Crescent Lake #1,45.41519,-93.94786,310,214,,,east,
+scan_2003,SCAN,Wabeno #1,45.47351,-88.58584,364,214,,,east,
+scan_2004,SCAN,Mason #1,40.31314,-89.90187,350,163,,,east,
+scan_2005,SCAN,Princeton #1,37.10237,-87.84105,371,131,,,east,
+scan_2006,SCAN,Bushland #1,35.17459,-102.09452,229,111,,,west,
+scan_2008,SCAN,Tidewater #1,35.87206,-76.65828,483,118,n0313,dev,east,n0313:-76.65:35.85
+scan_2009,SCAN,Wakulla #1,30.30585,-84.42477,405,63,n0185,dev,east,n0185:-84.45:30.35
+scan_2011,SCAN,Geneva #1,42.8765,-77.0307,479,188,,,east,
+scan_2012,SCAN,Sellers Lake #1,29.10376,-81.63194,433,51,,,east,
+scan_2013,SCAN,Watkinsville #1,33.88291,-83.42826,415,98,,,east,
+scan_2014,SCAN,Molly Caren #1,39.95684,-83.4447,415,159,,,east,
+scan_2015,SCAN,Adams Ranch #1,34.25294,-105.41973,195,102,,,west,
+scan_2016,SCAN,Prairie View #1,30.09168,-95.97695,290,60,,,east,
+scan_2017,SCAN,Nunn #1,40.85989,-104.74033,202,168,,,west,
+scan_2018,SCAN,Torrington #1,42.07053,-104.14084,208,180,n0515,dev,west,n0515:-104.15:42.05
+scan_2019,SCAN,Fort Assiniboine #1,48.49086,-109.8004,151,244,,,west,
+scan_2020,SCAN,Mandan #1,46.77236,-100.91419,240,227,,,west,
+scan_2021,SCAN,Lind #1,47.00713,-118.57403,64,230,n0682,dev,west,n0682:-118.55:47.05
+scan_2022,SCAN,Fort Reno #1,35.5572,-98.01627,269,115,oklahoma_rangeland,dev,west,oklahoma_rangeland:-98.05:35.55
+scan_2024,SCAN,Goodwin Ck Pasture,34.25491,-89.87347,351,102,n0281,dev,east,n0281:-89.85:34.25
+scan_2025,SCAN,Goodwin Ck Timber,34.23595,-89.89828,351,102,n0281,dev,east,n0281:-89.85:34.25
+scan_2026,SCAN,Walnut Gulch #1,31.74368,-110.05185,149,77,,,west,
+scan_2028,SCAN,Mahantango Ck,40.67309,-76.66702,483,166,,,east,
+scan_2030,SCAN,Uapb-Lonoke Farm,34.84886,-91.87826,331,108,,,east,
+scan_2031,SCAN,Ames,42.0136,-93.72977,312,180,,,east,
+scan_2032,SCAN,Beasley Lake,33.39138,-90.65132,343,93,,,east,
+scan_2033,SCAN,Onward,32.75358,-90.94208,340,87,,,east,
+scan_2034,SCAN,Tunica,34.6764,-90.41142,345,106,,,east,
+scan_2035,SCAN,Vance,34.06301,-90.35843,346,100,,,east,
+scan_2036,SCAN,Rock Springs Pa,40.72044,-77.93294,470,167,,,east,
+scan_2037,SCAN,Pee Dee,34.29343,-79.73987,452,102,,,east,
+scan_2038,SCAN,Youmans Farm,32.66919,-81.19609,438,86,,,east,
+scan_2039,SCAN,N Piedmont Arec,38.22518,-78.1189,468,142,n0406,dev,east,n0406:-78.15:38.25
+scan_2041,SCAN,Mount Mansfield,44.53512,-72.83462,521,205,,,east,
+scan_2042,SCAN,Lye Brook,43.05723,-73.03892,519,190,,,east,
+scan_2046,SCAN,Perthshire,33.9737,-90.90496,340,99,mississippi_delta,dev,east,mississippi_delta:-90.95:33.95
+scan_2047,SCAN,Spickard,40.2473,-93.71605,312,162,,,east,
+scan_2048,SCAN,Dexter,36.78773,-89.93937,350,127,,,east,
+scan_2049,SCAN,Powder Mill,39.02621,-76.84736,481,150,,,east,
+scan_2050,SCAN,Glacial Ridge,47.71593,-96.26823,287,237,,,east,
+scan_2053,SCAN,Wtars,34.90159,-86.53852,384,109,,,east,
+scan_2055,SCAN,Hodges,34.44486,-86.16517,388,104,n0267,dev,east,n0267:-86.15:34.45
+scan_2056,SCAN,Stanley Farm,34.43935,-86.68734,383,104,,,east,
+scan_2057,SCAN,AAMU-JTG,34.78534,-86.55906,384,107,,,east,
+scan_2060,SCAN,Mt Vernon,37.073,-93.88158,311,130,,,east,
+scan_2061,SCAN,Powell Gardens,38.868,-94.03564,309,148,,,east,
+scan_2064,SCAN,Starkville,33.47094,-88.78051,362,94,,,east,
+scan_2068,SCAN,Shagbark Hills,42.44481,-95.76793,292,184,,,east,
+scan_2069,SCAN,Hubbard Brook,43.94852,-71.72662,532,199,,,east,
+scan_2070,SCAN,Scott,33.61962,-91.10184,338,96,,,east,
+scan_2072,SCAN,Eros Data Center,43.73835,-96.61455,283,197,,,east,
+scan_2075,SCAN,McAllister Farm,35.06437,-86.59136,384,110,,,east,
+scan_2076,SCAN,Allen Farms,35.07461,-86.89418,381,110,,,east,
+scan_2077,SCAN,Eastview Farm,35.13916,-86.19109,388,111,,,east,
+scan_2078,SCAN,Bragg Farm,34.8937,-86.60247,383,108,,,east,
+scan_2079,SCAN,Mammoth Cave,37.18645,-86.04103,389,131,,,east,
+scan_2082,SCAN,Tnc Fort Bayou,30.47073,-88.74182,362,64,,,east,
+scan_2083,SCAN,Uapb Campus-PB,34.25188,-92.02632,329,102,,,east,
+scan_2084,SCAN,Uapb-Marianna,34.7849,-90.81769,341,107,,,east,
+scan_2085,SCAN,Uapb-Earle,35.27732,-90.45031,345,112,n0299,dev,east,n0299:-90.45:35.25
+scan_2086,SCAN,Silver City,33.0875,-90.51151,344,90,n0236,dev,east,n0236:-90.55:33.05
+scan_2087,SCAN,North Issaquena,32.9972,-91.05993,339,89,,,east,
+scan_2088,SCAN,Shenandoah,37.93299,-79.21513,457,139,,,east,
+scan_2089,SCAN,Reynolds Homestead,36.64517,-80.14902,448,126,n0350,dev,east,n0350:-80.15:36.65
+scan_2090,SCAN,Uapb Point Remove,35.20842,-92.92462,320,112,,,east,
+scan_2091,SCAN,Uapb Dewitt,34.27788,-91.35017,336,102,n0280,dev,east,n0280:-91.35:34.25
+scan_2092,SCAN,Abrams,37.1313,-97.0859,279,131,n0359,dev,east,n0359:-97.05:37.15
+scan_2093,SCAN,Phillipsburg,39.78638,-99.32953,256,157,,,west,
+scan_2094,SCAN,Centralia Lake,39.70045,-96.1629,288,157,,,east,
+scan_2104,SCAN,Reese Center,33.61536,-102.03869,229,96,,,west,
+scan_2105,SCAN,Levelland,33.55125,-102.37392,226,95,n0245,dev,west,n0245:-102.35:33.55
+scan_2106,SCAN,Lehman,33.62647,-102.7453,222,96,,,west,
+scan_2107,SCAN,Crossroads,33.53513,-103.242,217,95,,,west,
+scan_2108,SCAN,Willow Wells,33.53382,-103.63097,213,95,,,west,
+scan_2109,SCAN,Sandy Ridge,33.65911,-90.57297,344,96,mississippi_delta,dev,east,mississippi_delta:-90.55:33.65
+scan_2110,SCAN,Mayday,32.86153,-90.51989,344,88,n0236,dev,east,n0236:-90.55:32.85
+scan_2111,SCAN,Johnson Farm,40.37092,-101.72007,232,163,,,west,
+scan_2113,SCAN,Cullman-NAHRC,34.19492,-86.79897,382,101,,,east,
+scan_2114,SCAN,Livingston-UWA,32.608,-88.19743,368,86,,,east,
+scan_2115,SCAN,Tuskegee,32.43455,-85.74802,392,84,,,east,
+scan_2116,SCAN,Lovelock NNR,40.09247,-118.49345,65,160,,,west,
+scan_2117,SCAN,Conrad Ag Rc,48.30453,-111.92363,130,243,,,west,
+scan_2118,SCAN,Violett,48.43578,-111.18423,138,244,n0711,dev,west,n0711:-111.15:48.45
+scan_2119,SCAN,Moccasin,47.05818,-109.95082,150,230,,,west,
+scan_2120,SCAN,Sidney,47.77102,-104.247,207,237,n0692,dev,west,n0692:-104.25:47.75
+scan_2121,SCAN,Jordan,47.522,-107.12731,178,235,n0158,test,west,n0158:-107.15:47.55
+scan_2125,SCAN,Circleville,38.15109,-112.25148,127,141,n0373,dev,west,n0373:-112.25:38.15
+scan_2126,SCAN,Ephraim,39.36798,-111.57803,134,153,,,west,
+scan_2127,SCAN,Holden,39.19216,-112.40155,125,151,,,west,
+scan_2128,SCAN,Enterprise,37.63343,-113.64324,113,136,,,west,
+scan_2130,SCAN,Eastland,37.77853,-109.17193,158,137,,,west,
+scan_2131,SCAN,Green River,39.01825,-110.16264,148,150,n0420,dev,west,n0420:-110.15:39.05
+scan_2132,SCAN,Price,39.53288,-110.80604,141,155,,,west,
+scan_2133,SCAN,Morgan,40.9999,-111.68555,133,169,,,west,
+scan_2134,SCAN,Mountain Home,40.37263,-110.40624,145,163,,,west,
+scan_2135,SCAN,Blue Creek,41.93531,-112.4336,125,179,,,west,
+scan_2136,SCAN,Cache Junction,41.81568,-111.98043,130,178,utah_cache_valley,dev,west,utah_cache_valley:-111.95:41.85
+scan_2137,SCAN,Nephi,39.64554,-111.87044,131,156,,,west,
+scan_2138,SCAN,Alkali Mesa,37.67455,-109.36429,156,136,n0060,test,west,n0060:-109.35:37.65
+scan_2139,SCAN,West Summit,38.01394,-109.12745,158,140,,,west,
+scan_2140,SCAN,Mccracken Mesa,37.44671,-109.33776,156,134,n0060,test,west,n0060:-109.35:37.45
+scan_2141,SCAN,Kyle Canyon,36.26527,-115.60852,93,122,,,west,
+scan_2142,SCAN,Trough Springs,36.37355,-115.78127,92,123,,,west,
+scan_2144,SCAN,Pine Nut,36.57285,-115.20422,97,125,,,west,
+scan_2145,SCAN,Charkiln,36.36651,-115.82047,91,123,,,west,
+scan_2147,SCAN,Ku-Nesa,39.05141,-95.19128,298,150,,,east,
+scan_2149,SCAN,Marble Creek,37.77767,-118.4209,65,137,,,west,
+scan_2150,SCAN,Chicken Ridge,41.33136,-111.3036,136,173,,,west,
+scan_2151,SCAN,Buffalo Jump,41.34368,-111.18797,138,173,n0490,dev,west,n0490:-111.15:41.35
+scan_2152,SCAN,Grantsville,40.59044,-112.39253,126,165,n0449,dev,west,n0449:-112.35:40.55
+scan_2154,SCAN,Split Mountain,40.39136,-109.35326,156,163,,,west,
+scan_2155,SCAN,Little Red Fox,40.17956,-110.30404,146,161,,,west,
+scan_2156,SCAN,Manderfield,38.36649,-112.64291,123,143,,,west,
+scan_2157,SCAN,Panguitch,37.86975,-112.43437,125,138,n0373,dev,west,n0373:-112.45:37.85
+scan_2158,SCAN,Spooky,37.51468,-111.26189,137,135,n0059,test,west,n0059:-111.25:37.55
+scan_2159,SCAN,Sand Hollow,37.10516,-113.35615,116,131,,,west,
+scan_2160,SCAN,Grouse Creek,41.77846,-113.82048,111,177,,,west,
+scan_2161,SCAN,Cave Valley,37.35524,-113.12341,118,133,,,west,
+scan_2162,SCAN,Vermillion,37.19061,-112.19252,128,131,n0356,dev,west,n0356:-112.15:37.15
+scan_2163,SCAN,Tule Valley,39.23724,-113.45866,115,152,utah_west_desert,dev,west,utah_west_desert:-113.45:39.25
+scan_2164,SCAN,Hals Canyon,38.59445,-113.75102,112,145,,,west,
+scan_2165,SCAN,Goshute,39.98981,-114.00047,109,159,n0435,dev,west,n0435:-114.05:39.95
+scan_2166,SCAN,Harms Way,38.31347,-109.23998,157,143,,,west,
+scan_2168,SCAN,Jornada Exp Range,32.5566,-106.69997,183,85,new_mexico_chihuahuan,dev,west,new_mexico_chihuahuan:-106.65:32.55
+scan_2169,SCAN,Los Lunas PMC,34.7715,-106.76288,182,107,,,west,
+scan_2171,SCAN,Sevilleta,34.35813,-106.69127,183,103,,,west,
+scan_2172,SCAN,Alcalde,36.0908,-106.05668,189,120,,,west,
+scan_2173,SCAN,Isbell Farms,34.81982,-87.98685,370,108,,,east,
+scan_2174,SCAN,Dee River Ranch,33.10707,-88.32215,366,91,n0240,dev,east,n0240:-88.35:33.15
+scan_2175,SCAN,Wedowee,33.3316,-85.51809,394,93,,,east,
+scan_2176,SCAN,Selma,32.40392,-86.89137,381,84,,,east,
+scan_2177,SCAN,Broad Acres,32.28393,-86.05253,389,82,,,east,
+scan_2178,SCAN,Morris Farms,32.41222,-85.91028,390,84,,,east,
+scan_2179,SCAN,Sudduth Farms,34.17973,-87.45618,375,101,,,east,
+scan_2180,SCAN,Koptis Farms,30.5238,-87.69797,373,65,,,east,
+scan_2181,SCAN,Perdido Riv Farms,31.10923,-87.55277,374,71,,,east,
+scan_2182,SCAN,River Road Farms,31.01912,-85.03693,399,70,,,east,
+scan_2183,SCAN,Desert Center,33.80208,-115.30505,96,98,n0022,test,west,n0022:-115.35:33.85
+scan_2184,SCAN,Ford Dry Lake,33.6547,-115.09763,99,96,n0022,test,west,n0022:-115.05:33.65
+scan_2185,SCAN,Essex,34.67235,-115.16693,98,106,,,west,
+scan_2186,SCAN,Shadow Mtns,35.46607,-115.7151,92,114,,,west,
+scan_2187,SCAN,Deep Springs,37.37222,-117.97383,70,133,,,west,
+scan_2189,SCAN,Cochora Ranch,35.11807,-119.59608,54,111,,,west,
+scan_2190,SCAN,Death Valley Jct,36.32502,-116.35132,86,123,,,west,
+scan_2191,SCAN,Doe Ridge,37.63423,-118.82643,61,136,,,west,
+scan_2192,SCAN,Eagle Lake,40.6175,-120.72472,42,166,,,west,
+scan_2193,SCAN,Schell-Osage,37.98721,-94.03646,309,139,n0372,dev,east,n0372:-94.05:37.95
+scan_2194,SCAN,Journagan Ranch,36.9973,-92.2594,327,129,,,east,
+scan_2195,SCAN,CMRB LTAR-MO,39.2285,-92.11942,328,152,,,east,
+scan_2196,SCAN,UW Platteville,42.70785,-90.3899,346,187,,,east,
+scan_2197,SCAN,CPER,40.8228,-104.71068,202,168,,,west,
+scan_2198,SCAN,Cook Farm Field D,46.78373,-117.08008,79,227,eastern_washington,dev,west,eastern_washington:-117.05:46.75
+scan_2199,SCAN,Riesel,31.47914,-96.88173,281,74,texas_blackland,dev,east,texas_blackland:-96.85:31.45
+scan_2200,SCAN,San Angelo,31.5496,-100.50748,244,75,,,west,
+scan_2201,SCAN,Knox City,33.44635,-99.86657,251,94,texas_rolling_plains,dev,west,texas_rolling_plains:-99.85:33.45
+scan_2202,SCAN,Vernon,34.01635,-99.2464,257,100,,,west,
+scan_2203,SCAN,Stephenville,32.24535,-98.19563,268,82,n0215,dev,west,n0215:-98.15:32.25
+scan_2204,SCAN,Uvalde,29.21578,-99.75517,252,52,,,west,
+scan_2205,SCAN,Weslaco,26.15613,-97.95894,270,21,,,east,
+scan_2206,SCAN,Kingsville,27.54967,-97.88215,271,35,,,east,
+scan_2207,SCAN,Beaumont,30.06845,-94.29283,307,60,,,east,
+scan_2214,SCAN,Ash Valley,41.05204,-120.6872,43,170,,,west,
+scan_2215,SCAN,Bodie Hills,38.26477,-119.12645,58,142,,,west,
+scan_2216,SCAN,Buckhorn,40.87959,-119.9534,50,168,,,west,
+scan_2217,SCAN,Monocline Ridge,36.54417,-120.55463,44,125,,,west,
+scan_2218,SCAN,French Gulch,40.79361,-122.55083,24,167,,,west,
+scan_2219,SCAN,Stubblefield,34.97018,-119.47831,55,109,,,west,
+scan_2220,SCAN,Elsberry PMC,39.15321,-90.78279,342,151,,,east,
+scan_2223,SCAN,Carver Farm,38.52563,-92.13465,328,145,,,east,
+scan_2224,SCAN,Busby Farm,38.50452,-92.2469,327,145,,,east,
+scan_2225,SCAN,Mark Twain HS,39.51311,-91.51401,334,155,,,east,
+scan_2226,SCAN,Twin Pines Conservation Area,36.99024,-91.30943,336,129,,,east,
+scan_2227,SCAN,Shaw Nature Reserve,38.47902,-90.80641,341,144,n0401,dev,east,n0401:-90.85:38.45
+scan_2228,SCAN,Nacogdoches,31.50398,-94.75927,302,75,east_texas_piney,dev,east,east_texas_piney:-94.75:31.55
+scan_2229,SCAN,Ruby,40.63697,-115.2212,97,166,,,west,
+scan_2230,SCAN,LTSP,37.18167,-91.11778,338,131,,,east,
+scan_2231,SCAN,Sinkin Forest,37.50147,-91.25926,337,135,n0066,test,east,n0066:-91.25:37.55
+scan_2233,SCAN,Thoreau,35.40455,-108.1783,168,114,n0302,dev,west,n0302:-108.15:35.45
+scan_2234,SCAN,Vallecitos,36.45976,-120.70601,42,124,,,west,
+scan_2235,SCAN,Adobe,37.97787,-118.68626,63,139,,,west,
+scan_2236,SCAN,Rancheria,38.07666,-119.11417,58,140,,,west,
+scan_2237,SCAN,Alabama Hills,36.56295,-118.13562,68,125,,,west,
+scan_2240,SCAN,Chimney Creek,35.83799,-118.03377,69,118,,,west,
+scan_581,SCAN,Lindsay,47.21415,-105.18702,198,232,montana_east,dev,west,montana_east:-105.15:47.25
+scan_674,SCAN,Orchard Range Site,43.32268,-115.99643,90,193,,,west,
+scan_808,SCAN,Table Mountain,45.80272,-111.58655,134,218,,,west,
+uscrn_03047,USCRN,Sandhills State Park,31.62,-102.8,222,76,,,west,
+uscrn_03048,USCRN,Sevilleta National Wildlife Refuge (LTER Site),34.35,-106.88,181,103,,,west,
+uscrn_03054,USCRN,Muleshoe National Wildlife Refuge (Headquarters Site),33.95,-102.77,222,99,,,west,
+uscrn_03055,USCRN,OK  Panhandle Research & Extn. Center (Native Grassland Site),36.59,-101.59,234,125,,,west,
+uscrn_03060,USCRN,Black Canyon of the Gunnison National Park (Vernal Mesa),38.54,-107.69,173,145,,,west,
+uscrn_03061,USCRN,Mesa Verde National Park (Far View Site),37.25,-108.5,165,132,,,west,
+uscrn_03062,USCRN,"NPS, Valles Caldera National Preserve",35.85,-106.52,184,118,,,west,
+uscrn_03063,USCRN,USDA Comanche National Grassland,37.86,-103.82,211,138,,,west,
+uscrn_03067,USCRN,The Nature Conservancy Kansas (Smoky Valley Ranch),38.87,-100.96,240,148,,,west,
+uscrn_03072,USCRN,"Ft. Chadbourne Foundation, (Foundation Entrance Site)",32.04,-100.24,247,80,,,west,
+uscrn_03074,USCRN,Jornada USDA ARS Experimental Range (Jornada Headquarters Site),32.61,-106.74,182,86,new_mexico_chihuahuan,dev,west,new_mexico_chihuahuan:-106.75:32.65
+uscrn_03728,USCRN,SCDNR (Santee Coastal Reserve),33.15,-79.36,456,91,n0035,test,east,n0035:-79.35:33.15
+uscrn_03733,USCRN,Canaan Valley Resort State Park (Cabins Area),39.01,-79.47,455,150,,,east,
+uscrn_03739,USCRN,Anheuser Busch Coastal Res. Ctr. Univ. of  VA (Oyster),37.29,-75.92,490,132,,,east,
+uscrn_03758,USCRN,Duke Forest - Duke University,35.97,-79.09,459,119,north_carolina_piedmont,dev,east,north_carolina_piedmont:-79.05:35.95
+uscrn_03761,USCRN,Stroud Water Research Center,39.85,-75.78,492,158,,,east,
+uscrn_04125,USCRN,John Day Fossil Beds Nat'l. Mon.(Sheep Rock Hdqs.),44.55,-119.64,53,205,n0592,dev,west,n0592:-119.65:44.55
+uscrn_04127,USCRN,ARS NW  Watershed Research Cntr. (Reynolds Creek Site),43.2,-116.75,82,192,,,west,
+uscrn_04128,USCRN,Northern Great Basin Experimental Range (Rainout Site),43.47,-119.69,53,194,,,west,
+uscrn_04136,USCRN,"US Fish & Wildlife Service, Turnbull NWR (Headquarters Site)",47.41,-117.52,74,234,,,west,
+uscrn_04138,USCRN,Golden Spike National Historic Site (Visitor Center Site),41.61,-112.54,124,176,,,west,
+uscrn_04140,USCRN,"Montana Department  Fish, Wildlife & Parks, Judith River WMA",46.88,-110.28,147,228,,,west,
+uscrn_04222,USCRN,Whiskeytown National Recreation Area (RAWS Site),40.65,-122.6,24,166,,,west,
+uscrn_04223,USCRN,North Cascades National Park (Marblemount),48.54,-121.44,35,245,n0705,dev,west,n0705:-121.45:48.55
+uscrn_04236,USCRN,"DOI, William L. Finley NWR (East end of Field 22)",44.41,-123.32,16,204,,,west,
+uscrn_04237,USCRN,Olympic National Park (Bishop Field Site),47.51,-123.81,11,235,,,west,
+uscrn_04990,USCRN,EROS Data Center,43.73,-96.62,283,197,,,east,
+uscrn_04994,USCRN,Agassiz National Wildlife Refuge (Maintenance Shop Site),48.3,-95.87,291,243,n0718,dev,east,n0718:-95.85:48.35
+uscrn_12987,USCRN,Lower Rio Grande Valley NWR (La Sal Del Rey),26.52,-98.06,269,25,,,west,
+uscrn_13301,USCRN,University of Missouri (Forage Systems Research Station),39.86,-93.14,318,158,,,east,
+uscrn_23803,USCRN,"MSU, MAFES, North MS R&E Center, (North MS Branch)",34.82,-89.43,355,108,,,east,
+uscrn_23904,USCRN,"LFST Br. Exp. Stn.,Univ.of AR, Div.of Agriculture(Field #1)",35.82,-91.78,332,118,,,east,
+uscrn_23906,USCRN,Aransas National Wildlife Refuge (Weather Site),28.3,-96.82,281,43,,,east,
+uscrn_23908,USCRN,Shawnee Trail Conservation Area,37.42,-94.58,304,134,,,east,
+uscrn_23909,USCRN,"White River Trace Conservation Area (Stand 4, Compartment 7)",37.63,-91.72,332,136,,,east,
+uscrn_53132,USCRN,"BLM, Appleton-Whittell Research Ranch",31.59,-110.5,145,75,,,west,
+uscrn_53136,USCRN,Nevada Test Site (Desert Rock Meteorological Lab),36.62,-116.02,89,126,,,west,
+uscrn_53150,USCRN,"Yosemite National Park, (Crane Flat Lookout)",37.75,-119.82,51,137,,,west,
+uscrn_53152,USCRN,Univ. of California - Santa Barbara (Coal Oil Point Reserve),34.41,-119.87,51,104,,,west,
+uscrn_53182,USCRN,"Oklahoma Panhandle State Univ., School of Agriculture (Permanent Pasture)",36.56,-101.6,234,125,,,west,
+uscrn_53877,USCRN,North Carolina  Arboretum (Bierbaum Site),35.49,-82.61,423,114,,,east,
+uscrn_53878,USCRN,NC Mtn. Horticultural Crops Res. Ctr. (Backlund Site),35.41,-82.55,424,114,,,east,
+uscrn_53926,USCRN,Oklahoma State Univ. (Ag.  Research Farm Site),36.11,-97.09,279,121,,,east,
+uscrn_53927,USCRN,Oklahoma State University (Efaw Farm Site),36.13,-97.1,279,121,,,east,
+uscrn_53960,USCRN,University of Louisiana at Lafayette (Cade Farm),30.09,-91.87,331,60,,,east,
+uscrn_53961,USCRN,Upper Ouachita National Wildlife Refuge,32.88,-92.11,328,88,,,east,
+uscrn_53968,USCRN,NASA (National Scientific Balloon Facility),31.77,-95.72,292,77,,,east,
+uscrn_53974,USCRN,Kansas State University (Konza Prairie Biological Station),39.1,-96.6,284,151,n0426,dev,east,n0426:-96.55:39.15
+uscrn_54796,USCRN,University of Rhode Island (Plains Road Site),41.49,-71.54,534,174,,,east,
+uscrn_54797,USCRN,University of Rhode Island (Peckham Farm Site),41.47,-71.54,534,174,,,east,
+uscrn_54808,USCRN,Univ. of Illinois (Bondville Environ. & Atmos. Resrch. Stn.),40.05,-88.37,366,160,,,east,
+uscrn_54810,USCRN,Michigan State University (Upper Peninsula Experiment Station),46.33,-86.92,380,223,,,east,
+uscrn_54811,USCRN,Northern Illinois Agronomy Research Center,41.84,-88.85,361,178,,,east,
+uscrn_54851,USCRN,North Appalachian Experimental Watershed (CRN site),40.36,-81.78,432,163,n0469,dev,east,n0469:-81.75:40.35
+uscrn_54854,USCRN,"National Weather Service, Gaylord",44.9,-84.72,402,209,,,east,
+uscrn_54902,USCRN,Neal Smith NWR (NOAA Station Site),41.55,-93.28,317,175,,,east,
+uscrn_54903,USCRN,Necedah National Wildlife Refuge (Rynearson Dam No. 2),44.06,-90.17,348,200,wisconsin_dairy,dev,east,wisconsin_dairy:-90.15:44.05
+uscrn_54932,USCRN,Audubon Center of  the North Woods,46.11,-92.99,320,221,,,east,
+uscrn_54933,USCRN,"The Nature Conservancy (Samuel H. Ordway Prairie, Hdq. Site)",45.71,-99.12,258,217,,,west,
+uscrn_63826,USCRN,Clemson University (Edisto Research & Edu. Ctr.),33.35,-81.32,436,93,n0034,test,east,n0034:-81.35:33.35
+uscrn_63828,USCRN,Robert W. Woodruff Foundation (Ichauway-George Site),31.31,-84.47,405,73,,,east,
+uscrn_63829,USCRN,Robert W. Woodruff Foundation (Ichauway-Dubignon Site),31.19,-84.44,405,71,,,east,
+uscrn_63831,USCRN,Mississippi State University (Coastal Plain Exp. Station),32.33,-89.07,359,83,,,east,
+uscrn_63838,USCRN,University of Kentucky (Woodford County Site),38.09,-84.74,402,140,,,east,
+uscrn_63849,USCRN,Mammoth Cave National Park (Job Corps Site),37.25,-86.23,387,132,,,east,
+uscrn_63850,USCRN,"University of GA, Phil Campbell Sr Natural Resource Conservation Center",33.78,-83.38,416,97,georgia_piedmont,dev,east,georgia_piedmont:-83.35:33.75
+uscrn_63855,USCRN,Univ. of Tennessee (Plateau Research and Education Center),36.01,-85.13,398,120,,,east,
+uscrn_63856,USCRN,Cumberland Island National Seashore (Stafford Field),30.8,-81.45,435,68,,,east,
+uscrn_63857,USCRN,Sand Mountain Research / Extension  (Northwest Pasture),34.28,-85.96,390,102,,,east,
+uscrn_63858,USCRN,"Auburn University, Black Belt Research and Extension Center",32.45,-87.24,377,84,alabama_black_belt,dev,east,alabama_black_belt:-87.25:32.45
+uscrn_63869,USCRN,"Auburn University, Gulf Coast Research and Extension Center",30.54,-87.87,371,65,,,east,
+uscrn_63898,USCRN,"Feldun-Purdue Agricultural Center, (Pasture 17 Site)",38.88,-86.57,384,148,,,east,
+uscrn_64756,USCRN,Institute of Ecosystem Studies (Environmental Monitoring Station),41.78,-73.74,512,177,,,east,
+uscrn_64758,USCRN,Cornell University (Harford Teaching & Research Center),42.44,-76.24,487,184,n0543,dev,east,n0543:-76.25:42.45
+uscrn_92827,USCRN,Archbold Biological Station,27.15,-81.36,436,31,,,east,
+uscrn_93243,USCRN,Kesterson Reservoir (US Bureau of Reclamation),37.23,-120.88,41,132,,,west,
+uscrn_93245,USCRN,University of California - Davis (Bodega Marine Laboratory),38.32,-123.07,19,143,,,west,
+uscrn_94059,USCRN,Fort Peck Indian Res. (Give Out Morgan Site),48.48,-105.2,198,244,,,west,
+uscrn_94060,USCRN,Fort Peck Indian Res. (Poplar River Site),48.3,-105.1,199,243,,,west,
+uscrn_94074,USCRN,Ag. Res. Svc. Central Plains Exp. Range (SGS LTER at CSU),40.8,-104.75,202,168,,,west,
+uscrn_94077,USCRN,Agate Fossil Beds National Monument (Visitor Center Site),42.42,-103.73,212,184,,,west,
+uscrn_94079,USCRN,Gudmundsen Sandhills Laboratory (Site 1),42.06,-101.44,235,180,n0517,dev,west,n0517:-101.45:42.05
+uscrn_94081,USCRN,South Dakota School & Public Lands,45.51,-103.3,217,215,n0141,test,west,n0141:-103.25:45.55
+uscrn_94082,USCRN,Dinosaur National Monument (Hdq. Maintenance Site),40.24,-108.96,160,162,n0447,dev,west,n0447:-108.95:40.25
+uscrn_94084,USCRN,Des Lacs National Wildlife Refuge (HB-4 Site),48.96,-102.17,228,249,,,west,
+uscrn_94085,USCRN,Fort Pierre National Grassland (Chester West),44.01,-100.35,246,200,,,west,
+uscrn_94088,USCRN,"Bear Lodge Ranger Dist, Black Hills NF (Massengale Flats Site)",44.51,-104.43,205,205,n0610,dev,west,n0610:-104.45:44.55
+uscrn_94644,USCRN,University of Maine  (Rogers Farm Site),44.92,-68.7,563,209,,,east,
+uscrn_94645,USCRN,Aroostook National  Wildlife Ref. (Fire Training Area),46.96,-67.88,571,229,,,east,
+uscrn_94995,USCRN,University of Nebraska (Prairie Pines Site),40.84,-96.56,284,168,,,east,
+uscrn_94996,USCRN,Audubon Society (Spring Creek Prairie Site),40.69,-96.85,281,166,,,east,

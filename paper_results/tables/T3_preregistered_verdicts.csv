@@ -1,0 +1,11 @@
+﻿Job,Pre-registered row,Comparison,Development [95% CI],Development verdict,Fresh test [95% CI],"Fresh test, West","Fresh test, East",Fresh-test verdict
+"Job 1, estimate now",gate,GRU − Boosted trees (monotone in VCI),"−0.033 [−0.047, −0.020]",worse,"+0.036 [+0.019, +0.054]","+0.022 [+0.001, +0.044]","+0.009 [−0.014, +0.030]",passed
+"Job 1, estimate now",best Bi-LSTM variant,Residual Bi-LSTM − Boosted trees (monotone in VCI),"−0.050 [−0.064, −0.036]",worse,"+0.039 [+0.020, +0.057]","+0.025 [+0.003, +0.048]","+0.011 [−0.015, +0.035]",passed
+"Job 1, estimate now",against LR on VCI(T),GRU − LR on VCI(T),"−0.033 [−0.049, −0.019]",worse,"+0.035 [+0.019, +0.054]","+0.016 [−0.004, +0.036]","+0.026 [+0.001, +0.049]",passed
+"Job 1, estimate now",against LR on VCI(T),Residual Bi-LSTM − LR on VCI(T),"−0.050 [−0.064, −0.035]",worse,"+0.038 [+0.020, +0.057]","+0.019 [−0.001, +0.041]","+0.028 [+0.000, +0.054]",passed
+"Job 2, missing month",gate,GRU − Boosted trees (monotone in VCI),"−0.075 [−0.112, −0.038]",worse,"+0.002 [−0.038, +0.042]","+0.047 [+0.006, +0.095]","−0.035 [−0.091, +0.020]",no detectable difference
+"Job 2, missing month",best Bi-LSTM variant,Residual Bi-LSTM − Boosted trees (monotone in VCI),"−0.079 [−0.116, −0.040]",worse,"+0.013 [−0.024, +0.048]","+0.041 [+0.011, +0.073]","−0.016 [−0.067, +0.038]",no detectable difference
+"Job 3, onset forecast (mean over leads 1-3)",gate,GRU − LR + trend features,"−0.036 [−0.053, −0.019]",worse,"+0.024 [−0.007, +0.054]","+0.062 [+0.013, +0.114]","−0.036 [−0.070, −0.001]",no detectable difference
+"Job 3, onset forecast (mean over leads 1-3)",best Bi-LSTM variant,Bi-LSTM − LR + trend features,"−0.038 [−0.054, −0.020]",worse,"+0.038 [+0.007, +0.069]","+0.062 [+0.013, +0.113]","−0.025 [−0.059, +0.009]",passed
+"Job 4, where VCI changed most",gate,GRU − Boosted trees (monotone in VCI),"−0.034 [−0.051, −0.017]",worse,"+0.051 [+0.027, +0.075]","+0.021 [+0.002, +0.041]","+0.028 [−0.011, +0.063]",passed
+"Job 4, where VCI changed most",best Bi-LSTM variant,Residual Bi-LSTM − Boosted trees (monotone in VCI),"−0.054 [−0.071, −0.037]",worse,"+0.045 [+0.019, +0.070]","+0.020 [−0.002, +0.045]","+0.020 [−0.023, +0.058]",passed
