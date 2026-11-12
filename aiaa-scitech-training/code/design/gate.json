@@ -1,0 +1,28 @@
+{
+  "note": "Fixed before any training (DESIGN.md section 9). The scoring code reads this file.",
+  "metric": "within_fold_auc",
+  "bootstrap": {"resamples": 2000, "unit": "region", "seed": 20261108, "interval": "percentile", "level": 0.95},
+  "network_families": ["bilstm", "resbilstm", "gru", "lstm", "tcn"],
+  "bilstm_variants": ["bilstm", "resbilstm"],
+  "simple_models": ["climatology", "lr_vci_t", "lr_latest_age", "lr_trend", "gbt_mono", "state_ewma"],
+  "never_candidates": ["persistence"],
+  "jobs": [
+    {"job": "job1", "label": "Estimation now (month T observed)", "subset": "job1", "metric": "within_fold_auc",
+     "simple_exclude": [], "also_compare": "lr_vci_t"},
+    {"job": "job2", "label": "Missing month (T unobserved, >= 8 of the other 11 observed)", "subset": "job2",
+     "metric": "within_fold_auc", "simple_exclude": ["lr_vci_t"]},
+    {"job": "job3", "label": "Forecast T+1..T+3, onsets only (not in drought at T)",
+     "subset": ["job3_lead1_onset", "job3_lead2_onset", "job3_lead3_onset"],
+     "metric": "mean_within_fold_auc_over_leads", "simple_exclude": []},
+    {"job": "job4", "label": "Estimation now where VCI changed most (top quartile of 1- or 3-month change)",
+     "subset": "job4_either", "metric": "within_fold_auc", "simple_exclude": []}
+  ],
+  "selection_rule": "best network = highest development within-fold AUC among network_families; best simple = highest among simple_models minus simple_exclude; best Bi-LSTM variant = highest among bilstm_variants",
+  "pass_rule": "paired within-fold AUC difference (best network minus best simple) 95% interval entirely above zero over all regions AND neither the West nor the East paired interval entirely below zero",
+  "wording": {
+    "pass": "passed",
+    "includes_zero": "no detectable difference",
+    "below_zero": "worse",
+    "above_zero_but_side_worse": "did not pass (better overall, worse in the {side})"
+  }
+}

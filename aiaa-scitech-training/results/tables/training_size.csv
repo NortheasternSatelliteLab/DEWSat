@@ -1,0 +1,6 @@
+point,held_out_or_note,training_windows,lr_auc,bilstm_auc,bilstm_minus_lr
+Fold 3,2020-2021,323298,0.7327,0.6187,-0.114
+Fold 2,2018-2019,350186,0.7167,0.6661,-0.0507
+Fold 4,2022-2023,480333,0.6542,0.5965,-0.0577
+Fold 1,2016-2017,508428,0.6414,0.6521,0.0107
+Fresh test,trained on all 8 years,1118986,0.6214,0.6631,0.0417

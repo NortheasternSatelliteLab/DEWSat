@@ -1,0 +1,12 @@
+﻿Model,Role,AUC [95% CI],Minus LR on VCI(T) [95% CI],Brier score,ECE,Mean predicted probability
+Bi-LSTM,added after development,"0.663 [0.639, 0.688]","+0.042 [+0.024, +0.060]",0.246,0.149,0.252
+Residual Bi-LSTM,pre-registered: best Bi-LSTM variant,"0.659 [0.633, 0.686]","+0.038 [+0.020, +0.057]",0.247,0.150,0.253
+GRU,pre-registered: best network,"0.657 [0.631, 0.683]","+0.035 [+0.019, +0.054]",0.247,0.149,0.254
+VCI-only Bi-LSTM,added after development,"0.644 [0.615, 0.672]","+0.023 [+0.013, +0.033]",0.251,0.154,0.246
+CNN + LR,added after development,"0.638 [0.609, 0.665]","+0.016 [+0.008, +0.024]",0.253,0.162,0.233
+CNN + Bi-LSTM,added after development,"0.636 [0.608, 0.664]","+0.015 [+0.004, +0.025]",0.254,0.157,0.242
+LR on VCI(T),pre-registered comparator,"0.621 [0.590, 0.652]",,0.256,0.161,0.234
+Boosted trees (monotone in VCI),pre-registered: best simple model (gate comparator),"0.621 [0.589, 0.652]","−0.001 [−0.005, +0.004]",0.256,0.159,0.236
+Smoothed-VCI state model,baseline,"0.620 [0.589, 0.651]","−0.001 [−0.004, +0.001]",0.256,0.160,0.235
+LR + trend features,baseline,"0.613 [0.581, 0.645]","−0.008 [−0.012, −0.004]",0.258,0.161,0.234
+Climatology,baseline,"0.500 [0.500, 0.500]","−0.121 [−0.152, −0.090]",0.267,0.168,0.227

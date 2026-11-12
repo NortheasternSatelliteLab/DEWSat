@@ -1,0 +1,11 @@
+﻿Quantity,Value,Source
+Development regions,"558 (102 original + 456 new; West 276, East 282)",data_counts.json → regions
+"Fresh-test regions (new, never used in development)","144 (West 72, East 72)",data_counts.json → regions
+0.1° cells: development / fresh test,"13,977 / 3,600",data_counts.json → cells
+HLS granules searched,"2,092,733",data_counts.json → summary
+Clear dates per region-month: median (range),6 (0–19),data_counts.json
+"Development windows scored, job 1 (4 outer folds)","267,412",data_counts.json → windows
+"Drought rate, development","22.1% (West 23.4%, East 20.9%)",data_counts.json → drought_rate_dev
+"Fresh-test windows, job 1","65,170, 25,734 in drought (39.5%)",phase5.json → fresh.job1
+"FLDAS drought flag against NLDAS-2, development: agreement / kappa / AUC",80.8% / 0.458 / 0.824,phase6.json → nldas.dev
+"AUC of −SPEI for the FLDAS drought flag, development: 90 d / 180 d / 270 d / 1 y",0.796 / 0.804 / 0.796 / 0.776,phase6.json → spei.auc_minus_spei_for_fldas_flag_dev

@@ -1,0 +1,11 @@
+job,job_label,row,model,comparator,diff,diff_lo,diff_hi,diff_west,diff_west_lo,diff_west_hi,diff_east,diff_east_lo,diff_east_hi,verdict
+job1,Estimation now (month T observed),gate,GRU,Boosted trees (monotone in VCI),-0.0333,-0.0474,-0.0203,-0.0135,-0.0283,0.001,-0.0207,-0.0332,-0.007,worse
+job1,Estimation now (month T observed),best_bilstm,Residual Bi-LSTM,Boosted trees (monotone in VCI),-0.0498,-0.0636,-0.0359,-0.0201,-0.0349,-0.0045,-0.0453,-0.0636,-0.0269,worse
+job1,Estimation now (month T observed),vs_lr_vci_t_network,GRU,LR on VCI(T),-0.0332,-0.0488,-0.0189,-0.0198,-0.0365,-0.0044,-0.0119,-0.0279,0.0042,worse
+job1,Estimation now (month T observed),vs_lr_vci_t_bilstm,Residual Bi-LSTM,LR on VCI(T),-0.0497,-0.0644,-0.0352,-0.0263,-0.0428,-0.0102,-0.0365,-0.0566,-0.0155,worse
+job2,"Missing month (T unobserved, >= 8 of the other 11 observed)",gate,GRU,Boosted trees (monotone in VCI),-0.0753,-0.1115,-0.0383,-0.0539,-0.0924,-0.0185,-0.0388,-0.1076,0.0301,worse
+job2,"Missing month (T unobserved, >= 8 of the other 11 observed)",best_bilstm,Residual Bi-LSTM,Boosted trees (monotone in VCI),-0.0785,-0.1161,-0.04,-0.0517,-0.0909,-0.0148,-0.0292,-0.1,0.0405,worse
+job3,"Forecast T+1..T+3, onsets only (not in drought at T)",gate,GRU,LR + trend features,-0.0364,-0.0533,-0.0192,-0.0115,-0.0349,0.0116,-0.0541,-0.0749,-0.0325,worse
+job3,"Forecast T+1..T+3, onsets only (not in drought at T)",best_bilstm,Bi-LSTM,LR + trend features,-0.0378,-0.0536,-0.0205,-0.0097,-0.0321,0.0127,-0.0451,-0.0656,-0.0251,worse
+job4,Estimation now where VCI changed most (top quartile of 1- or 3-month change),gate,GRU,Boosted trees (monotone in VCI),-0.0337,-0.0507,-0.0171,-0.0268,-0.0431,-0.0106,-0.0233,-0.0413,-0.0043,worse
+job4,Estimation now where VCI changed most (top quartile of 1- or 3-month change),best_bilstm,Residual Bi-LSTM,Boosted trees (monotone in VCI),-0.0537,-0.0706,-0.0369,-0.0312,-0.0481,-0.014,-0.0482,-0.0706,-0.0243,worse

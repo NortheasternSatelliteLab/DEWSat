@@ -1,0 +1,145 @@
+{
+ "regions": {
+  "dev_existing_west": 48,
+  "dev_existing_east": 54,
+  "test_new_west": 72,
+  "test_new_east": 72,
+  "dev_new_west": 228,
+  "dev_new_east": 228
+ },
+ "granules": {
+  "dev_existing_pc_S30": 136494,
+  "pc_S30": 992473,
+  "dev_existing_v20": 285946,
+  "v20": 2092733,
+  "dev_existing_pc_L30": 73422,
+  "pc_L30": 545687,
+  "dev_existing_nasa_S30": 50563,
+  "nasa_S30": 365685,
+  "dev_existing_nasa_L30": 25467,
+  "nasa_L30": 188888,
+  "test_new_pc_S30": 208038,
+  "test_new_v20": 441757,
+  "test_new_pc_L30": 116858,
+  "test_new_nasa_S30": 76786,
+  "test_new_nasa_L30": 40075,
+  "dev_new_pc_S30": 647941,
+  "dev_new_v20": 1365030,
+  "dev_new_pc_L30": 355407,
+  "dev_new_nasa_S30": 238336,
+  "dev_new_nasa_L30": 123346
+ },
+ "views": {
+  "views": 1726243,
+  "view_cell_rows": 43156075,
+  "view_cell_rows_clear30": 12129773,
+  "views_test": 378264,
+  "views_L30": 610990,
+  "views_S30": 1115253,
+  "views_dev": 1347979
+ },
+ "disk": {
+  "new_regions_bytes": 40852865024,
+  "reextract_bytes": 835211264,
+  "paper_regions_copy_bytes": 3791220736,
+  "cache_bytes": 1258745856
+ },
+ "cells": {
+  "dev": 13977,
+  "dev_dropped_no_label": 48,
+  "test": 3600,
+  "dev_with_ndmi": 11353,
+  "dev_with_views": 11353
+ },
+ "windows": {
+  "job1_fold1": {
+   "outer_train": 508428,
+   "outer_val": 65750,
+   "inner_train": 201891,
+   "inner_val": 34353
+  },
+  "job1_fold2": {
+   "outer_train": 350186,
+   "outer_val": 67014,
+   "inner_train": 115516,
+   "inner_val": 29453
+  },
+  "job1_fold3": {
+   "outer_train": 323298,
+   "outer_val": 67160,
+   "inner_train": 164182,
+   "inner_val": 25857
+  },
+  "job1_fold4": {
+   "outer_train": 480333,
+   "outer_val": 67488,
+   "inner_train": 188565,
+   "inner_val": 33208
+  },
+  "job2_fold1": {
+   "outer_train": 462184,
+   "outer_val": 6215,
+   "inner_train": 182843,
+   "inner_val": 4511
+  },
+  "job2_fold2": {
+   "outer_train": 234082,
+   "outer_val": 8666,
+   "inner_train": 63479,
+   "inner_val": 4827
+  },
+  "job2_fold3": {
+   "outer_train": 191239,
+   "outer_val": 8350,
+   "inner_train": 81907,
+   "inner_val": 6837
+  },
+  "job2_fold4": {
+   "outer_train": 342312,
+   "outer_val": 8525,
+   "inner_train": 117785,
+   "inner_val": 5039
+  },
+  "job3_fold1": {
+   "outer_train": 466492,
+   "outer_val": 65750,
+   "inner_train": 174112,
+   "inner_val": 25625
+  },
+  "job3_fold2": {
+   "outer_train": 295227,
+   "outer_val": 67014,
+   "inner_train": 79904,
+   "inner_val": 22040
+  },
+  "job3_fold3": {
+   "outer_train": 272212,
+   "outer_val": 67160,
+   "inner_train": 150578,
+   "inner_val": 15927
+  },
+  "job3_fold4": {
+   "outer_train": 455742,
+   "outer_val": 58816,
+   "inner_train": 172787,
+   "inner_val": 25058
+  }
+ },
+ "drought_rate_dev": {
+  "all": 0.2212444253654814,
+  "west": 0.23399543625125774,
+  "east": 0.20860784662867995
+ },
+ "observed_share_dev_all_table": 0.8339489280007631,
+ "clear_dates_per_region_month": {
+  "median": 6.0,
+  "min": 0,
+  "max": 19
+ },
+ "summary": {
+  "regions": 702,
+  "granules_searched": 2092733,
+  "views": 1726243,
+  "view_cell_rows": 43156075
+ }
+}

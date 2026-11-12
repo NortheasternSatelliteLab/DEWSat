@@ -1,0 +1,23 @@
+# Downloaded or rebuilt locally; not part of the repository
+data/
+cache/
+inputs/
+external/
+logs/
+tmp/
+mplconfig/
+pip-cache/
+.venv/
+# Every run except the saved fresh-test models
+runs/*
+!runs/phase5/
+# Status files rendered while a run is going
+HANDOFF.md
+STATUS.md
+STOP*
+# Python and macOS
+__pycache__/
+*.pyc
+.DS_Store
+*.tmp
+*.tmp.npz

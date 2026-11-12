@@ -1,0 +1,11 @@
+job,job_label,row,model,comparator,diff,diff_lo,diff_hi,diff_west,diff_west_lo,diff_west_hi,diff_east,diff_east_lo,diff_east_hi,verdict
+job1,"Job 1, estimate now",gate,GRU,Boosted trees (monotone in VCI),0.0361,0.019,0.054,0.0218,0.0008,0.0441,0.0086,-0.0143,0.0296,passed
+job1,"Job 1, estimate now",best Bi-LSTM variant,Residual Bi-LSTM,Boosted trees (monotone in VCI),0.0387,0.0203,0.0574,0.025,0.003,0.0481,0.0111,-0.0148,0.035,passed
+job1,"Job 1, estimate now",against LR on VCI(T),GRU,LR on VCI(T),0.0355,0.0185,0.0536,0.0159,-0.0036,0.0365,0.0257,0.0006,0.0492,passed
+job1,"Job 1, estimate now",against LR on VCI(T),Residual Bi-LSTM,LR on VCI(T),0.0381,0.0199,0.0573,0.0191,-0.0014,0.0407,0.0283,0.0001,0.0544,passed
+job2,"Job 2, missing month",gate,GRU,Boosted trees (monotone in VCI),0.0021,-0.0378,0.0422,0.0472,0.0057,0.0954,-0.0352,-0.0909,0.0196,no detectable difference
+job2,"Job 2, missing month",best Bi-LSTM variant,Residual Bi-LSTM,Boosted trees (monotone in VCI),0.0133,-0.024,0.0476,0.0409,0.0108,0.0731,-0.0155,-0.0672,0.0384,no detectable difference
+job3,"Job 3, onset forecast (mean over leads 1-3)",gate,GRU,LR + trend features,0.0236,-0.0069,0.0541,0.0616,0.0125,0.1136,-0.0357,-0.0704,-0.001,no detectable difference
+job3,"Job 3, onset forecast (mean over leads 1-3)",best Bi-LSTM variant,Bi-LSTM,LR + trend features,0.0376,0.0074,0.0692,0.0621,0.0132,0.1132,-0.025,-0.0593,0.0087,passed
+job4,"Job 4, where VCI changed most",gate,GRU,Boosted trees (monotone in VCI),0.0509,0.0266,0.0747,0.0205,0.0023,0.0413,0.0282,-0.0108,0.0626,passed
+job4,"Job 4, where VCI changed most",best Bi-LSTM variant,Residual Bi-LSTM,Boosted trees (monotone in VCI),0.0452,0.0187,0.07,0.0197,-0.0017,0.0451,0.02,-0.0229,0.0576,passed

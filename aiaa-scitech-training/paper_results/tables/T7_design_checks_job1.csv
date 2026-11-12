@@ -1,0 +1,12 @@
+﻿Question,Comparison,Development [95% CI],Fresh test [95% CI]
+Image tiles (CNN) before the 12-month model,CNN + Bi-LSTM − VCI-only Bi-LSTM,"+0.000 [−0.005, +0.005]","−0.008 [−0.016, +0.000]"
+Image tiles (CNN) for the month-T model,CNN + LR − LR on VCI(T),"−0.007 [−0.011, −0.003]","+0.016 [+0.008, +0.024]"
+12 months of history instead of month T only (VCI cell average),VCI-only Bi-LSTM − LR on VCI(T),"−0.028 [−0.037, −0.019]","+0.023 [+0.013, +0.033]"
+All inputs instead of VCI only,Bi-LSTM − VCI-only Bi-LSTM,not run,"+0.019 [+0.006, +0.032]"
+Full-input Bi-LSTM against the CNN version,Bi-LSTM − CNN + Bi-LSTM,not run,"+0.027 [+0.013, +0.041]"
+"Add NDMI (needs SWIR, not on DEWSat's camera)",GRU with NDMI − GRU without,"+0.002 [−0.005, +0.009]",not run
+VCI per 0.1° cell instead of per pixel,"GRU, per-cell VCI − per-pixel VCI","−0.007 [−0.015, +0.000]",not run
+52 weekly steps instead of 12 monthly,"GRU − LR on latest VCI + age, both weekly","−0.018 [−0.033, −0.003]",not run
+ReLU instead of tanh in the Bi-LSTM,ReLU Bi-LSTM − Bi-LSTM,"+0.001 [−0.003, +0.005]",not run
+More training years per fold (2 to 5),Change in Bi-LSTM − LR on VCI(T),"+0.038 [+0.028, +0.048]",not run
+More regions per fold (1/8 to all),Change in Bi-LSTM − LR on VCI(T),"−0.007 [−0.019, +0.006]",not run

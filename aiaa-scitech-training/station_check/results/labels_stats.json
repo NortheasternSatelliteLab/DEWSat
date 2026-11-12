@@ -1,0 +1,14 @@
+{
+ "sites": 278,
+ "no_fldas_cell": 0,
+ "fldas_nan_cell": 2,
+ "rows": 82513,
+ "rows_all_three_labels": 37694,
+ "stations_with_all_three": 233,
+ "fldas_range": [
+  0.0799999013543129,
+  0.46799999475479126
+ ],
+ "in_v2_regions": 64,
+ "in_v2_dev": 54
+}
