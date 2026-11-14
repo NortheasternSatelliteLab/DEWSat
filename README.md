@@ -6,23 +6,27 @@ inputs (a Bi-LSTM) ranks this month's soil-moisture drought better than logistic
 Condition Index, LR on VCI(T).
 
 **Result.** On a one-time fresh test in 144 regions never used in development (target months 2025-01 to 2026-09), the
-residual Bi-LSTM scored AUC 0.659 against LR's 0.621: +0.038 [+0.020, +0.057], which passed the rule fixed before
-training. With four or five training years per fold in development, every network trailed LR. The full write-up is
-[FINDINGS.md](FINDINGS.md).
+Bi-LSTM scored AUC 0.663 against LR's 0.621: +0.042 [+0.024, +0.060]. With four or five training years per fold in
+development, every network trailed LR. The full write-up is [FINDINGS.md](FINDINGS.md).
+
+The Bi-LSTM here is the plain network, the model the DEWSat paper uses. For job 1 it is not one of the pre-registered
+rows: it was added to the fresh test before any fresh-test label was read (`code/design/DESIGN.md`, amendment 6). The
+two pre-registered networks, the residual Bi-LSTM (LR on VCI(T) plus a Bi-LSTM correction) and the GRU, both passed the
+rule fixed before training, and the three networks are within 0.006 AUC of each other on the fresh test.
 
 | Question | Answer |
 | --- | --- |
-| Does the Bi-LSTM beat LR on VCI(T), job 1, fresh test? | Yes: residual Bi-LSTM +0.038 [+0.020, +0.057]; GRU +0.035 [+0.019, +0.054] |
-| In development? | No: residual Bi-LSTM −0.050 [−0.064, −0.035] |
+| Does the Bi-LSTM beat LR on VCI(T), job 1, fresh test? | Yes: +0.042 [+0.024, +0.060]. Pre-registered rows, both passed: residual Bi-LSTM +0.038 [+0.020, +0.057]; GRU +0.035 [+0.019, +0.054] |
+| In development? | No: −0.059 [−0.075, −0.043] (residual Bi-LSTM −0.050 [−0.064, −0.035]) |
 | Why the difference? | Years of training data: more years narrowed the gap, more regions did not |
-| Judged by another soil-moisture model (NLDAS-2)? | The gain holds: +0.027 [+0.013, +0.041] |
-| Judged by climatic drought (SPEI, 180 days)? | It reverses: −0.030 [−0.047, −0.012] |
-| With single satellite passes? | About +0.02 with a pass every 7 days; none at 32 days |
-| Model size | 11,617 parameters, 80,688 multiply-adds, 49.5 KiB per copy |
+| Judged by another soil-moisture model (NLDAS-2)? | The gain holds: +0.031 [+0.017, +0.044] |
+| Judged by climatic drought (SPEI, 180 days)? | It reverses: −0.032 [−0.049, −0.013] |
+| With single satellite passes? | +0.012 to +0.020 with a pass every 7 days, every interval including zero; none at 16 or 32 days. The residual Bi-LSTM and GRU keep +0.021 to +0.027 at 7 days |
+| Model size | 11,617 parameters, 80,688 multiply-adds, 49.5 KiB per copy; the scored result averages 10 copies (seeds), about 495 KiB |
 
 Brackets are 95% intervals from 2,000 resamples of whole regions.
 
-![Gap to LR per model, development against the fresh test](results/figures/fig1_gap_to_lr_dev_vs_fresh.png)
+![Gap to LR per model, development against the fresh test](paper_results/figures/fig1_gap_to_lr_dev_vs_fresh.png)
 
 ## Repository layout
 
@@ -30,6 +34,7 @@ Brackets are 95% intervals from 2,000 resamples of whole regions.
 | --- | --- |
 | `FINDINGS.md` | The findings: what was tested, every result, what it means, limitations |
 | `results/` | The numbers and figures: `tables/` (CSV), `figures/` (PNG and PDF), `scores/` (every score file of the run, JSON); index in [results/README.md](results/README.md) |
+| `paper_results/` | The paper's tables and figures, led by the Bi-LSTM, and the manuscript's claims checked against the results; index in [paper_results/README.md](paper_results/README.md) |
 | `report.md` | The full report, every table of the run, generated from the score files |
 | `data_card.md` | The data: products, regions, coverage, labels, sources and credits |
 | `code/design/` | `DESIGN.md` and `gate.json`: the design and pass rule committed before training, with dated amendments 3-7 |

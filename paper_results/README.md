@@ -2,6 +2,8 @@
 
 Tables and figures for the paper from the v2 study (`~/Desktop/DEWSat_BiLSTM_v2`; published copy `~/Desktop/DEWSat_BiLSTM_github`): 558 development regions and a fresh test in 144 new regions, scored once. This is not the earlier 102-region run described in this folder's `report.md`.
 
+The paper's model is the plain Bi-LSTM, labelled "Bi-LSTM" in the tables and figures. For job 1 it is not a pre-registered row: it was added to the single fresh-test scoring before any fresh-test label was read (`code/design/DESIGN.md`, amendment 6), so T1 marks it "added after development". Job 1's pre-registered networks are the Residual Bi-LSTM (best Bi-LSTM variant) and the GRU (best network); both passed on the fresh test, and the three are within 0.006 AUC of each other there. In job 3 the plain Bi-LSTM is the pre-registered best Bi-LSTM variant.
+
 Every result is read from `results/scores/*.json` and rounded once, to 3 decimals. There is no prose for the paper here, only table headings and figure labels, so the text and captions can be the authors' own.
 
 | File | What it holds |
@@ -25,5 +27,5 @@ Every result is read from `results/scores/*.json` and rounded once, to 3 decimal
 - Pre-registered: fixed in `code/design/DESIGN.md` before any training. Rows marked "added after development" were added after the development results and before the fresh test.
 - T1 leaves out "LR on latest VCI + age": with month T observed it is the same model as LR on VCI(T).
 - T4 uses the 64,995 windows that have every label, so its FLDAS row can differ from T1 in the third decimal.
-- The figures are redrawn from the same score files by the repository's own figure code.
+- Figures 2, 3, 5 and 6 are redrawn from the same score files by the repository's own figure code. Figures 1 and 4 are drawn by `build_paper_results.py` in the same style with the Bi-LSTM first, since the repository's versions lead with the Residual Bi-LSTM. Figure 5 plots the Residual Bi-LSTM only; T5 has the Bi-LSTM's revisit numbers.
 - The SPEI-12 results come from `~/Desktop/DEWSat_BiLSTM_v2/scores/fresh_spei12_posthoc.json` (generated 2026-11-12 01:27:00): the saved fresh-test predictions scored after the lock against gridMET's 1-year SPEI, with the same models and resamples as the other labels, on the same windows; every published row came out identical. The GitHub copy has it at `results/scores/fresh_spei12_posthoc.json`, with its script at `code/dewsat2/fresh_spei12_posthoc.py`.
