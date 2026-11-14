@@ -4,14 +4,21 @@
 logistic regression on this month's Vegetation Condition Index, LR on VCI(T)?
 
 **Answer: yes, for soil-moisture drought on the one-time fresh test, with conditions.** Trained on all eight development
-years and scored once on 144 regions never used in development, the residual Bi-LSTM reached AUC 0.659 against LR's
-0.621, a difference of +0.038 [+0.020, +0.057] that passed the rule fixed before training. In development, with four or
-five training years per fold, every network trailed LR.
+years and scored once on 144 regions never used in development, the Bi-LSTM reached AUC 0.663 against LR's 0.621, a
+difference of +0.042 [+0.024, +0.060]. In development, with four or five training years per fold, every network trailed
+LR.
+
+The Bi-LSTM is the plain network, the model the DEWSat paper uses, and it leads every section below. For job 1 it is not
+a pre-registered row: it was added to the single fresh-test scoring before any fresh-test label was read (DESIGN.md
+amendment 6). Job 1's pre-registered networks, the residual Bi-LSTM (LR on VCI(T) plus a Bi-LSTM correction) and the
+GRU, both passed the rule fixed before training: +0.038 [+0.020, +0.057] and +0.035 [+0.019, +0.054]. The three are
+within 0.006 AUC of each other on the fresh test.
 
 Brackets are 95% intervals from 2,000 resamples of whole regions. Every number here is in `results/` (tables, figures,
-score files); `report.md` has every table of the run.
+score files); `report.md` has every table of the run. Figures 1 and 4 here are the Bi-LSTM-led versions in
+`paper_results/figures/`; the versions in `results/figures/` lead with the residual Bi-LSTM.
 
-![Gap to LR per model, development against the fresh test](results/figures/fig1_gap_to_lr_dev_vs_fresh.png)
+![Gap to LR per model, development against the fresh test](paper_results/figures/fig1_gap_to_lr_dev_vs_fresh.png)
 
 ## What we tested
 
@@ -39,16 +46,17 @@ score files); `report.md` has every table of the run.
 | 3, onset forecast | GRU − LR with trend features: −0.036 [−0.053, −0.019] | worse |
 | 4, VCI changed most | GRU − boosted trees: −0.034 [−0.051, −0.017] | worse |
 
-On job 1, LR on VCI(T) scored 0.686 against the GRU's 0.653, the residual Bi-LSTM's 0.636 and the Bi-LSTM's 0.627.
-Against LR, the residual Bi-LSTM trailed by −0.050 [−0.064, −0.035]. Three models added after these results
+On job 1, LR on VCI(T) scored 0.686 against the Bi-LSTM's 0.627, the residual Bi-LSTM's 0.636 and the GRU's 0.653.
+Against LR, the Bi-LSTM trailed by −0.059 [−0.075, −0.043] and the residual Bi-LSTM by −0.050 [−0.064, −0.035]. Three models added after these results
 (a VCI-only Bi-LSTM, and a CNN on per-pixel VCI tiles feeding LR or a Bi-LSTM) also trailed LR.
 
 Tables: `results/tables/development_gate.csv`, `development_auc_job1.csv`.
 
-### 2. Fresh test: both pre-registered networks beat LR on job 1
+### 2. Fresh test: the Bi-LSTM and both pre-registered networks beat LR on job 1
 
 | Job | Comparison | All regions | West | East | Verdict |
 | --- | --- | --- | --- | --- | --- |
+| 1 | Bi-LSTM − LR on VCI(T) (added before scoring; not a gate row) | +0.042 [+0.024, +0.060] | +0.013 [−0.008, +0.035] | +0.037 [+0.010, +0.061] | meets the pass rule |
 | 1 | Residual Bi-LSTM − LR on VCI(T) | +0.038 [+0.020, +0.057] | +0.019 [−0.001, +0.041] | +0.028 [+0.000, +0.054] | passed |
 | 1 | GRU − LR on VCI(T) | +0.035 [+0.019, +0.054] | +0.016 [−0.004, +0.036] | +0.026 [+0.001, +0.049] | passed |
 | 1 | GRU − boosted trees (gate) | +0.036 [+0.019, +0.054] | +0.022 [+0.001, +0.044] | +0.009 [−0.014, +0.030] | passed |
@@ -57,8 +65,8 @@ Tables: `results/tables/development_gate.csv`, `development_auc_job1.csv`.
 | 4 | GRU − boosted trees (gate) | +0.051 [+0.027, +0.075] | +0.021 [+0.002, +0.041] | +0.028 [−0.011, +0.063] | passed |
 
 Job 1 AUCs (65,170 windows, 39.5% in drought): Bi-LSTM 0.663, residual Bi-LSTM 0.659, GRU 0.657, LR on VCI(T) 0.621.
-The plain Bi-LSTM (+0.042 [+0.024, +0.060]) was added to the fresh test before it was scored, but only the GRU and the
-residual Bi-LSTM were pre-registered. Job 3's pass is not a usable forecast: every model's mean onset AUC is at most
+For job 1 the Bi-LSTM was added to the fresh test before it was scored; the GRU and the residual Bi-LSTM were the
+pre-registered rows. In job 3 the Bi-LSTM is the pre-registered best Bi-LSTM variant. Job 3's pass is not a usable forecast: every model's mean onset AUC is at most
 0.54. All rows: `results/tables/fresh_test_verdicts.csv`, `fresh_test_auc.csv`.
 
 ### 3. Why development and the fresh test disagree: years of training data
@@ -86,22 +94,35 @@ exist: the gain holds against a second soil-moisture model (NLDAS-2 Noah, 10-40 
 climatic drought (gridMET SPEI). FLDAS and NLDAS-2 agree on 81% of drought flags in development and 71% in the fresh
 period.
 
-![Fresh-test predictions judged by five drought labels](results/figures/fig4_other_labels.png)
+![Fresh-test predictions judged by other drought labels](paper_results/figures/fig4_other_labels.png)
 
-Residual Bi-LSTM − LR: NLDAS-2 +0.027 [+0.013, +0.041]; SPEI over 90 days −0.003 [−0.020, +0.014]; over 180 days
-(chosen on development data) −0.030 [−0.047, −0.012]; over 270 days −0.021 [−0.038, −0.003]. Table:
-`results/tables/other_labels.csv`.
+Bi-LSTM − LR: NLDAS-2 +0.031 [+0.017, +0.044]; SPEI over 90 days +0.002 [−0.016, +0.021]; over 180 days (chosen on
+development data) −0.032 [−0.049, −0.013]; over 270 days −0.024 [−0.042, −0.005]; over 1 year (SPEI-12, scored after
+the lock) −0.035 [−0.057, −0.013]. Residual Bi-LSTM − LR: NLDAS-2 +0.027 [+0.013, +0.041]; SPEI 90 days −0.003
+[−0.020, +0.014]; 180 days −0.030 [−0.047, −0.012]; 270 days −0.021 [−0.038, −0.003]; 1 year −0.033 [−0.053, −0.011].
+Tables: `results/tables/other_labels.csv`, `paper_results/tables/T4_other_labels_job1.csv` (with SPEI-12).
 
 ### 5. The gain needs frequent clear views
 
 With single clear views instead of monthly composites, the networks' lead shrinks with the revisit interval. A pass sees
-a cell only when at least 30% of it is clear that day.
+a cell only when at least 30% of it is clear that day. The models were trained on composites; each range below spans
+three start dates.
+
+| One clear view every | Bi-LSTM − LR | Residual Bi-LSTM − LR | GRU − LR |
+| --- | --- | --- | --- |
+| Full record (monthly composites) | +0.042 [+0.024, +0.060] | +0.038 [+0.020, +0.057] | +0.035 [+0.019, +0.054] |
+| 7 days | +0.012 to +0.020 (0 of 3 intervals above zero) | +0.021 to +0.027 (3 of 3) | +0.021 to +0.025 (3 of 3) |
+| 16 days | −0.005 to +0.021 (0 of 3) | +0.013 to +0.026 (1 of 3) | +0.005 to +0.023 (1 of 3) |
+| 32 days | −0.032 to +0.019 (0 of 3) | −0.004 to +0.013 (0 of 3) | −0.014 to +0.020 (0 of 3) |
+
+The Bi-LSTM is the least robust of the three: its intervals include zero even at 7 days. The figure plots the residual
+Bi-LSTM and GRU only.
 
 ![Network minus LR by revisit interval](results/figures/fig5_revisit.png)
 
 The GRU retrained on thinned development data behaves the same: mean AUC, LR against GRU, 0.625 / 0.645 at 7 days,
-0.640 / 0.661 at 16 days, 0.641 / 0.647 at 32 days. The plain Bi-LSTM is the least robust; its intervals include zero
-even at 7 days. Table: `results/tables/revisit.csv`.
+0.640 / 0.661 at 16 days, 0.641 / 0.647 at 32 days; this retraining was run only for the GRU. Tables:
+`results/tables/revisit.csv`, `paper_results/tables/T5_revisit_job1.csv`.
 
 ### 6. What matters is the inputs, not the architecture
 
@@ -137,12 +158,13 @@ Tables: `results/tables/positive_control.csv`, `order_test.csv`.
 
 | Job 1 model | Setting | Parameters | Multiply-adds per prediction | Weights (float32) |
 | --- | --- | --- | --- | --- |
-| Residual Bi-LSTM | hidden 24, 1 layer | 11,617 | 80,688 | 49.5 KiB |
 | Bi-LSTM | hidden 24, 1 layer | 11,617 | 80,688 | 49.5 KiB |
+| Residual Bi-LSTM | hidden 24, 1 layer | 11,617 | 80,688 | 49.5 KiB |
 | GRU | hidden 32, 1 layer | 16,833 | 102,720 | 69.8 KiB |
 | CNN + Bi-LSTM | hidden 16, CNN width 16, depth 3 | 23,217 | 13,030,048 | 95.9 KiB |
 
-Each reported result averages 10 seeds, about 500 KiB and 0.8 million multiply-adds for the residual Bi-LSTM; in
+Each reported result averages 10 seeds (copies): for the Bi-LSTM about 495 KiB of weights and 806,880 multiply-adds
+per prediction, above the 30-100 KB range that one copy (49.5 KiB) fits; in
 development one seed alone scores 0.001-0.013 AUC below the 10-seed average per fold. The networks were trained directly
 on the labels; an earlier run found that distilling from a large teacher gave no small model an advantage over direct
 training. The saved models are in `runs/phase5/composite/<job>/<model>/seed<s>/` (`model.pt`, `meta.json`); no INT8,
@@ -154,7 +176,7 @@ ONNX or TensorRT export has been made yet. Table: `results/tables/model_sizes.cs
 | --- | --- | --- |
 | Regions | 102, of them 22 test regions | 558 development + 144 fresh-test regions |
 | Test | 2024-01 to 2026-09, 15,347 windows | 2025-01 to 2026-09, 65,170 windows |
-| Bi-LSTM − LR on VCI(T), test | −0.005 [−0.049, +0.038] | residual Bi-LSTM +0.038 [+0.020, +0.057] |
+| Bi-LSTM − LR on VCI(T), test | −0.005 [−0.049, +0.038] | +0.042 [+0.024, +0.060] (pre-registered residual Bi-LSTM +0.038 [+0.020, +0.057]) |
 | Decision | LR as the headline, the Bi-LSTM to future work | passed the pre-registered rule, with conditions |
 
 ## What it means
@@ -170,13 +192,16 @@ ONNX or TensorRT export has been made yet. Table: `results/tables/model_sizes.cs
 
 ## Limitations
 
-- **One test period:** 21 months, unusually dry (39.5% of job-1 windows in drought against 22% in development); region
+- **One test period:** 21 months, unusually dry (39.5% of job-1 windows in drought against 23.0% in development; 22.1%
+  of all labelled development cell-months); region
   resampling cannot show how another period would differ.
 - **Development and the fresh test disagree:** the training-size explanation rests on five points, and training size
   moves with which years and regions each fold trained on.
 - **The label is a model:** FLDAS Noah soil moisture, not ground observations.
-- **Rows added after development:** the plain Bi-LSTM, the VCI-only Bi-LSTM and the CNN models are reported separately;
-  only the GRU and the residual Bi-LSTM were pre-registered.
+- **Rows added after development:** for job 1 the Bi-LSTM (the paper's model), the VCI-only Bi-LSTM and the CNN models
+  were added after the development results and before the fresh test was scored; only the GRU and the residual
+  Bi-LSTM were pre-registered. The three recurrent networks are within 0.006 AUC on the fresh test, so leading with the
+  Bi-LSTM does not rest on it beating the pre-registered rows.
 - **The camera is not modelled:** HLS composites stand in for DEWSat's camera, without its resolution, noise and
   calibration.
 - **SPEI was chosen on a sample** of 70 development regions and read at region centres.
