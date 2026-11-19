@@ -1,0 +1,21 @@
+seed 0: best val_loss 0.9000 -> /home/austin/dewstat/model/runs_valgap_week/anom_h16_win4/checkpoints/best_seed0.ckpt
+seed 1: best val_loss 0.8970 -> /home/austin/dewstat/model/runs_valgap_week/anom_h16_win4/checkpoints/best_seed1.ckpt
+seed 2: best val_loss 0.8778 -> /home/austin/dewstat/model/runs_valgap_week/anom_h16_win4/checkpoints/best_seed2.ckpt
+
+NEW regions, 2024+ (the honest score): alabama_wiregrass, arizona_southeast, california_sacramento, eastern_washington, georgia_coastal_plain, idaho_upper_snake, indiana_corn, kansas_flint_hills, kentucky_bluegrass, louisiana_rice, maine_aroostook, michigan_northern_lp, minnesota_south, montana_east, nebraska_panhandle, nevada_great_basin, north_dakota_east, oregon_willamette, pennsylvania_lancaster, south_carolina_sandhills, texas_blackland, texas_south_brush (52019 cell-months)
+  model                                    RMSE      R2   vs normal
+  normal map alone (no model)           0.02867   0.831       +0.0%
+  ridge (linear, same data)             0.03100   0.803       -8.1%
+  Bi-LSTM (3 seed avg)                  0.02724   0.848       +5.0%
+  (ref) persistence, needs ground data  0.01804   0.933
+  (ref) seasonal average (date only)    0.06531   0.125
+
+TRAIN regions, 2024+: alabama_black_belt, alabama_north, arizona_desert, arizona_high_desert, arkansas_ouachita, california_foothills, california_imperial, california_modoc, california_san_joaquin_south, central_valley_ca, colorado_plains, colorado_san_luis, east_texas_piney, florida_central, georgia_piedmont, idaho_snake_river, illinois_corn, illinois_north, illinois_south, iowa_corn, iowa_northwest, iowa_southern, kansas_northwest, kansas_ref, kansas_south_central, maryland_eastern_shore, massachusetts_berkshires, michigan_thumb, minnesota_north_woods, minnesota_red_river, mississippi_delta, mississippi_hills, missouri_north, montana_dryland, montana_west_valleys, nebraska_platte, nevada_mojave, new_jersey_pinelands, new_mexico_chihuahuan, new_mexico_east, new_york_north_country, north_carolina_coastal, north_carolina_piedmont, north_dakota_west, north_dakota_wheat, ohio_northwest, oklahoma_east, oklahoma_panhandle, oklahoma_rangeland, oregon_coast_range, south_dakota_east, south_dakota_mixed, tennessee_middle, texas_coastal_bend, texas_hill_country, texas_panhandle, utah_cache_valley, utah_uinta_basin, vermont_champlain, virginia_shenandoah, washington_chehalis, washington_columbia_basin, west_texas_trans_pecos, west_virginia_forest, wisconsin_dairy, wisconsin_south, wyoming_basin (170253 cell-months)
+  model                                    RMSE      R2   vs normal
+  normal map alone (no model)           0.02979   0.804       +0.0%
+  ridge (linear, same data)             0.02988   0.803       -0.3%
+  Bi-LSTM (3 seed avg)                  0.02783   0.829       +6.6%
+  (ref) persistence, needs ground data  0.01769   0.931
+  (ref) seasonal average (date only)    0.06465   0.079
+
+R2        = how much of the soil-moisture level is explained (1 = perfect)

@@ -1,0 +1,30 @@
+# Secrets: never commit (the Earthdata token lives in data-pipeline/Atlas/.env)
+.env
+*.netrc
+
+# Separate repo: git clone https://github.com/AerospaceNU/Atlas.git data-pipeline/Atlas
+data-pipeline/Atlas/
+
+# Environments and caches
+.venv/
+.venv-train/
+__pycache__/
+*.pyc
+
+# Downloaded data and logs (re-pull with pull_regions.py)
+data-pipeline/practice/regions/
+data-pipeline/practice/*_log.txt
+*.jsonl
+
+# Training output (the chosen models are in model/models/)
+model/runs*/
+model/results/
+model/*.log
+
+# NLDAS daily soil moisture for the weekly model (nldas_daily.py, ~1 h to re-download)
+data-pipeline/practice/nldas_daily.npz
+data-pipeline/practice/nldas_days/
+data-pipeline/practice/nldas_cells.csv
+
+# Raw weekly data export (make_trends.py writes it; shared separately, ~12 MB)
+model/report/trends/raw/

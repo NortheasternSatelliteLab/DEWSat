@@ -1,0 +1,81 @@
+name,west,south,east,north,split,note
+maine_aroostook,-68.5,46.5,-68.0,47.0,test,potatoes/forest; cold humid continental
+vermont_champlain,-73.2,44.0,-72.7,44.5,train,dairy/forest; snowy
+new_york_genesee,-78.0,42.5,-77.5,43.0,val,dairy/row crops; humid continental
+new_york_north_country,-75.5,44.2,-75.0,44.7,train,dairy/forest; cold
+massachusetts_berkshires,-73.2,42.2,-72.7,42.7,train,hardwood forest; hilly
+pennsylvania_lancaster,-76.5,39.8,-76.0,40.3,test,dairy/corn/soy; humid
+new_jersey_pinelands,-74.8,39.6,-74.3,40.1,train,pine forest on sand
+maryland_eastern_shore,-75.9,38.5,-75.4,39.0,train,corn/soy/poultry; coastal plain
+virginia_shenandoah,-79.0,38.5,-78.5,39.0,train,valley pasture/orchards
+west_virginia_forest,-80.5,38.3,-80.0,38.8,train,Appalachian forest; steep
+michigan_thumb,-83.3,43.3,-82.8,43.8,train,corn/soy/sugar beet
+michigan_northern_lp,-84.8,44.3,-84.3,44.8,test,forest on sand; snowy
+wisconsin_central_sands,-89.8,44.0,-89.3,44.5,val,irrigated potatoes/vegetables on sand
+wisconsin_south,-89.8,42.6,-89.3,43.1,train,dairy/corn
+minnesota_red_river,-96.8,47.0,-96.3,47.5,train,wheat/sugar beet; flat lakebed
+minnesota_north_woods,-93.0,46.3,-92.5,46.8,train,forest/wetland; cold
+iowa_northwest,-96.0,42.8,-95.5,43.3,train,corn/soy
+iowa_southern,-94.0,40.7,-93.5,41.2,train,pasture/row crops; rolling
+illinois_north,-89.5,41.5,-89.0,42.0,train,corn/soy
+illinois_south,-89.0,38.0,-88.5,38.5,train,corn/soy/wheat; claypan soils
+indiana_corn,-86.5,40.3,-86.0,40.8,test,rainfed corn/soy
+ohio_northwest,-84.5,41.0,-84.0,41.5,train,corn/soy; flat clay
+missouri_north,-93.0,39.5,-92.5,40.0,train,corn/soy/pasture
+missouri_ozarks,-92.5,37.0,-92.0,37.5,val,forest/pasture; karst
+kentucky_bluegrass,-84.7,37.9,-84.2,38.4,test,pasture/horse farms
+tennessee_middle,-86.8,35.5,-86.3,36.0,train,pasture/hay; humid subtropical
+north_carolina_coastal,-77.8,35.3,-77.3,35.8,train,tobacco/cotton/hogs; coastal plain
+south_carolina_sandhills,-80.5,34.0,-80.0,34.5,test,pine/cotton on sand
+georgia_piedmont,-83.5,33.3,-83.0,33.8,train,pine/pasture; red clay
+alabama_black_belt,-87.5,32.3,-87.0,32.8,train,pasture/forest; clay prairie
+alabama_wiregrass,-85.8,31.0,-85.3,31.5,test,peanuts/cotton
+alabama_north,-87.3,33.8,-86.8,34.3,train,forest/poultry; hilly
+florida_north,-82.8,30.0,-82.3,30.5,val,pine plantations; sandy karst
+florida_central,-82.2,27.2,-81.7,27.7,train,citrus/pasture; subtropical
+mississippi_hills,-89.5,34.0,-89.0,34.5,train,forest/pasture
+louisiana_rice,-92.8,30.0,-92.3,30.5,test,rice/crawfish; humid subtropical
+arkansas_delta,-91.3,35.0,-90.8,35.5,val,rice/soy; irrigated
+arkansas_ouachita,-94.3,34.3,-93.8,34.8,train,pine forest; mountains
+east_texas_piney,-94.8,31.3,-94.3,31.8,train,pine forest
+texas_coastal_bend,-97.8,28.0,-97.3,28.5,train,cotton/sorghum; humid-semiarid edge
+texas_hill_country,-99.3,30.0,-98.8,30.5,train,juniper/oak rangeland; shallow limestone
+texas_south_brush,-98.8,27.3,-98.3,27.8,test,mesquite brush; semi-arid
+texas_rolling_plains,-100.0,33.0,-99.5,33.5,val,cotton/rangeland; semi-arid
+west_texas_trans_pecos,-103.5,30.3,-103.0,30.8,train,Chihuahuan desert grassland
+new_mexico_east,-103.5,33.0,-103.0,33.5,train,dryland/irrigated + rangeland; semi-arid
+new_mexico_chihuahuan,-107.0,32.3,-106.5,32.8,train,desert + irrigated pecans
+oklahoma_panhandle,-101.5,36.5,-101.0,37.0,train,dryland wheat/irrigated corn
+oklahoma_east,-96.3,34.5,-95.8,35.0,train,pasture/forest; humid
+kansas_flint_hills,-96.8,38.3,-96.3,38.8,test,tallgrass prairie
+kansas_northwest,-101.0,39.3,-100.5,39.8,train,dryland wheat
+kansas_south_central,-98.0,37.3,-97.5,37.8,train,winter wheat
+nebraska_platte,-98.8,40.5,-98.3,41.0,train,irrigated corn
+nebraska_panhandle,-103.5,41.3,-103.0,41.8,test,dryland wheat/rangeland
+south_dakota_west_river,-101.5,44.0,-101.0,44.5,val,mixed-grass rangeland
+south_dakota_east,-97.3,43.3,-96.8,43.8,train,corn/soy
+north_dakota_west,-102.5,46.5,-102.0,47.0,train,rangeland/wheat; semi-arid
+north_dakota_east,-98.0,48.0,-97.5,48.5,test,wheat/canola; cold
+montana_east,-105.5,47.0,-105.0,47.5,test,rangeland; semi-arid
+montana_west_valleys,-114.3,46.3,-113.8,46.8,train,irrigated valley/forest; mountains
+wyoming_basin,-108.5,42.5,-108.0,43.0,train,sagebrush steppe
+colorado_san_luis,-106.0,37.3,-105.5,37.8,train,irrigated high-altitude valley
+utah_uinta_basin,-110.0,40.0,-109.5,40.5,train,cold desert shrubland
+utah_cache_valley,-112.0,41.5,-111.5,42.0,train,irrigated valley/mountain
+utah_west_desert,-113.5,39.0,-113.0,39.5,val,salt desert scrub
+idaho_upper_snake,-112.3,43.5,-111.8,44.0,test,irrigated potatoes/grain
+nevada_great_basin,-116.5,39.5,-116.0,40.0,test,sagebrush; cold desert
+nevada_mojave,-115.8,36.5,-115.3,37.0,train,Mojave desert scrub; very dry
+arizona_high_desert,-110.5,35.0,-110.0,35.5,train,high desert grassland
+arizona_southeast,-110.0,31.8,-109.5,32.3,test,desert grassland; monsoon rain
+california_imperial,-115.6,32.5,-115.1,33.0,train,irrigated desert farmland
+california_sacramento,-122.0,39.0,-121.5,39.5,test,rice/orchards; Mediterranean
+california_san_joaquin_south,-119.5,35.5,-119.0,36.0,train,irrigated orchards; Mediterranean
+california_coast_ranges,-120.8,35.3,-120.3,35.8,val,oak/annual grassland; Mediterranean
+california_foothills,-121.0,38.3,-120.5,38.8,train,oak woodland/forest; Mediterranean
+california_modoc,-121.3,41.2,-120.8,41.7,train,juniper/sagebrush plateau
+oregon_willamette,-123.3,44.5,-122.8,45.0,test,grass seed/orchards; marine
+oregon_coast_range,-123.8,43.8,-123.3,44.3,train,conifer forest; very wet winters
+oregon_high_desert,-120.5,43.3,-120.0,43.8,val,sagebrush; cold desert
+washington_chehalis,-123.3,46.5,-122.8,47.0,train,forest/pasture; marine
+washington_columbia_basin,-119.5,46.8,-119.0,47.3,train,irrigated + dryland; semi-arid

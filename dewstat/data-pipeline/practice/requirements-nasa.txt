@@ -1,0 +1,6 @@
+# Only for the "nasa" step (nasa_backfill.py, HLS 2016-2019 from NASA). Install into data-pipeline/practice/.venv:
+#   uv venv .venv --python 3.12 && uv pip install --python .venv/bin/python -r requirements-nasa.txt -e ../Atlas
+rasterio>=1.5
+pyproj>=3.8
+httpx
+numpy

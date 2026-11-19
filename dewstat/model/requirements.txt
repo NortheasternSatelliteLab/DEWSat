@@ -1,0 +1,7 @@
+# Python 3.12. CPU works fine (a full sweep is ~15 min on 6 cores). For an NVIDIA GPU, install torch from
+# https://pytorch.org/get-started/locally/ first, then the rest.
+torch>=2.14
+lightning==2.6.6
+numpy
+pandas
+matplotlib
