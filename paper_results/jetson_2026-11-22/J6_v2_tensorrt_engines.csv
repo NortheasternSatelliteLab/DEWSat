@@ -1,0 +1,21 @@
+﻿Engine,Layers by precision TensorRT chose,Engine file (MB),Build time on the board (s)
+ensemble10_fp16_b1,FP32 255 of 256 layers,1.62,115.8
+ensemble10_fp16_dyn,FP32 485 of 1171 layers,5.23,196.0
+ensemble10_fp32_b1,FP32 255 of 256 layers,1.62,48.2
+ensemble10_fp32_dyn,FP32 485 of 1171 layers,5.21,80.7
+ensemble10_int8_b1,"INT8 232, FP16 455, FP32 12 of 700 layers",24.5,295.5
+ensemble10_int8_dyn,"INT8 233, FP32 464 of 1383 layers",36.4,538.1
+ensemble10_int8s_b1,"INT8 232, FP32 464 of 697 layers",24.5,85.8
+ensemble10_int8s_dyn,"INT8 233, FP32 464 of 1383 layers",36.4,112.6
+fused10_fp16_b1,FP32 19 of 20 layers,0.840,14.2
+fused10_fp16_dyn,FP16 30 of 33 layers,3.87,64.6
+fused10_fp32_b1,FP32 19 of 20 layers,0.840,9.5
+fused10_fp32_dyn,FP32 31 of 32 layers,2.14,13.7
+seed42_fp16_b1,FP32 28 of 29 layers,0.541,10.8
+seed42_fp16_dyn,FP32 52 of 90 layers,1.26,14.3
+seed42_fp32_b1,FP32 28 of 29 layers,0.536,8.5
+seed42_fp32_dyn,FP32 52 of 90 layers,1.25,10.1
+seed42_int8_b1,"INT8 25, FP32 49 of 75 layers",2.56,15.1
+seed42_int8_dyn,"INT8 25, FP16 26, FP32 2 of 58 layers",3.73,17.9
+seed42_int8s_b1,"INT8 25, FP32 49 of 75 layers",2.56,10.6
+seed42_int8s_dyn,"INT8 26, FP32 49 of 113 layers",3.87,12.2

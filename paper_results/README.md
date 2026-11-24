@@ -4,7 +4,7 @@ Tables and figures for the paper from the v2 study (`~/Desktop/DEWSat_BiLSTM_v2`
 
 The paper's model is the plain Bi-LSTM, labelled "Bi-LSTM" in the tables and figures. For job 1 it is not a pre-registered row: it was added to the single fresh-test scoring before any fresh-test label was read (`code/design/DESIGN.md`, amendment 6), so T1 marks it "added after development". Job 1's pre-registered networks are the Residual Bi-LSTM (best Bi-LSTM variant) and the GRU (best network); both passed on the fresh test, and the three are within 0.006 AUC of each other there. In job 3 the plain Bi-LSTM is the pre-registered best Bi-LSTM variant.
 
-Every result is read from `results/scores/*.json` and rounded once, to 3 decimals. There is no prose for the paper here, only table headings and figure labels, so the text and captions can be the authors' own.
+Every result is read from `results/scores/*.json` and rounded once, to 3 decimals, except the board results in `jetson_2026-11-22/`, which come from the board's own files. There is no prose for the paper here, only table headings and figure labels, so the text and captions can be the authors' own (the board folder's README suggests captions for its two figures).
 
 | File | What it holds |
 |---|---|
@@ -20,6 +20,7 @@ Every result is read from `results/scores/*.json` and rounded once, to 3 decimal
 | `figures/` | The study's six figures, PNG at 300 dpi (for Google Docs) and PDF, without title text |
 | `claims_vs_results.md` | Each results claim in the manuscript against what the study found |
 | `build_paper_results.py` | Rebuilds this folder from the score files |
+| `jetson_2026-11-22/` | The paper's model, and the Prithvi pilot's model for comparison, on a Jetson Orin Nano Super (2026-11-21 and 22): speed, power, heat, boot time and whether the board gives the Mac's answers. Start with its README. Its own scripts build it, not this one |
 
 ## Notes
 

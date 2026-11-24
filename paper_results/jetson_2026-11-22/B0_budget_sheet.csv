@@ -1,0 +1,182 @@
+﻿Budget,Item,Model,Value,Unit,Conditions,From
+Power,"Idle at rest (nothing running, no load for the 4-10 min before)",board,4.38-4.40,W,"7W, dynamic clocks; module input power (VDD_IN); 2 readings: v2 benchmark 7W_dvfs after a 5-min rest 4.40 W; Prithvi benchmark 7W_dvfs after a 5-min rest 4.38 W","J2, J0, P1"
+Power,"Idle at rest (nothing running, no load for the 4-10 min before)",board,4.44-4.56,W,"15W, dynamic clocks; module input power (VDD_IN); 4 readings: F10 flight15w baseline 4.44 W; F11 duty15w baseline 4.46 W; F11 duty15w 240-s rest phases 4.50 W; Prithvi benchmark 15W_dvfs after a 5-min rest 4.56 W","J2, J0, P1"
+Power,"Idle at rest (nothing running, no load for the 4-10 min before)",board,4.46,W,"MAXN_SUPER, dynamic clocks; module input power (VDD_IN); 1 reading: first run (worstcase_load_MAXN_SUPER_dvfs) baseline 4.46 W","J2, J0, P1"
+Power,"Idle at rest (nothing running, no load for the 4-10 min before)",board,6.67,W,"MAXN_SUPER, pinned clocks; module input power (VDD_IN); 1 reading: F12 worstcase baseline 6.67 W","J2, J0, P1"
+Power,Idle at the start of the benchmark,board,4.40,W,"7W, dynamic clocks; module input power (VDD_IN); 35 min after boot",J0
+Power,Idle at the start of the benchmark,board,4.46,W,"7W, pinned clocks; module input power (VDD_IN); 40 min after boot",J0
+Power,Idle at the start of the benchmark,board,4.99,W,"15W, dynamic clocks; module input power (VDD_IN); 1 min after boot",J0
+Power,Idle at the start of the benchmark,board,4.99,W,"15W, pinned clocks; module input power (VDD_IN); 209 min after boot",J0
+Power,Idle at the start of the benchmark,board,6.94,W,"25W, pinned clocks; module input power (VDD_IN); 1 min after boot",J0
+Power,Idle at the start of the benchmark,board,4.54,W,"MAXN_SUPER, dynamic clocks; module input power (VDD_IN); time since boot not logged",J0
+Power,Idle at the start of the benchmark,board,7.14,W,"MAXN_SUPER, pinned clocks; module input power (VDD_IN); 1 min after boot",J0
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),6.38,W,"7W, dynamic clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),6.38,W,"7W, dynamic clocks",J1
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),6.39,W,"7W, pinned clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),6.42,W,"7W, pinned clocks",J1
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),8.57,W,"15W, dynamic clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),8.97,W,"15W, dynamic clocks",J1
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),9.27,W,"15W, pinned clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),9.29,W,"15W, pinned clocks",J1
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),12.92,W,"25W, pinned clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),12.93,W,"25W, pinned clocks",J1
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),14.08,W,"MAXN_SUPER, dynamic clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),14.12,W,"MAXN_SUPER, dynamic clocks",J1
+Power,Running the model on 100-window tiles back to back,Bi-LSTM ten-seed ensemble (paper model),14.12,W,"MAXN_SUPER, pinned clocks; TensorRT FP16; module input power",J1
+Power,Highest single sample while running tiles,Bi-LSTM ten-seed ensemble (paper model),14.13,W,"MAXN_SUPER, pinned clocks",J1
+Power,"Sustained continuous load, batch 4096 (60 min)",Bi-LSTM ten-seed ensemble (paper model),17.01,W,"MAXN_SUPER, dynamic clocks; first run (worstcase_load_MAXN_SUPER_dvfs)",J2
+Power,"Sustained continuous load, batch 100 (120 min)",Bi-LSTM ten-seed ensemble (paper model),7.79,W,"15W, dynamic clocks; F10 flight15w",J2
+Power,"Duty cycle: 60 s of tiles, 240 s idle (average over the test)",Bi-LSTM ten-seed ensemble (paper model),5.15,W,"15W, dynamic clocks; F11 duty15w; on 7.74 W, off 4.50 W",J2
+Power,"Sustained continuous load, batch 4096 (60 min)",Bi-LSTM ten-seed ensemble (paper model),17.52,W,"MAXN_SUPER, pinned clocks; F12 worstcase",J2
+Power,Over-current protection events (the module's own limit),Bi-LSTM ten-seed ensemble (paper model),18 in 60 min,count,"MAXN_SUPER, pinned clocks; F12 worstcase, batch 4096, continuous; 18 (hwmon3/oc3_event_cnt 18); 0 errors, p50 drift 0.05%",J2
+Power,Over-current protection events during a benchmark,Prithvi encoder + GRU head (fresh-test model),13900,count,benchmark MAXN_SUPER_dvfs,bench json
+Power,"Over-current protection events, all other runs",board,0,count,12 runs: every other soak and benchmark (v2 and Prithvi),"J2, bench json"
+Power,"Highest mean over any 5 s benchmark row (any engine, batch, runtime)",v2 engines,20.50,W,"MAXN_SUPER, dynamic clocks: trtexec fused10_fp32_dyn b4096",J5
+Power,Highest mean over any Prithvi benchmark row,Prithvi encoder + GRU head (fresh-test model),22.63,W,"MAXN_SUPER, dynamic clocks: trtexec encoder_fp16_dyn b25 cudagraph (power is real; this engine's outputs did NOT match)",P3
+Power,Idle at the start of the benchmark,board (Prithvi run),4.38,W,"7W, dynamic clocks; 6 min after boot",P1
+Power,"Encoder on TensorRT, 100-chip batches back to back (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),8.07,W,"7W, dynamic clocks; TensorRT FP16",P1
+Power,"GRU head on TensorRT, 25-window batches (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),5.79,W,"7W, dynamic clocks; TensorRT FP16 variable-batch engine",P1
+Power,Idle at the start of the benchmark,board (Prithvi run),4.56,W,"15W, dynamic clocks; 29 min after boot",P1
+Power,"Encoder on the CPU, 25-chip batches back to back (outputs match)",Prithvi encoder + GRU head (fresh-test model),9.29,W,"15W, dynamic clocks; ONNX Runtime FP32",P1
+Power,"GRU head on the CPU, 25-window batches back to back (outputs match)",Prithvi encoder + GRU head (fresh-test model),8.39,W,"15W, dynamic clocks; ONNX Runtime FP32",P1
+Power,"Encoder on TensorRT, 100-chip batches back to back (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),12.90,W,"15W, dynamic clocks; TensorRT FP16",P1
+Power,"GRU head on TensorRT, 25-window batches (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),6.72,W,"15W, dynamic clocks; TensorRT FP16 variable-batch engine",P1
+Power,Idle at the start of the benchmark,board (Prithvi run),4.60,W,"MAXN_SUPER, dynamic clocks; 11 min after boot",P1
+Power,"Encoder on the CPU, 25-chip batches back to back (outputs match)",Prithvi encoder + GRU head (fresh-test model),10.57,W,"MAXN_SUPER, dynamic clocks; ONNX Runtime FP32",P1
+Power,"GRU head on the CPU, 25-window batches back to back (outputs match)",Prithvi encoder + GRU head (fresh-test model),9.64,W,"MAXN_SUPER, dynamic clocks; ONNX Runtime FP32",P1
+Power,"Encoder on TensorRT, 100-chip batches back to back (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),21.96,W,"MAXN_SUPER, dynamic clocks; TensorRT FP16",P1
+Power,"GRU head on TensorRT, 25-window batches (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),8.69,W,"MAXN_SUPER, dynamic clocks; TensorRT FP16 variable-batch engine",P1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),26.0,mJ,"7W, dynamic clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),8.05,mJ,"7W, dynamic clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),4.56,J,"7W, dynamic clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,5.75,mJ,"7W, dynamic clocks",J1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),26.1,mJ,"7W, pinned clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),7.88,mJ,"7W, pinned clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),4.57,J,"7W, pinned clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,5.67,mJ,"7W, pinned clocks",J1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),15.4,mJ,"15W, dynamic clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),6.46,mJ,"15W, dynamic clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),2.71,J,"15W, dynamic clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,4.13,mJ,"15W, dynamic clocks",J1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),16.4,mJ,"15W, pinned clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),7.59,mJ,"15W, pinned clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),2.88,J,"15W, pinned clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,4.39,mJ,"15W, pinned clocks",J1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),15.6,mJ,"25W, pinned clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),7.21,mJ,"25W, pinned clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),2.73,J,"25W, pinned clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,3.88,mJ,"25W, pinned clocks",J1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),15.6,mJ,"MAXN_SUPER, dynamic clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),10.5,mJ,"MAXN_SUPER, dynamic clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),2.73,J,"MAXN_SUPER, dynamic clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,4.16,mJ,"MAXN_SUPER, dynamic clocks",J1
+Energy,One tile (100 windows),Bi-LSTM ten-seed ensemble (paper model),15.7,mJ,"MAXN_SUPER, pinned clocks; module energy",J1
+Energy,One tile above idle,Bi-LSTM ten-seed ensemble (paper model),7.77,mJ,"MAXN_SUPER, pinned clocks",J1
+Energy,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),2.76,J,"MAXN_SUPER, pinned clocks; derived: 175.5 tiles x the tile energy",J1 (derived)
+Energy,One tile (100 windows),Bi-LSTM one seed,3.85,mJ,"MAXN_SUPER, pinned clocks",J1
+Energy,Board left on and idle for a day,board,105,Wh,"7W, dynamic clocks; derived: idle 4.39 W (at rest) x 24 h",J0/J2 (derived)
+Energy,Board left on and idle for a day,board,108,Wh,"15W, dynamic clocks; derived: idle 4.49 W (at rest) x 24 h",J0/J2 (derived)
+Energy,Board left on and idle for a day,board,166,Wh,"25W, pinned clocks; derived: idle 6.94 W (at the start of the benchmark) x 24 h",J0/J2 (derived)
+Energy,Board left on and idle for a day,board,107,Wh,"MAXN_SUPER, dynamic clocks; derived: idle 4.46 W (at rest) x 24 h",J0/J2 (derived)
+Energy,"One region-month with one pass, TensorRT FP16 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),2331,mJ,"7W, dynamic clocks; derived from P1",P4
+Energy,"All 702 regions with one pass each, TensorRT FP16 (outputs did NOT match)",Prithvi encoder + GRU head (fresh-test model),1636,J,"7W, dynamic clocks; derived: 702 x the region-month energy",P4 (derived)
+Energy,"One region-month with one pass, CPU path (100 chips + 25 windows; outputs match)",Prithvi encoder + GRU head (fresh-test model),26768,mJ,"15W, dynamic clocks; ONNX Runtime FP32; derived from P1",P4
+Energy,"All 702 regions with one pass each, CPU path (outputs match)",Prithvi encoder + GRU head (fresh-test model),18791,J,"15W, dynamic clocks; derived: 702 x the region-month energy (5.22 Wh)",P4 (derived)
+Energy,"One region-month with one pass, TensorRT FP16 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),1433,mJ,"15W, dynamic clocks; derived from P1",P4
+Energy,"All 702 regions with one pass each, TensorRT FP16 (outputs did NOT match)",Prithvi encoder + GRU head (fresh-test model),1006,J,"15W, dynamic clocks; derived: 702 x the region-month energy",P4 (derived)
+Energy,"One region-month with one pass, CPU path (100 chips + 25 windows; outputs match)",Prithvi encoder + GRU head (fresh-test model),27060,mJ,"MAXN_SUPER, dynamic clocks; ONNX Runtime FP32; derived from P1",P4
+Energy,"All 702 regions with one pass each, CPU path (outputs match)",Prithvi encoder + GRU head (fresh-test model),18996,J,"MAXN_SUPER, dynamic clocks; derived: 702 x the region-month energy (5.28 Wh)",P4 (derived)
+Energy,"One region-month with one pass, TensorRT FP16 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),1641,mJ,"MAXN_SUPER, dynamic clocks; derived from P1",P4
+Energy,"All 702 regions with one pass each, TensorRT FP16 (outputs did NOT match)",Prithvi encoder + GRU head (fresh-test model),1152,J,"MAXN_SUPER, dynamic clocks; derived: 702 x the region-month energy",P4 (derived)
+Time,Reboot command to SSH login,board,50-56,s,"6 reboots, measured on the Mac",J4
+Time,systemd boot (kernel + userspace),board,16.0-18.5,s,6 reboots,J4
+Time,Cold start to the first result (ensemble10_fp32.onnx),Bi-LSTM ten-seed ensemble (paper model),1.34,s,"new process: import 0.036 s, load 0.924 s, first inference 7.6 ms; MAXN_SUPER",robust.json
+Time,Cold start to the first result (fused10_fp16_b1.engine),Bi-LSTM ten-seed ensemble (paper model),0.52,s,"new process: import 0.065 s, load 0.099 s, first inference 1.9 ms; MAXN_SUPER",robust.json
+Time,Cold start to the first result (seed42_fp16_b1.engine),Bi-LSTM one seed,0.53,s,"new process: import 0.064 s, load 0.109 s, first inference 1.6 ms; MAXN_SUPER",robust.json
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),4.103 / 4.119,ms,"7W, dynamic clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.715,s,"7W, dynamic clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.914,ms,"7W, dynamic clocks; batch-1 engine",J1
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),4.101 / 4.114,ms,"7W, pinned clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.716,s,"7W, pinned clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.910,ms,"7W, pinned clocks; batch-1 engine",J1
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),1.831 / 1.854,ms,"15W, dynamic clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.316,s,"15W, dynamic clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.409,ms,"15W, dynamic clocks; batch-1 engine",J1
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),1.792 / 1.803,ms,"15W, pinned clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.311,s,"15W, pinned clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.396,ms,"15W, pinned clocks; batch-1 engine",J1
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),1.223 / 1.232,ms,"25W, pinned clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.211,s,"25W, pinned clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.274,ms,"25W, pinned clocks; batch-1 engine",J1
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),1.129 / 1.146,ms,"MAXN_SUPER, dynamic clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.194,s,"MAXN_SUPER, dynamic clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.263,ms,"MAXN_SUPER, dynamic clocks; batch-1 engine",J1
+Time,"One tile (100 windows), p50 / p99",Bi-LSTM ten-seed ensemble (paper model),1.127 / 1.136,ms,"MAXN_SUPER, pinned clocks; trtexec, copies included",J1
+Time,"All 702 regions once (17,550 windows)",Bi-LSTM ten-seed ensemble (paper model),0.195,s,"MAXN_SUPER, pinned clocks; derived from tile throughput",J1 (derived)
+Time,"One window alone, p50",Bi-LSTM ten-seed ensemble (paper model),0.250,ms,"MAXN_SUPER, pinned clocks; batch-1 engine",J1
+Time,"GRU head, one window, TensorRT batch-1 engine, p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),1.521,ms,"7W, dynamic clocks; FP16 asked for; trtexec",P1
+Time,"Encoder, one chip alone on TensorRT FP16, p50 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),4.384,ms,"7W, dynamic clocks",P1
+Time,"One region-month with one pass, TensorRT FP16, p50 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),286.249,ms,"7W, dynamic clocks",P4
+Time,"All 702 regions with one pass each, TensorRT FP16 (outputs did NOT match)",Prithvi encoder + GRU head (fresh-test model),203.33,s,"7W, dynamic clocks; derived",P4 (derived)
+Time,"Encoder, one chip alone on the CPU, p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),33.557,ms,"15W, dynamic clocks; ONNX Runtime FP32",P1
+Time,"One region-month with one pass, CPU path (4 x 25 chips + 25 windows), p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),2888,ms,"15W, dynamic clocks; ONNX Runtime FP32",P4
+Time,"All 702 regions with one pass each, CPU path (outputs match)",Prithvi encoder + GRU head (fresh-test model),2024,s,"15W, dynamic clocks; derived",P4 (derived)
+Time,"GRU head, one window, TensorRT batch-1 engine, p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),1.062,ms,"15W, dynamic clocks; FP16 asked for; trtexec",P1
+Time,"Encoder, one chip alone on TensorRT FP16, p50 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),2.369,ms,"15W, dynamic clocks",P1
+Time,"One region-month with one pass, TensorRT FP16, p50 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),118.715,ms,"15W, dynamic clocks",P4
+Time,"All 702 regions with one pass each, TensorRT FP16 (outputs did NOT match)",Prithvi encoder + GRU head (fresh-test model),78.48,s,"15W, dynamic clocks; derived",P4 (derived)
+Time,"Encoder, one chip alone on the CPU, p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),30.065,ms,"MAXN_SUPER, dynamic clocks; ONNX Runtime FP32",P1
+Time,"One region-month with one pass, CPU path (4 x 25 chips + 25 windows), p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),2562,ms,"MAXN_SUPER, dynamic clocks; ONNX Runtime FP32",P4
+Time,"All 702 regions with one pass each, CPU path (outputs match)",Prithvi encoder + GRU head (fresh-test model),1797,s,"MAXN_SUPER, dynamic clocks; derived",P4 (derived)
+Time,"GRU head, one window, TensorRT batch-1 engine, p50 (outputs match)",Prithvi encoder + GRU head (fresh-test model),0.734,ms,"MAXN_SUPER, dynamic clocks; FP16 asked for; trtexec",P1
+Time,"Encoder, one chip alone on TensorRT FP16, p50 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),1.577,ms,"MAXN_SUPER, dynamic clocks",P1
+Time,"One region-month with one pass, TensorRT FP16, p50 (outputs did NOT match; timing only)",Prithvi encoder + GRU head (fresh-test model),80.095,ms,"MAXN_SUPER, dynamic clocks",P4
+Time,"All 702 regions with one pass each, TensorRT FP16 (outputs did NOT match)",Prithvi encoder + GRU head (fresh-test model),52.89,s,"MAXN_SUPER, dynamic clocks; derived",P4 (derived)
+Heat,"Hottest on-chip sensor, first run (worstcase_load_MAXN_SUPER_dvfs)",Bi-LSTM ten-seed ensemble (paper model),61.8,C,"MAXN_SUPER, dynamic clocks, 60 min; gpu-thermal; margin 8.2 C to the 70 C passive trip; room air, stock fan",J2
+Heat,"Hottest on-chip sensor, F10 flight15w",Bi-LSTM ten-seed ensemble (paper model),47.0,C,"15W, dynamic clocks, 120 min; gpu-thermal; margin 23.0 C to the 70 C passive trip; room air, stock fan",J2
+Heat,"Hottest on-chip sensor, F11 duty15w",Bi-LSTM ten-seed ensemble (paper model),50.5,C,"15W, dynamic clocks, 60 min; tj-thermal; margin 19.5 C to the 70 C passive trip; room air, stock fan",J2
+Heat,"Hottest on-chip sensor, F12 worstcase",Bi-LSTM ten-seed ensemble (paper model),67.2,C,"MAXN_SUPER, pinned clocks, 60 min; gpu-thermal; margin 2.8 C to the 70 C passive trip; room air, stock fan",J2
+Heat,Hottest on-chip sensor in any Prithvi benchmark row,Prithvi encoder + GRU head (fresh-test model),66.7,C,MAXN_SUPER: trtexec encoder_fp16_dyn b100 cudagraph; no long soak was run for this model,P3
+Heat,Heat to remove = electrical power (all of it ends as heat),board,4.39-17.52,W,idle in the lowest mode to the worst sustained soak; module only,"J0, J2"
+Heat,Board thermal limits,board,70 / 104.5,C,"passive (throttling) trip / critical shutdown on the CPU, GPU and SoC zones (from the board)",soak trip_points
+Memory,Board RAM (shared by CPU and GPU),board,"7,619",MB,MemTotal; the stock desktop was running,sysinfo.json
+Memory,"Runner process memory (RSS), peak, soak worstcase_load_MAXN_SUPER_dvfs",Bi-LSTM ten-seed ensemble (paper model),253,MB,"TensorRT, batch 4096; growth 18.4 MB over 60 min",soak intervals
+Memory,"Lowest free memory (MemAvailable), soak worstcase_load_MAXN_SUPER_dvfs",board,"4,737",MB,"whole board, with the desktop running",soak intervals
+Memory,"Runner process memory (RSS), peak, soak duty15w_15W_dvfs",Bi-LSTM ten-seed ensemble (paper model),261,MB,"TensorRT, batch 100; growth 19.3 MB over 60 min",soak intervals
+Memory,"Lowest free memory (MemAvailable), soak duty15w_15W_dvfs",board,"5,574",MB,"whole board, with the desktop running",soak intervals
+Memory,"Runner process memory (RSS), peak, soak flight15w_15W_dvfs",Bi-LSTM ten-seed ensemble (paper model),259,MB,"TensorRT, batch 100; growth 18.7 MB over 120 min",soak intervals
+Memory,"Lowest free memory (MemAvailable), soak flight15w_15W_dvfs",board,"5,582",MB,"whole board, with the desktop running",soak intervals
+Memory,"Runner process memory (RSS), peak, soak worstcase_MAXN_SUPER_pinned",Bi-LSTM ten-seed ensemble (paper model),260,MB,"TensorRT, batch 4096; growth 18.7 MB over 60 min",soak intervals
+Memory,"Lowest free memory (MemAvailable), soak worstcase_MAXN_SUPER_pinned",board,"5,799",MB,"whole board, with the desktop running",soak intervals
+Memory,"Runner process memory, peak (Prithvi bench 15W_dvfs)",Prithvi encoder + GRU head (fresh-test model),716,MB,all graphs loaded in turn,bench json
+Memory,"Runner process memory, peak (Prithvi bench 7W_dvfs)",Prithvi encoder + GRU head (fresh-test model),858,MB,all graphs loaded in turn,bench json
+Memory,"Runner process memory, peak (Prithvi bench MAXN_SUPER_dvfs)",Prithvi encoder + GRU head (fresh-test model),859,MB,all graphs loaded in turn,bench json
+Memory,TensorRT working memory of encoder_fp16_dyn,Prithvi encoder + GRU head (fresh-test model),95.3,MB,15W; this engine's outputs did NOT match,P3
+Storage,"Model weights, 10 x 11,617 parameters (FP32)",Bi-LSTM ten-seed ensemble (paper model),0.46,MB,"116,170 floats",v2 state_dicts
+Storage,ONNX file fused10_fp32.onnx,Bi-LSTM ten-seed ensemble (paper model),0.524,MB,,kit
+Storage,ONNX file seed42_fp32.onnx,Bi-LSTM one seed,0.154,MB,,kit
+Storage,ONNX file ensemble10_int8.onnx,"Bi-LSTM ten-seed ensemble (paper model), INT8",2.15,MB,,kit
+Storage,TensorRT engine fused10_fp16_b1,Bi-LSTM ten-seed ensemble (paper model),0.840,MB,built on the board,J6
+Storage,TensorRT engine fused10_fp16_dyn,Bi-LSTM ten-seed ensemble (paper model),3.87,MB,built on the board,J6
+Storage,TensorRT engine seed42_fp16_dyn,Bi-LSTM one seed,1.26,MB,built on the board,J6
+Storage,"Whole v2 test kit (zip: models, test data, runner)",kit,21.3,MB,,kit
+Storage,ONNX file prithvi_encoder_fp16.onnx,Prithvi encoder + GRU head (fresh-test model),11.5,MB,,kit
+Storage,ONNX file prithvi_encoder_fp32.onnx,Prithvi encoder + GRU head (fresh-test model),22.8,MB,,kit
+Storage,ONNX file gru_o3_head_fp16.onnx,Prithvi encoder + GRU head (fresh-test model),1.07,MB,,kit
+Storage,ONNX file gru_o3_head_fp32.onnx,Prithvi encoder + GRU head (fresh-test model),1.74,MB,,kit
+Storage,TensorRT engine encoder_fp16_dyn,Prithvi encoder + GRU head (fresh-test model),16.1,MB,built on the board,build.json
+Storage,TensorRT engine gru_o3_fp16_dyn,Prithvi encoder + GRU head (fresh-test model),2.83,MB,built on the board,build.json
+Data,"Input per window (12 months x 9 channels, float32)",Bi-LSTM ten-seed ensemble (paper model),432,bytes,,kit manifest
+Data,"Output per window (one drought probability, float32)",Bi-LSTM ten-seed ensemble (paper model),4,bytes,,kit manifest
+Data,Output per region-month (25 cells),Bi-LSTM ten-seed ensemble (paper model),100,bytes,float32; 25 bytes if sent as 1 byte each,derived
+Data,"Encoder input per chip (6 bands x 224 x 224, int16 DN)",Prithvi encoder + GRU head (fresh-test model),"602,112",bytes,1 chip; 4 chips per cell-pass,kit manifest
+Data,"Head input per window (12 months x 196 values + 2, float32)",Prithvi encoder + GRU head (fresh-test model),"9,416",bytes,,kit manifest
+Data,"Output per window (4 standardized percentiles, float32)",Prithvi encoder + GRU head (fresh-test model),16,bytes,,kit manifest
+Reliability,"Errors / times the probe output changed, first run (worstcase_load_MAXN_SUPER_dvfs)",Bi-LSTM ten-seed ensemble (paper model),0 / 0,count,"390,504,448 windows in 60 min; p50 drift 0.11%",J2
+Reliability,"Errors / times the probe output changed, F10 flight15w",Bi-LSTM ten-seed ensemble (paper model),0 / 0,count,"310,639,100 windows in 120 min; p50 drift -0.18%",J2
+Reliability,"Errors / times the probe output changed, F11 duty15w",Bi-LSTM ten-seed ensemble (paper model),0 / 0,count,"30,835,400 windows in 60 min; p50 drift -0.22%",J2
+Reliability,"Errors / times the probe output changed, F12 worstcase",Bi-LSTM ten-seed ensemble (paper model),0 / 0,count,"397,459,456 windows in 60 min; p50 drift 0.05%",J2
+Reliability,Prithvi TensorRT engines whose outputs matched the reference,Prithvi encoder + GRU head (fresh-test model),6,count,"bilstm_o3_exploratory_fp16_b1, bilstm_o3_exploratory_fp16_dyn, bilstm_o3_exploratory_fp32_b1, bilstm_o3_exploratory_fp32_dyn, gru_o3_fp16_b1, gru_o3_fp32_b1",P2
+Reliability,Prithvi TensorRT engines whose outputs did NOT match,Prithvi encoder + GRU head (fresh-test model),6,count,"encoder_fp16_b1, encoder_fp16_dyn, encoder_fp32_b1, encoder_fp32_dyn, gru_o3_fp16_dyn, gru_o3_fp32_dyn; the variable-batch head engines also gave different outputs on two runs",P2
+Reliability,Prithvi on the CPU (ONNX Runtime) matched the reference,Prithvi encoder + GRU head (fresh-test model),6,count,"bilstm_o3_exploratory fp16, bilstm_o3_exploratory fp32, encoder fp16, encoder fp32, gru_o3 fp16, gru_o3 fp32 (FP16 encoder warned, within its fail limit)",P2
+Reliability,ONNX Runtime 1.23.2 (CPU) in the 7W mode,board,aborts at import,,"exit 134, a vector index assertion in its CPU detection; 7W leaves CPU cores 0-3 online (4-5 offline); TensorRT runs normally","b7.log, s2.log"

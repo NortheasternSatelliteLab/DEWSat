@@ -116,7 +116,7 @@ three start dates.
 | 32 days | −0.032 to +0.019 (0 of 3) | −0.004 to +0.013 (0 of 3) | −0.014 to +0.020 (0 of 3) |
 
 The Bi-LSTM is the least robust of the three: its intervals include zero even at 7 days. The figure plots the residual
-Bi-LSTM and GRU only.
+Bi-LSTM only.
 
 ![Network minus LR by revisit interval](results/figures/fig5_revisit.png)
 
@@ -167,8 +167,15 @@ Each reported result averages 10 seeds (copies): for the Bi-LSTM about 495 KiB o
 per prediction, above the 30-100 KB range that one copy (49.5 KiB) fits; in
 development one seed alone scores 0.001-0.013 AUC below the 10-seed average per fold. The networks were trained directly
 on the labels; an earlier run found that distilling from a large teacher gave no small model an advantage over direct
-training. The saved models are in `runs/phase5/composite/<job>/<model>/seed<s>/` (`model.pt`, `meta.json`); no INT8,
-ONNX or TensorRT export has been made yet. Table: `results/tables/model_sizes.csv`.
+training. The saved models are in `runs/phase5/composite/<job>/<model>/seed<s>/` (`model.pt`, `meta.json`). Table:
+`results/tables/model_sizes.csv`.
+
+On a Jetson Orin Nano Super (2026-11-21 and 22), the ten copies ran as one TensorRT FP16 engine: a tile of 100
+windows took 4.10 ms in the 7W mode and 1.13 ms in MAXN_SUPER, the highest mode (median, host-device copies
+included), at 6.4-14.1 W of module input power. On every FP32 and FP16 runtime the board matched the Mac's outputs
+and the stored fresh-test AUC (0.663); post-training INT8 gave 0.662. The hottest sensor reached 67.2 C in the
+worst-case hour, in room air with the stock fan, not in vacuum. The tables, two figures and the limits of these tests
+are in `paper_results/jetson_2026-11-22/` (start with its README).
 
 ### 9. Compared with the earlier paper run
 
@@ -188,7 +195,8 @@ ONNX or TensorRT export has been made yet. Table: `results/tables/model_sizes.cs
 3. **The inputs matter, not the architecture:** GRU, residual and plain Bi-LSTM are within 0.006, and ReLU matches tanh.
 4. **The scope is narrow:** soil-moisture drought, with a clear view about every week; no gain for the missing month
    and no usable onset forecast.
-5. **It fits the Orin Nano easily:** about 12,000 parameters and 80,000 multiply-adds per copy.
+5. **It fits the Orin Nano easily:** about 12,000 parameters and 80,000 multiply-adds per copy; on the board the ten
+   copies take 1.1-4.1 ms per 100-window tile, depending on the power mode.
 
 ## Limitations
 

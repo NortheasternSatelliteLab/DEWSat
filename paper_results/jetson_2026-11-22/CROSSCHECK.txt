@@ -1,0 +1,11 @@
+v2:
+  [PASS] v2 2026-11-21: 80 trtexec rows match their raw logs
+  [PASS] soak worstcase_load_MAXN_SUPER_dvfs: hottest 61.8 C from 359 intervals (summary 61.843), on-phase power 17.01 W (summary 17.01 W), probe identical to the first in all 359 intervals that ran it: True
+  [PASS] v2 2026-11-22: 96 trtexec rows match their raw logs (1 benchmark files already checked in an earlier fetch)
+  [PASS] soak duty15w_15W_dvfs: hottest 50.5 C from 360 intervals (summary 50.468), on-phase power 7.74 W (summary 7.74 W), probe identical to the first in all 72 intervals that ran it: True
+  [PASS] soak flight15w_15W_dvfs: hottest 47.0 C from 719 intervals (summary 47.0), on-phase power 7.79 W (summary 7.79 W), probe identical to the first in all 719 intervals that ran it: True
+  [PASS] soak worstcase_MAXN_SUPER_pinned: hottest 67.2 C from 360 intervals (summary 67.218), on-phase power 17.52 W (summary 17.52 W), probe identical to the first in all 360 intervals that ran it: True
+  [PASS] v2 2026-11-22_7W: 48 trtexec rows match their raw logs (5 benchmark files already checked in an earlier fetch)
+Prithvi:
+  [PASS] Prithvi 2026-11-22: 204 trtexec rows match their raw logs
+ALL PASS
