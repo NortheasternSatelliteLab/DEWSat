@@ -1,0 +1,28 @@
+﻿Runtime,Model or engine,Precision,Compared with,"AUC on the 65,170 fresh-test windows [95% CI]",AUC minus the stored FP32 AUC,Bi-LSTM minus LR on VCI(T) [95% CI],Brier score,ECE,AUC difference from that reference [paired 95% CI],Largest probability difference from that reference,Same output on a rerun,Status
+"v2 stored result (Mac, PyTorch)",ten-seed mean,FP32,-,"0.663 [0.639, 0.688]",,"+0.042 [+0.024, +0.060]",0.246,0.149,,,,reference
+ONNX Runtime CPU (board),ensemble10_fp32,FP32,Mac: the same ONNX file on ONNX Runtime,"0.663 [0.639, 0.688]",0.0000,"+0.042 [+0.024, +0.060]",0.246,0.149,+4.9e-10,2.4e-07,,PASS
+ONNX Runtime CPU (board),ensemble10_int8,"INT8 (Q/DQ file, FP32 elsewhere on the CPU)",Mac: the same ONNX file on ONNX Runtime,0.662,-0.0010,+0.041,0.245,0.146,-7.9e-08,8.4e-04,,PASS
+ONNX Runtime CPU (board),fused10_fp32,FP32,Mac: the same ONNX file on ONNX Runtime,0.663,0.0000,+0.042,0.246,0.149,+3.4e-09,2.4e-07,,PASS
+ONNX Runtime CPU (board),seed42_fp32,FP32,Mac: the same ONNX file on ONNX Runtime,"one seed: output parity only, no accuracy",,,,,,3.3e-07,,PASS
+ONNX Runtime CPU (board),seed42_int8,"INT8 (Q/DQ file, FP32 elsewhere on the CPU)",Mac: the same ONNX file on ONNX Runtime,"one seed: output parity only, no accuracy",,,,,,2.4e-03,,PASS
+TensorRT (board),ensemble10_fp16_b1,FP16,Mac FP32 reference (ONNX),batch-1 engine: parity only,,,,,,1.8e-07,,PASS
+TensorRT (board),ensemble10_fp16_dyn,FP16,Mac FP32 reference (ONNX),0.663,0.0000,+0.042,0.246,0.149,"-5.5e-07 [-1.5e-06, +3.9e-07]",1.0e-04,yes,PASS
+TensorRT (board),ensemble10_fp32_b1,FP32,Mac FP32 reference (ONNX),batch-1 engine: parity only,,,,,,1.8e-07,,PASS
+TensorRT (board),ensemble10_fp32_dyn,FP32,Mac FP32 reference (ONNX),0.663,0.0000,+0.042,0.246,0.149,-1.4e-08,2.4e-07,yes,PASS
+TensorRT (board),ensemble10_int8_b1,"INT8 (Q/DQ, FP16 elsewhere)",Mac FP32 reference (ONNX),batch-1 engine: parity only,,,,,,1.7e-02,,PASS
+TensorRT (board),ensemble10_int8_dyn,"INT8 (Q/DQ, FP16 elsewhere)",Mac FP32 reference (ONNX),"0.662 [0.638, 0.687]",-0.0010,"+0.041 [+0.023, +0.059]",0.245,0.146,"-1.0e-03 [-1.5e-03, -6.0e-04]",2.9e-02,yes,PASS
+TensorRT (board),ensemble10_int8s_b1,"INT8 strict (Q/DQ, FP32 elsewhere)",Mac FP32 reference (ONNX),batch-1 engine: parity only,,,,,,1.6e-02,,PASS
+TensorRT (board),ensemble10_int8s_dyn,"INT8 strict (Q/DQ, FP32 elsewhere)",Mac FP32 reference (ONNX),0.662,-0.0010,+0.041,0.245,0.146,"-1.0e-03 [-1.5e-03, -6.0e-04]",2.9e-02,yes,PASS
+TensorRT (board),fused10_fp16_b1,FP16,Mac FP32 reference (ONNX),batch-1 engine: parity only,,,,,,1.8e-07,,PASS
+TensorRT (board),fused10_fp16_dyn,FP16,Mac FP32 reference (ONNX),"0.663 [0.639, 0.688]",0.0000,"+0.042 [+0.024, +0.060]",0.246,0.149,"+2.6e-06 [-3.5e-06, +8.5e-06]",9.1e-04,yes,PASS
+TensorRT (board),fused10_fp32_b1,FP32,Mac FP32 reference (ONNX),batch-1 engine: parity only,,,,,,1.8e-07,,PASS
+TensorRT (board),fused10_fp32_dyn,FP32,Mac FP32 reference (ONNX),0.663,0.0000,+0.042,0.246,0.149,-5.4e-09,2.4e-07,yes,PASS
+TensorRT (board),seed42_fp16_b1,FP16,Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,3.6e-07,,PASS
+TensorRT (board),seed42_fp16_dyn,FP16,Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,3.7e-04,yes,PASS
+TensorRT (board),seed42_fp32_b1,FP32,Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,4.2e-07,,PASS
+TensorRT (board),seed42_fp32_dyn,FP32,Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,5.7e-07,yes,PASS
+TensorRT (board),seed42_int8_b1,"INT8 (Q/DQ, FP16 elsewhere)",Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,4.8e-02,,PASS
+TensorRT (board),seed42_int8_dyn,"INT8 (Q/DQ, FP16 elsewhere)",Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,6.1e-02,yes,PASS
+TensorRT (board),seed42_int8s_b1,"INT8 strict (Q/DQ, FP32 elsewhere)",Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,4.8e-02,,PASS
+TensorRT (board),seed42_int8s_dyn,"INT8 strict (Q/DQ, FP32 elsewhere)",Mac FP32 reference (ONNX),"one seed: output parity only, no accuracy",,,,,,6.6e-02,yes,PASS
+"TensorRT after a reboot (board, F13)",fused10_fp16_dyn,FP16,Mac FP32 reference (ONNX),"0.663 [0.639, 0.688]",0.0000,"+0.042 [+0.024, +0.060]",0.246,0.149,+2.6e-06,9.1e-04,yes,PASS

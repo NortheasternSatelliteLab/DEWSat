@@ -1,0 +1,8 @@
+﻿"Power mode and clocks (figure order, top to bottom)",Idle module power (W),Which idle reading that is (marked * in the figure unless at rest),Module power running the paper model on 100-window tiles (W),"Time per tile, p50 (ms)"
+"7W, dynamic clocks",4.40,"at rest, mean of 1 reading",6.38,4.103
+"7W, pinned clocks",4.46,"start of the benchmark, 40 min after boot",6.39,4.101
+"15W, dynamic clocks",4.47,"at rest, mean of 3 readings",8.57,1.831
+"15W, pinned clocks",4.99,"start of the benchmark, 209 min after boot",9.27,1.792
+"25W, pinned clocks",6.94,"start of the benchmark, 1 min after boot",12.92,1.223
+"MAXN_SUPER, dynamic clocks",4.46,"at rest, mean of 1 reading",14.08,1.129
+"MAXN_SUPER, pinned clocks",6.67,"at rest, mean of 1 reading",14.12,1.127

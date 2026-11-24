@@ -1,0 +1,7 @@
+﻿Reboot at,"Reboot command to SSH login (s, measured on the Mac)",systemd boot total (s),systemd breakdown,Target reached after (s)
+2026-11-22 00:44:47 EST,50,15.960,8.608s (kernel) + 7.352s (userspace),7.315
+2026-11-22 04:30:01 EST,55,16.131,8.680s (kernel) + 7.450s (userspace),7.413
+2026-11-22 04:33:22 EST,56,18.505,9.712s (kernel) + 8.793s (userspace),8.734
+2026-11-22 04:45:01 EST,56,16.490,8.662s (kernel) + 7.827s (userspace),7.786
+2026-11-22 06:04:45 EST,56,16.895,9.517s (kernel) + 7.378s (userspace),7.338
+2026-11-22 07:34:07 EST,54,17.560,8.495s (kernel) + 9.065s (userspace),9.009

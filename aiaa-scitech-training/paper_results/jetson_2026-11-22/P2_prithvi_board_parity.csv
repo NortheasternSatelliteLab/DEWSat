@@ -1,0 +1,19 @@
+﻿Runtime,Graph,Precision,Engine profile,Items compared,Compared with,Largest difference,Mean difference,ESI output: largest difference,ESI ranking agreement (Spearman),Encoder: lowest cosine similarity,Same output on a rerun,Status,Notes
+ONNX Runtime CPU (board),Prithvi-EO-2.0-tiny encoder (frozen),FP32,-,64,Mac PyTorch features of the same chips,8.8e-06,6.1e-07,,,1.000000,,PASS,
+ONNX Runtime CPU (board),Prithvi-EO-2.0-tiny encoder (frozen),FP16,-,64,Mac PyTorch features of the same chips,9.6e-02,1.5e-03,,,0.999916,,WARN,
+ONNX Runtime CPU (board),"GRU head, 5 seeds (fresh-test model)",FP32,-,16469,stored 5-seed mean the fresh test scored,5.4e-07,6.4e-08,3.8e-07,1.000000,,,PASS,
+ONNX Runtime CPU (board),"GRU head, 5 seeds (fresh-test model)",FP16,-,16469,stored 5-seed mean the fresh test scored,7.9e-04,1.6e-04,5.7e-04,1.000000,,,PASS,
+ONNX Runtime CPU (board),"Bi-LSTM head (exploratory, no verdict)",FP32,-,16469,stored 5-seed mean the fresh test scored,6.0e-07,7.3e-08,4.8e-07,1.000000,,,PASS,
+ONNX Runtime CPU (board),"Bi-LSTM head (exploratory, no verdict)",FP16,-,16469,stored 5-seed mean the fresh test scored,7.6e-04,1.2e-04,5.1e-04,1.000000,,,PASS,
+TensorRT (board),Prithvi-EO-2.0-tiny encoder (frozen),FP32,b1,64,Mac PyTorch features of the same chips,5.3e+00,4.6e-01,,,0.670166,yes,FAIL,min cosine 0.670166 < 0.99999
+TensorRT (board),Prithvi-EO-2.0-tiny encoder (frozen),FP32,dyn,64,Mac PyTorch features of the same chips,5.3e+00,4.6e-01,,,0.670166,yes,FAIL,min cosine 0.670166 < 0.99999
+TensorRT (board),Prithvi-EO-2.0-tiny encoder (frozen),FP16,b1,64,Mac PyTorch features of the same chips,5.3e+00,4.6e-01,,,0.670044,yes,FAIL,min cosine 0.670044 < 0.999
+TensorRT (board),Prithvi-EO-2.0-tiny encoder (frozen),FP16,dyn,64,Mac PyTorch features of the same chips,5.3e+00,4.6e-01,,,0.670120,yes,FAIL,min cosine 0.670120 < 0.999
+TensorRT (board),"GRU head, 5 seeds (fresh-test model)",FP32,b1,512,stored 5-seed mean the fresh test scored,4.3e-07,7.8e-08,3.3e-07,1.000000,,yes,PASS,
+TensorRT (board),"GRU head, 5 seeds (fresh-test model)",FP32,dyn,16469,stored 5-seed mean the fresh test scored,1.7e+00,3.3e-01,1.6e+00,0.693719,,no,FAIL,max |diff| 1.6733 > 0.0010; two runs of the same engine differ by 0.0739
+TensorRT (board),"GRU head, 5 seeds (fresh-test model)",FP16,b1,512,stored 5-seed mean the fresh test scored,1.9e-03,4.1e-04,1.2e-03,0.999996,,yes,PASS,
+TensorRT (board),"GRU head, 5 seeds (fresh-test model)",FP16,dyn,16469,stored 5-seed mean the fresh test scored,1.7e+00,3.3e-01,1.6e+00,0.693727,,no,FAIL,ESI Spearman 0.693727 < 0.999; two runs of the same engine differ by 0.0765
+TensorRT (board),"Bi-LSTM head (exploratory, no verdict)",FP32,b1,512,stored 5-seed mean the fresh test scored,5.7e-07,7.7e-08,2.9e-07,1.000000,,yes,PASS,
+TensorRT (board),"Bi-LSTM head (exploratory, no verdict)",FP32,dyn,16469,stored 5-seed mean the fresh test scored,8.6e-07,7.1e-08,5.7e-07,1.000000,,yes,PASS,
+TensorRT (board),"Bi-LSTM head (exploratory, no verdict)",FP16,b1,512,stored 5-seed mean the fresh test scored,2.7e-04,5.7e-05,2.4e-04,1.000000,,yes,PASS,
+TensorRT (board),"Bi-LSTM head (exploratory, no verdict)",FP16,dyn,16469,stored 5-seed mean the fresh test scored,4.1e-04,6.6e-05,3.8e-04,1.000000,,yes,PASS,

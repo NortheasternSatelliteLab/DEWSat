@@ -23,6 +23,7 @@ rule fixed before training, and the three networks are within 0.006 AUC of each 
 | Judged by climatic drought (SPEI, 180 days)? | It reverses: −0.032 [−0.049, −0.013] |
 | With single satellite passes? | +0.012 to +0.020 with a pass every 7 days, every interval including zero; none at 16 or 32 days. The residual Bi-LSTM and GRU keep +0.021 to +0.027 at 7 days |
 | Model size | 11,617 parameters, 80,688 multiply-adds, 49.5 KiB per copy; the scored result averages 10 copies (seeds), about 495 KiB |
+| On a Jetson Orin Nano Super? | A 100-window tile takes 1.1-4.1 ms across power modes at 6.4-14.1 W of module power, and the board reproduces the AUC (0.663): [paper_results/jetson_2026-11-22/](paper_results/jetson_2026-11-22/README.md) |
 
 Brackets are 95% intervals from 2,000 resamples of whole regions.
 
@@ -34,7 +35,7 @@ Brackets are 95% intervals from 2,000 resamples of whole regions.
 | --- | --- |
 | `FINDINGS.md` | The findings: what was tested, every result, what it means, limitations |
 | `results/` | The numbers and figures: `tables/` (CSV), `figures/` (PNG and PDF), `scores/` (every score file of the run, JSON); index in [results/README.md](results/README.md) |
-| `paper_results/` | The paper's tables and figures, led by the Bi-LSTM, and the manuscript's claims checked against the results; index in [paper_results/README.md](paper_results/README.md) |
+| `paper_results/` | The paper's tables and figures, led by the Bi-LSTM, the manuscript's claims checked against the results, and the Jetson Orin Nano board results (`jetson_2026-11-22/`); index in [paper_results/README.md](paper_results/README.md) |
 | `report.md` | The full report, every table of the run, generated from the score files |
 | `data_card.md` | The data: products, regions, coverage, labels, sources and credits |
 | `code/design/` | `DESIGN.md` and `gate.json`: the design and pass rule committed before training, with dated amendments 3-7 |
@@ -74,6 +75,7 @@ Details and credits for earlier work are in [data_card.md](data_card.md).
 ## Not in this repository
 
 - The downloaded data, features and image tiles (`data/`, `cache/`), and the runs other than the fresh-test models.
+- The Jetson board's raw output files. `paper_results/jetson_2026-11-22/` holds the tables and figures built from them.
 - Decision numbers (#n) in `DESIGN.md` and `report.md` refer to the project's internal decision log, kept with the
   working files.
 - A license has not been chosen yet.

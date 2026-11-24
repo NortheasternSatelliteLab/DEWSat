@@ -2,7 +2,8 @@
 
 Every number is read from results/scores/*.json in ~/Desktop/DEWSat_BiLSTM_github, through the repository's own
 export_results.py builders at full precision or straight from the JSON, and rounded once (3 decimals); the count and
-weight files of the Bi-LSTM's copies come from its saved runs in runs/phase5. Nothing is typed in.
+weight files of the Bi-LSTM's copies come from its saved runs in runs/phase5. Nothing is typed in, except the Jetson
+board numbers in two claims rows (INT8 and speed), copied from jetson_2026-11-22/ (tables J3, J6 and J7).
 
 The paper's model is the plain Bi-LSTM, so the claims, figures 1 and 4 and tables T4 and T5 lead with it, and the
 Residual Bi-LSTM and the GRU follow as the pre-registered networks. Figures 2, 3, 5 and 6 are the repository's figures
@@ -560,12 +561,21 @@ CLAIMS = [
      f"{SIZES['Bi-LSTM']['model_pt_kib']:.1f} KiB of float32 weights, already within 30–100 KB with no compression. "
      f"The scored prediction averages {N_COPIES} copies (seeds), so as scored it is about {COPIES_KIB:.0f} KiB of "
      f"weights ({'above' if COPIES_KIB * 1.024 > 100 else 'within'} that range) and {N_COPIES * MACS:,} multiply-adds "
-     f"per prediction. Distillation, pruning and INT8 were not tested in this study (the earlier pipeline's distilled "
-     f"and INT8 models were trained on synthetic data).",
-     "Starting size doesn't match; compression not tested"),
+     f"per prediction. Distillation and pruning were not tested in this study (the earlier pipeline's distilled and "
+     "INT8 models were trained on synthetic data). INT8 was tested on a Jetson Orin Nano Super (2026-11-22, "
+     "`jetson_2026-11-22/` J3 and J6): post-training INT8 of the ten copies (calibrated, not quantization-aware "
+     "training) scored AUC 0.662 on the fresh-test windows against 0.663 in FP32, but its TensorRT engines were "
+     "larger, not smaller: 24.5–36.4 MB against 1.6–5.2 MB for the same ten copies in FP32.",
+     "Starting size doesn't match; INT8 keeps the AUC but does not shrink the engines; distillation and pruning "
+     "not tested"),
     ("2.2", "Bi-LSTM and CNN inference in under 10 ms per tile on the NPU",
-     f"Not measured on any flight processor. One Bi-LSTM prediction is {MACS:,} multiply-adds per copy, "
-     f"{N_COPIES * MACS:,} for the {N_COPIES}-copy average that was scored.", "Not tested"),
+     "Measured on a Jetson Orin Nano Super (2026-11-21 and 22, `jetson_2026-11-22/` J7), on its GPU: the Orin Nano "
+     "has no NPU (DLA). One tile of 100 windows through the ten-copy Bi-LSTM (TensorRT FP16, host-device copies "
+     "included) took 4.103 ms (median) in the 7W mode and 1.127–1.831 ms in the 15W, 25W and MAXN_SUPER modes. "
+     "The CNN was not run on the board. "
+     f"One Bi-LSTM prediction is {MACS:,} multiply-adds per copy, "
+     f"{N_COPIES * MACS:,} for the {N_COPIES}-copy average that was scored.",
+     "Bi-LSTM: met on the Orin's GPU in every power mode; CNN not tested"),
     ("2.2", "Onboard triage gives up to 90% data reduction", "Cited from reference [18]; not part of this study.",
      "Not tested"),
     ("3.1", "The Bi-LSTM detects flash-drought anomalies earlier by modelling temporal change",
@@ -589,7 +599,8 @@ CLAIMS = [
 ]
 md = ["# Manuscript claims against the v2 results", "",
       "For the authors, not text for the paper. Claims are paraphrased from NortheasternSatelliteLab_DroughtMonitoring"
-      ".pdf (05/04/2026); numbers come from the same score files as the tables. AUC differences carry 95% intervals "
+      ".pdf (05/04/2026); numbers come from the same score files as the tables, except the board results in the INT8 "
+      "and speed rows, which come from `jetson_2026-11-22/`. AUC differences carry 95% intervals "
       "from 2,000 whole-region resamples.", "",
       "Each finding leads with the plain Bi-LSTM, the paper's model. For job 1 it is not a pre-registered row: it was "
       "added to the single fresh-test scoring before any fresh-test label was read (DESIGN.md amendment 6). The "
@@ -618,6 +629,9 @@ FILES = [
     ("figures/", "The study's six figures, PNG at 300 dpi (for Google Docs) and PDF, without title text"),
     ("claims_vs_results.md", "Each results claim in the manuscript against what the study found"),
     ("build_paper_results.py", "Rebuilds this folder from the score files"),
+    ("jetson_2026-11-22/", "The paper's model, and the Prithvi pilot's model for comparison, on a Jetson Orin Nano "
+     "Super (2026-11-21 and 22): speed, power, heat, boot time and whether the board gives the Mac's answers. Start "
+     "with its README. Its own scripts build it, not this one"),
 ]
 readme = [
     "# DEWSat paper results", "",
@@ -631,8 +645,10 @@ readme = [
     f"{'both passed on the fresh test' if PRE1_PASSED else 'T3 has their verdicts'}, and the three are within "
     f"{a3(NETS3_SPREAD)} AUC of each other there. In job 3 the plain Bi-LSTM is the pre-registered best Bi-LSTM "
     f"variant.", "",
-    "Every result is read from `results/scores/*.json` and rounded once, to 3 decimals. There is no prose for the "
-    "paper here, only table headings and figure labels, so the text and captions can be the authors' own.", "",
+    "Every result is read from `results/scores/*.json` and rounded once, to 3 decimals, except the board results in "
+    "`jetson_2026-11-22/`, which come from the board's own files. There is no prose for the paper here, only table "
+    "headings and figure labels, so the text and captions can be the authors' own (the board folder's README "
+    "suggests captions for its two figures).", "",
     "| File | What it holds |", "|---|---|"]
 readme += [f"| `{f}` | {w} |" for f, w in FILES]
 readme += [
